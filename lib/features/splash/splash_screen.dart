@@ -1,15 +1,19 @@
 import 'dart:ui';
 
 import 'package:bonoos/core/resources/assets/images/app_images.dart';
+import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/features/on_boarding/on_boarding_screen.dart';
+import 'package:bonoos/features/questions/question_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,7 +24,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _intro;
   late final AnimationController _glow;
 
@@ -35,13 +40,26 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     if (!mounted) return;
 
+    final prefs = inject<SharedPreferences>();
     final token = inject<PrefManager>().token;
     final hasToken = token != null && token.isNotEmpty;
+    final hasSeenOnboarding = prefs.getBool(SharedModel.onBoard) ?? false;
+    final hasPendingQuestions = prefs.getBool(SharedModel.newUser) ?? false;
 
-    if (hasToken) {
-      context.go(TabBoxScreen.routeName);
-    } else {
+    if (!hasSeenOnboarding) {
+      context.go(OnBoardingScreen.routeName);
+      return;
+    }
+
+    if (!hasToken) {
       context.go(LoginPhoneScreen.routeName);
+      return;
+    }
+
+    if (hasPendingQuestions) {
+      context.go(QuestionScreen.routeName);
+    } else {
+      context.go(TabBoxScreen.routeName);
     }
   }
 
@@ -188,7 +206,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                         gradient: LinearGradient(
                                           colors: [
                                             Colors.white.withValues(alpha: 0.0),
-                                            Colors.white.withValues(alpha: 0.85),
+                                            Colors.white
+                                                .withValues(alpha: 0.85),
                                             Colors.white.withValues(alpha: 0.0),
                                           ],
                                         ),
@@ -259,7 +278,8 @@ class _AmbientGlow extends StatelessWidget {
                 child: Transform.scale(
                   scale: 1.06 - 0.08 * t,
                   child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: blur * 0.85, sigmaY: blur * 0.85),
+                    imageFilter: ImageFilter.blur(
+                        sigmaX: blur * 0.85, sigmaY: blur * 0.85),
                     child: Container(
                       width: 280.w,
                       height: 280.w,

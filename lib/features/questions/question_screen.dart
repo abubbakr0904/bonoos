@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:bonoos/core/resources/assets/images/app_images.dart';
+import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/di.dart';
 import 'package:bonoos/features/common/widget/custom_button.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
 import 'package:bonoos/features/questions/data/mock_psych_questions.dart';
 import 'package:bonoos/features/questions/models/psych_question.dart';
+import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -19,20 +24,27 @@ class QuestionScreen extends StatefulWidget {
   State<QuestionScreen> createState() => _QuestionScreenState();
 }
 
-class _QuestionScreenState extends State<QuestionScreen> with TickerProviderStateMixin {
+class _QuestionScreenState extends State<QuestionScreen>
+    with TickerProviderStateMixin {
   int _index = 0;
   int? _selected;
 
   void _next() {
     if (_selected == null) return;
     if (_index >= mockPsychQuestions.length - 1) {
-      context.go(LoginPhoneScreen.routeName);
+      unawaited(_completeQuestions());
       return;
     }
     setState(() {
       _index += 1;
       _selected = null;
     });
+  }
+
+  Future<void> _completeQuestions() async {
+    await inject<SharedPreferences>().setBool(SharedModel.newUser, false);
+    if (!mounted) return;
+    context.go(TabBoxScreen.routeName);
   }
 
   @override
@@ -52,7 +64,8 @@ class _QuestionScreenState extends State<QuestionScreen> with TickerProviderStat
               child: Column(
                 children: [
                   SizedBox(height: 8.h),
-                  _Header(progress: progress, current: _index + 1, total: total),
+                  _Header(
+                      progress: progress, current: _index + 1, total: total),
                   SizedBox(height: 26.h),
                   Expanded(
                     child: AnimatedSwitcher(
@@ -63,7 +76,8 @@ class _QuestionScreenState extends State<QuestionScreen> with TickerProviderStat
                         final slide = Tween<Offset>(
                           begin: const Offset(0.10, 0),
                           end: Offset.zero,
-                        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+                        ).animate(CurvedAnimation(
+                            parent: animation, curve: Curves.easeOutCubic));
                         return FadeTransition(
                           opacity: animation,
                           child: SlideTransition(position: slide, child: child),
@@ -252,9 +266,13 @@ class _OptionTile extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.r),
-            color: selected ? AppColors.c842D5F.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.06),
+            color: selected
+                ? AppColors.c842D5F.withValues(alpha: 0.14)
+                : Colors.white.withValues(alpha: 0.06),
             border: Border.all(
-              color: selected ? AppColors.c842D5F.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.10),
+              color: selected
+                  ? AppColors.c842D5F.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.10),
               width: selected ? 1.5 : 1,
             ),
             boxShadow: selected
@@ -275,7 +293,8 @@ class _OptionTile extends StatelessWidget {
                 child: Text(
                   title,
                   style: AppTextStyles.body16w6.copyWith(
-                    color: Colors.white.withValues(alpha: selected ? 0.98 : 0.90),
+                    color:
+                        Colors.white.withValues(alpha: selected ? 0.98 : 0.90),
                   ),
                 ),
               ),
@@ -303,7 +322,9 @@ class _RadioCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.c842D5F : Colors.white.withValues(alpha: 0.35),
+          color: selected
+              ? AppColors.c842D5F
+              : Colors.white.withValues(alpha: 0.35),
           width: 2,
         ),
       ),

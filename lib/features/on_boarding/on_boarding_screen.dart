@@ -1,9 +1,12 @@
+import 'package:bonoos/core/api/list_api.dart';
+import 'package:bonoos/di.dart';
+import 'package:bonoos/features/auth/login_phone_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/widget/home_gradient_background.dart';
-import '../questions/question_screen.dart';
 import 'models/onboarding_model.dart';
 import 'widgets/navigation_buttons.dart';
 import 'widgets/onboarding_page.dart';
@@ -61,8 +64,13 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     }
   }
 
-  void _completeOnboarding() {
-    context.go(QuestionScreen.routeName);
+  Future<void> _completeOnboarding() async {
+    final prefs = inject<SharedPreferences>();
+    await prefs.setBool(SharedModel.onBoard, true);
+    // First-time local flow: after onboarding, user must pass questions once.
+    await prefs.setBool(SharedModel.newUser, true);
+    if (!mounted) return;
+    context.go(LoginPhoneScreen.routeName);
   }
 
   @override

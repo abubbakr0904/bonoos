@@ -48,7 +48,8 @@ class PrefManager {
 
   int get authExpiresIn => preferences.getInt(SharedModel.authExpiresIn) ?? 0;
 
-  String? get authSessionJson => preferences.getString(SharedModel.authSessionJson);
+  String? get authSessionJson =>
+      preferences.getString(SharedModel.authSessionJson);
 
   /// Verify-otp javobidagi maydonlar va `data` JSON (keyinchalik ishlatish uchun).
   Future<void> persistAuthSession({
@@ -60,11 +61,13 @@ class PrefManager {
     required String phoneDigits,
     required String rawDataJson,
   }) async {
+    final pendingQuestions = preferences.getBool(SharedModel.newUser) ?? false;
     await preferences.setString(_kToken, accessToken);
     await preferences.setString(_kRefresh, refreshToken);
     await preferences.setInt(_kUserId, userId);
     await preferences.setInt(SharedModel.authExpiresIn, expiresIn);
-    await preferences.setBool(SharedModel.newUser, isNewUser);
+    await preferences.setBool(
+        SharedModel.newUser, pendingQuestions || isNewUser);
     await preferences.setString(SharedModel.authSessionJson, rawDataJson);
     await preferences.setString(SharedModel.useName, phoneDigits);
   }

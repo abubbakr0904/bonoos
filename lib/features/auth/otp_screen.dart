@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/resources/assets/images/app_images.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
@@ -7,14 +8,17 @@ import 'package:bonoos/di.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
 import 'package:bonoos/features/common/widget/custom_button.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
+import 'package:bonoos/features/questions/question_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpArgs {
   final String phone;
+
   /// API uchun 9 raqam (prefiksiz), masalan `930374441`.
   final String phoneDigits;
   const OtpArgs({required this.phone, required this.phoneDigits});
@@ -118,26 +122,37 @@ class _OtpScreenState extends State<OtpScreen> {
         _hasError = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(verifyFailure.message ?? 'Tasdiqlash muvaffaqiyatsiz.')),
+        SnackBar(
+            content:
+                Text(verifyFailure.message ?? 'Tasdiqlash muvaffaqiyatsiz.')),
       );
       return;
     }
 
-    final sessionResult = await inject<AuthRepository>().registerClientSession();
+    final sessionResult =
+        await inject<AuthRepository>().registerClientSession();
     if (!mounted) return;
 
     sessionResult.fold(
       (failure) {
         setState(() => _verifyLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message ?? 'Sessiya saqlanmadi. Qayta urinib ko‘ring.')),
+          SnackBar(
+              content: Text(failure.message ??
+                  'Sessiya saqlanmadi. Qayta urinib ko‘ring.')),
         );
       },
       (_) {
         setState(() => _verifyLoading = false);
         Future<void>.delayed(const Duration(milliseconds: 200)).then((_) {
           if (!mounted) return;
-          context.go(TabBoxScreen.routeName);
+          final isNewUser =
+              inject<SharedPreferences>().getBool(SharedModel.newUser) ?? false;
+          if (isNewUser) {
+            context.go(QuestionScreen.routeName);
+          } else {
+            context.go(TabBoxScreen.routeName);
+          }
         });
       },
     );
@@ -190,7 +205,8 @@ class _OtpScreenState extends State<OtpScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Image.asset(AppImages.appLogoPurple, width: 64.w, height: 64.w),
+                        Image.asset(AppImages.appLogoPurple,
+                            width: 64.w, height: 64.w),
                         SizedBox(height: 10.h),
                         Text(
                           "Tasdiqlash kodi",
@@ -210,11 +226,13 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                         SizedBox(height: 8.h),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 14.w, vertical: 10.h),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.10)),
                           ),
                           child: Text(
                             widget.args.phone,
@@ -257,18 +275,23 @@ class _OtpScreenState extends State<OtpScreen> {
                     Center(
                       child: Text(
                         "Kod noto‘g‘ri yoki muddati o‘tgan.",
-                        style: AppTextStyles.body12w6.copyWith(color: AppColors.red),
+                        style: AppTextStyles.body12w6
+                            .copyWith(color: AppColors.red),
                       ),
                     ),
                   SizedBox(height: 10.h),
                   Center(
                     child: TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: _resendSecondsLeft == 0 && !_resendLoading && !_verifyLoading
+                        foregroundColor: _resendSecondsLeft == 0 &&
+                                !_resendLoading &&
+                                !_verifyLoading
                             ? AppColors.c842D5F
                             : Colors.white.withValues(alpha: 0.55),
                       ),
-                      onPressed: _resendSecondsLeft == 0 && !_resendLoading && !_verifyLoading
+                      onPressed: _resendSecondsLeft == 0 &&
+                              !_resendLoading &&
+                              !_verifyLoading
                           ? _resendOtp
                           : null,
                       child: _resendLoading
@@ -288,8 +311,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                 color: _resendSecondsLeft == 0
                                     ? AppColors.c842D5F
                                     : Colors.white.withValues(alpha: 0.55),
-                                decoration:
-                                    _resendSecondsLeft == 0 ? TextDecoration.underline : TextDecoration.none,
+                                decoration: _resendSecondsLeft == 0
+                                    ? TextDecoration.underline
+                                    : TextDecoration.none,
                               ),
                             ),
                     ),
