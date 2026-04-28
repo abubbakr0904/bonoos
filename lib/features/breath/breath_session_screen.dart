@@ -78,7 +78,7 @@ class _BreathSessionScreenState extends State<BreathSessionScreen>
   late final AnimationController _timerController;
   late final AudioPlayer _inhaleCuePlayer;
   late final AudioPlayer _exhaleCuePlayer;
-  bool _started = false;
+  bool _started = false;N
   _BreathCuePhase _lastCuePhase = _BreathCuePhase.idle;
   bool _cuePlayersReady = false;
 

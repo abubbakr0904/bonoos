@@ -123,6 +123,19 @@ class ListAPI {
   /// Sevimli auditionlar ro'yxati (GET, Bearer).
   static const String clientFavoriteAuditions =
       'api/v1/client/favorites/auditions';
+
+  /// Abumarket API host — asosiy `BASE_URL` dan alohida. `.env` → `ABUMARKET_BASE_URL`.
+  static String get abuMarketBaseUrl {
+    final raw = dotenv.env['ABUMARKET_BASE_URL']?.trim();
+    final s = (raw != null && raw.isNotEmpty)
+        ? raw
+        : 'https://abumarket.sahiy.uz/';
+    return s.replaceAll(RegExp(r'/$'), '');
+  }
+
+  /// Bannerlar ro‘yxati (GET). To‘liq URL — [abuMarketBaseUrl] + yo‘l; `DioClient` `BASE_URL` ga ulanmaydi.
+  static String get abuMarketBannersAllUrl =>
+      '$abuMarketBaseUrl/api/v1/clients/banners/all';
 }
 
 class SharedModel {

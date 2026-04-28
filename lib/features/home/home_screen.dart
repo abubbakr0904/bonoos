@@ -8,6 +8,8 @@ import 'package:bonoos/features/common/widget/audio_list_tile.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
+import 'package:bonoos/features/home/domain/entity/client_banner_dto.dart';
+import 'package:bonoos/features/home/domain/repository/banners_repository.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/home/self_talk_topics_screen.dart';
 import 'package:bonoos/features/notification/notifications_screen.dart';
@@ -85,6 +87,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 SizedBox(height: 12.h),
                 _ExpandableChallenge(expanded: _expanded),
                 SizedBox(height: 16.h),
+                const _HomeBannersCarousel(),
+                SizedBox(height: 14.h),
                 const _MessageOfDayCard(),
                 SizedBox(height: 14.h),
                 const _SelfTalkCard(),
@@ -586,6 +590,119 @@ class _ExpandableChallenge extends StatelessWidget {
           child: const _ChallengeCard(),
         ),
       ),
+    );
+  }
+}
+
+/// Abumarket bannerlar (`ListAPI.abuMarketBaseUrl` + `.../banners/all?type=1`) — asosiy `BASE_URL` dan mustaqil.
+class _HomeBannersCarousel extends StatefulWidget {
+  const _HomeBannersCarousel();
+
+  @override
+  State<_HomeBannersCarousel> createState() => _HomeBannersCarouselState();
+}
+
+class _HomeBannersCarouselState extends State<_HomeBannersCarousel> {
+  final PageController _pageController = PageController();
+  List<ClientBannerDto> _items = [];
+  bool _loading = true;
+  int _pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final r = await inject<BannersRepository>().fetchAbuMarketBanners();
+    if (!mounted) return;
+    r.fold(
+      (_) => setState(() {
+        _loading = false;
+        _items = [];
+      }),
+      (list) => setState(() {
+        _loading = false;
+        _items = list;
+      }),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return SizedBox(
+        height: 132.h,
+        child: Center(
+          child: SizedBox(
+            width: 26.w,
+            height: 26.w,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white.withValues(alpha: 0.45),
+            ),
+          ),
+        ),
+      );
+    }
+    if (_items.isEmpty) return const SizedBox.shrink();
+
+    final locale = Localizations.localeOf(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: SizedBox(
+            height: 132.h,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _items.length,
+              onPageChanged: (i) => setState(() => _pageIndex = i),
+              itemBuilder: (context, i) {
+                final url = _items[i].imageUrlForLocale(locale);
+                if (url.isEmpty) {
+                  return ColoredBox(color: Colors.white.withValues(alpha: 0.06));
+                }
+                return CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
+                  errorWidget: (_, __, ___) => ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
+                );
+              },
+            ),
+          ),
+        ),
+        if (_items.length > 1) ...[
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_items.length, (i) {
+              final active = i == _pageIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                margin: EdgeInsets.symmetric(horizontal: 3.w),
+                width: active ? 18.w : 6.w,
+                height: 6.w,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  color: active
+                      ? AppColors.c842D5F.withValues(alpha: 0.95)
+                      : Colors.white.withValues(alpha: 0.22),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 }

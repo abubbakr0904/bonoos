@@ -1,8 +1,10 @@
 import 'package:bonoos/features/auth/data/auth_repository_impl.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
 import 'package:bonoos/features/common/cubit/settings_cubit.dart';
+import 'package:bonoos/features/home/data/banners_repository_impl.dart';
 import 'package:bonoos/features/home/data/quotes_repository_impl.dart';
 import 'package:bonoos/features/home/data/topics_repository_impl.dart';
+import 'package:bonoos/features/home/domain/repository/banners_repository.dart';
 import 'package:bonoos/features/home/domain/repository/quotes_repository.dart';
 import 'package:bonoos/features/home/domain/repository/topics_repository.dart';
 import 'package:bonoos/features/profile/data/profile_repository_impl.dart';
@@ -49,6 +51,7 @@ void _repositories() {
   inject.registerSingleton<SettingsRepository>(SettingsRepositoryImpl());
   inject.registerSingleton<AuthRepository>(AuthRepositoryImpl());
   inject.registerSingleton<QuotesRepository>(QuotesRepositoryImpl());
+  inject.registerSingleton<BannersRepository>(BannersRepositoryImpl());
   inject.registerSingleton<TopicsRepository>(TopicsRepositoryImpl());
   inject.registerSingleton<ProfileRepository>(ProfileRepositoryImpl());
   inject.registerSingleton<SubscriptionRepository>(SubscriptionRepositoryImpl());
