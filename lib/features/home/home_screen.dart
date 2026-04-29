@@ -6,17 +6,19 @@ import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
+import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/home/domain/entity/client_banner_dto.dart';
 import 'package:bonoos/features/home/domain/repository/banners_repository.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
-import 'package:bonoos/features/home/self_talk_topics_screen.dart';
 import 'package:bonoos/features/notification/notifications_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
+import 'package:bonoos/features/playlist/domain/entity/category.dart';
 import 'package:bonoos/features/playlist/domain/repository/playlist_repository.dart';
 import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
+import 'package:bonoos/features/profile/profile_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -62,7 +64,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _goToProfile() {
-    TabBoxController.instance.setIndex(4);
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
   }
 
   @override
@@ -82,25 +86,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   profile: _profile,
                   onAvatarTap: _goToProfile,
                   onChevronTap: _toggleChallenge,
-                  onNotificationTap: () => context.push(NotificationsScreen.routeName),
+                  onNotificationTap: () =>
+                      context.push(NotificationsScreen.routeName),
                 ),
                 SizedBox(height: 12.h),
-                _ExpandableChallenge(expanded: _expanded),
-                SizedBox(height: 16.h),
-                const _HomeBannersCarousel(),
                 SizedBox(height: 14.h),
                 const _MessageOfDayCard(),
                 SizedBox(height: 14.h),
-                const _SelfTalkCard(),
-                SizedBox(height: 22.h),
-                Text(
-                  "Breathing practices",
-                  style: AppTextStyles.body20w7.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                const WeeklyListeningChartCard(
+                  title: "Weekly listening (minutes)",
+                  subtitle: "Static demo data",
+                  values: [0, 6, 12, 8, 16, 10, 14],
+                  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
                 ),
-                SizedBox(height: 12.h),
-                _BreathingCards(),
                 SizedBox(height: 18.h),
-                _AudioPlaylistSection(scrollController: _homeScroll),
+                const _HomePlaylistFromPlaylistSection(),
+                SizedBox(height: 22.h),
               ],
             ),
           ),
@@ -172,10 +173,12 @@ class _Header extends StatelessWidget {
                       height: 46.w,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Center(
-                        child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
+                        child: Icon(CupertinoIcons.person,
+                            color: Colors.white, size: 22),
                       ),
                       errorWidget: (_, __, ___) => Center(
-                        child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
+                        child: Icon(CupertinoIcons.person,
+                            color: Colors.white, size: 22),
                       ),
                     ),
                   ),
@@ -199,7 +202,8 @@ class _Header extends StatelessWidget {
                     ],
                   ),
                   child: const Center(
-                    child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
+                    child: Icon(CupertinoIcons.person,
+                        color: Colors.white, size: 22),
                   ),
                 ),
         ),
@@ -215,7 +219,8 @@ class _Header extends StatelessWidget {
                   displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.body20w7.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                  style: AppTextStyles.body20w7
+                      .copyWith(color: Colors.white.withValues(alpha: 0.95)),
                 ),
                 SizedBox(height: 2.h),
                 Text(
@@ -241,21 +246,21 @@ class _Header extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.92),
               ),
             ),
-            SizedBox(width: 10.w),
-            _HeaderActionTile(
-              onTap: onChevronTap,
-              emphasize: false,
-              child: AnimatedRotation(
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                turns: expanded ? 0.5 : 0,
-                child: Icon(
-                  CupertinoIcons.chevron_down,
-                  size: 18.sp,
-                  color: Colors.white.withValues(alpha: 0.72),
-                ),
-              ),
-            ),
+            // SizedBox(width: 10.w),
+            // _HeaderActionTile(
+            //   onTap: onChevronTap,
+            //   emphasize: false,
+            //   child: AnimatedRotation(
+            //     duration: const Duration(milliseconds: 260),
+            //     curve: Curves.easeOutCubic,
+            //     turns: expanded ? 0.5 : 0,
+            //     child: Icon(
+            //       CupertinoIcons.chevron_down,
+            //       size: 18.sp,
+            //       color: Colors.white.withValues(alpha: 0.72),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -362,7 +367,8 @@ class _ChallengeCard extends StatelessWidget {
               child: Center(
                 child: Text(
                   "Start the challenge",
-                  style: AppTextStyles.body16w7.copyWith(color: AppColors.white),
+                  style:
+                      AppTextStyles.body16w7.copyWith(color: AppColors.white),
                 ),
               ),
             ),
@@ -379,7 +385,8 @@ class _MessageOfDayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(MessageOfDayScreen.routeName, extra: UniqueKey()),
+      onTap: () =>
+          context.push(MessageOfDayScreen.routeName, extra: UniqueKey()),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
         decoration: BoxDecoration(
@@ -398,7 +405,7 @@ class _MessageOfDayCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                "Open up\nmessage of the day",
+                "Bonoo\$ ilovasi \nkun sovg'asi",
                 style: AppTextStyles.body20w7.copyWith(
                   color: Colors.white.withValues(alpha: 0.95),
                   height: 1.05,
@@ -427,151 +434,6 @@ class _MessageOfDayCard extends StatelessWidget {
   }
 }
 
-/// Ichki suhbat / o‘z-o‘ziga muloyimlik — home uchun ilhom kartochkasi.
-class _SelfTalkCard extends StatelessWidget {
-  const _SelfTalkCard();
-
-  static const _accent = Color(0xFFE8B4C8);
-  static const _accentSoft = Color(0x66E8B4C8);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(SelfTalkTopicsScreen.routeName),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x18842D5F),
-              blurRadius: 24,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF2A1538).withValues(alpha: 0.95),
-                    AppColors.c30215A.withValues(alpha: 0.55),
-                    const Color(0xFF1A0F28).withValues(alpha: 0.9),
-                  ],
-                  stops: const [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: -20.w,
-            top: -24.h,
-            child: IgnorePointer(
-              child: Container(
-                width: 120.w,
-                height: 120.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _accentSoft,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.w, 18.h, 18.w, 20.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(10.w),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14.r),
-                        color: Colors.white.withValues(alpha: 0.08),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                      ),
-                      child: Icon(
-                        CupertinoIcons.bubble_left_bubble_right_fill,
-                        color: _accent.withValues(alpha: 0.95),
-                        size: 22.sp,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'O‘zing bilan suhbat',
-                            style: AppTextStyles.body18w6.copyWith(
-                              color: Colors.white.withValues(alpha: 0.96),
-                              height: 1.2,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'ichki tinchlik · har kuni bir qadam',
-                            style: AppTextStyles.body12w4.copyWith(
-                              color: _accent.withValues(alpha: 0.75),
-                              letterSpacing: 0.15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                Container(
-                  width: 36.w,
-                  height: 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    gradient: LinearGradient(
-                      colors: [
-                        _accent.withValues(alpha: 0.9),
-                        _accent.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                Text(
-                  'Ichki ovozing — eng yaqin suhbatdoshing. Uni ayblamasdan tingla; muloyim gaplar o‘zingga qaytgan sayin, yengillasasan.',
-                  style: AppTextStyles.body14w4.copyWith(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    height: 1.55,
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  '«Bugun o‘zimga nima deb ayta olaman?» — shu savol bilan boshla.',
-                  style: AppTextStyles.body13w5.copyWith(
-                    color: Colors.white.withValues(alpha: 0.55),
-                    height: 1.45,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-    );
-  }
-}
-
 class _ExpandableChallenge extends StatelessWidget {
   const _ExpandableChallenge({required this.expanded});
   final bool expanded;
@@ -588,6 +450,336 @@ class _ExpandableChallenge extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.only(bottom: 2.h),
           child: const _ChallengeCard(),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomePlaylistFromPlaylistSection extends StatefulWidget {
+  const _HomePlaylistFromPlaylistSection();
+
+  @override
+  State<_HomePlaylistFromPlaylistSection> createState() =>
+      _HomePlaylistFromPlaylistSectionState();
+}
+
+class _HomePlaylistFromPlaylistSectionState
+    extends State<_HomePlaylistFromPlaylistSection> {
+  bool _categoriesLoading = true;
+  String? _categoriesError;
+  List<Category> _categories = [];
+  int _selectedIndex = 0;
+
+  bool _auditionsLoading = false;
+  String? _auditionsError;
+  List<Audition> _auditions = [];
+
+  static const _gradientPalette = <List<Color>>[
+    [Color(0xFFB77BCB), Color(0xFF8F5FB0)],
+    [Color(0xFFA883CF), Color(0xFF6F5AB6)],
+    [Color(0xFFC78DB7), Color(0xFF8C66A7)],
+    [Color(0xFF8A8CD6), Color(0xFF5F6BB8)],
+    [Color(0xFFD27DA8), Color(0xFF9A5B90)],
+    [Color(0xFFC48ABF), Color(0xFF7A5AA0)],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+      _categoriesError = null;
+    });
+    final result = await inject<PlaylistRepository>().fetchCategories();
+    if (!mounted) return;
+    result.fold(
+      (f) => setState(() {
+        _categoriesLoading = false;
+        _categoriesError = f.message ?? 'Xatolik';
+      }),
+      (cats) {
+        setState(() {
+          _categoriesLoading = false;
+          _categories = cats;
+          _selectedIndex = 0;
+        });
+        if (cats.isNotEmpty) {
+          _loadAuditions(cats.first.id);
+        }
+      },
+    );
+  }
+
+  Future<void> _loadAuditions(int categoryId) async {
+    setState(() {
+      _auditionsLoading = true;
+      _auditionsError = null;
+      _auditions = [];
+    });
+    final result =
+        await inject<PlaylistRepository>().fetchAuditions(categoryId);
+    if (!mounted) return;
+    result.fold(
+      (f) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = f.message ?? 'Xatolik';
+      }),
+      (list) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = null;
+        _auditions = list;
+      }),
+    );
+  }
+
+  void _onCategorySelected(int index) {
+    if (index == _selectedIndex) return;
+    setState(() => _selectedIndex = index);
+    if (index < _categories.length) {
+      _loadAuditions(_categories[index].id);
+    }
+  }
+
+  void _onFavoriteTapAudition(int index) {
+    if (index < 0 || index >= _auditions.length) return;
+    final item = _auditions[index];
+    final next = !item.favorited;
+    setState(() {
+      _auditions = List<Audition>.from(_auditions);
+      _auditions[index] = item.copyWith(favorited: next);
+    });
+    unawaited(
+      inject<PlaylistRepository>()
+          .toggleAuditionFavorite(item.id)
+          .then((either) {
+        if (!mounted) return;
+        either.fold(
+          (_) => setState(() {
+            _auditions = List<Audition>.from(_auditions);
+            _auditions[index] = item;
+          }),
+          (_) {},
+        );
+      }),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_categoriesLoading) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 20.h),
+        child: Center(
+          child: SizedBox(
+            width: 26.w,
+            height: 26.w,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white.withValues(alpha: 0.45),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_categoriesError != null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _categoriesError!,
+              style: AppTextStyles.body14w5.copyWith(
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            TextButton(
+              onPressed: _loadCategories,
+              child: Text(
+                'Qayta urinish',
+                style: AppTextStyles.body14w6.copyWith(
+                  color: AppColors.c842D5F,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final selectedCategoryName = _selectedIndex < _categories.length
+        ? _categories[_selectedIndex].name
+        : '';
+    final selectedCategoryId = _selectedIndex < _categories.length
+        ? _categories[_selectedIndex].id
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: List.generate(_categories.length, (index) {
+              final selected = index == _selectedIndex;
+              return Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: GestureDetector(
+                  onTap: () => _onCategorySelected(index),
+                  child: _HomeCategoryChip(
+                    label: _categories[index].name,
+                    selected: selected,
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        if (_auditionsLoading)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.h),
+            child: Center(
+              child: SizedBox(
+                width: 24.w,
+                height: 24.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white.withValues(alpha: 0.45),
+                ),
+              ),
+            ),
+          )
+        else if (_auditionsError != null)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _auditionsError!,
+                  style: AppTextStyles.body14w5.copyWith(
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (selectedCategoryId != null) {
+                      _loadAuditions(selectedCategoryId);
+                    }
+                  },
+                  child: Text(
+                    'Qayta urinish',
+                    style: AppTextStyles.body14w6.copyWith(
+                      color: AppColors.c842D5F,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (_auditions.isEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, bottom: 6.h),
+            child: Text(
+              "Bu kategoriyada hozircha audio yo'q",
+              style: AppTextStyles.body13w5.copyWith(
+                color: Colors.white.withValues(alpha: 0.55),
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _auditions.length,
+            separatorBuilder: (_, __) => SizedBox(height: 10.h),
+            itemBuilder: (context, index) {
+              final item = _auditions[index];
+              final colors = _gradientPalette[index % _gradientPalette.length];
+              return AudioListTile(
+                title: item.text,
+                subtitle: selectedCategoryName,
+                tag: item.formattedDuration,
+                duration: item.durationLabel,
+                colors: colors,
+                onTap: () {
+                  LastListenedManager.save(
+                    prefs: inject<SharedPreferences>(),
+                    title: item.text,
+                    durationLabel: item.durationLabel,
+                    audioUrl: item.fullAudioUrl,
+                    formattedDuration: item.formattedDuration,
+                  );
+                  context.push(
+                    AudioScreen.routeName,
+                    extra: AudioScreenArgs(
+                      title: item.text,
+                      durationLabel: item.durationLabel,
+                      audioUrl: item.fullAudioUrl,
+                      auditionId: item.id,
+                      auditionType: item.type,
+                      durationSeconds: item.duration,
+                      initialFavorited: item.favorited,
+                    ),
+                  );
+                },
+                isFavorite: item.favorited,
+                onFavoriteTap: () => _onFavoriteTapAudition(index),
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _HomeCategoryChip extends StatelessWidget {
+  const _HomeCategoryChip({
+    required this.label,
+    this.selected = false,
+  });
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: selected
+            ? Colors.white.withValues(alpha: 0.14)
+            : Colors.white.withValues(alpha: 0.06),
+        border: Border.all(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.14)
+              : Colors.white.withValues(alpha: 0.10),
+        ),
+        boxShadow: selected
+            ? const [
+                BoxShadow(
+                  color: Color(0x20842D5F),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.body12w5.copyWith(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.92)
+              : Colors.white.withValues(alpha: 0.70),
         ),
       ),
     );
@@ -669,13 +861,16 @@ class _HomeBannersCarouselState extends State<_HomeBannersCarousel> {
               itemBuilder: (context, i) {
                 final url = _items[i].imageUrlForLocale(locale);
                 if (url.isEmpty) {
-                  return ColoredBox(color: Colors.white.withValues(alpha: 0.06));
+                  return ColoredBox(
+                      color: Colors.white.withValues(alpha: 0.06));
                 }
                 return CachedNetworkImage(
                   imageUrl: url,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
-                  errorWidget: (_, __, ___) => ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
+                  placeholder: (_, __) =>
+                      ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
+                  errorWidget: (_, __, ___) =>
+                      ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
                 );
               },
             ),
@@ -760,18 +955,25 @@ class _BreathingCards extends StatelessWidget {
                     color: Color(0x1EFFFFFF),
                   ),
                   child: const Center(
-                    child: Icon(CupertinoIcons.wind, color: Colors.white, size: 20),
+                    child: Icon(CupertinoIcons.wind,
+                        color: Colors.white, size: 20),
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  index == 0 ? "Breathing\npractices" : index == 1 ? "Shall we take a\nwalk by the sea?" : "A\nfocus",
-                  style: AppTextStyles.body20w7.copyWith(color: AppColors.white, height: 1.05),
+                  index == 0
+                      ? "Breathing\npractices"
+                      : index == 1
+                          ? "Shall we take a\nwalk by the sea?"
+                          : "A\nfocus",
+                  style: AppTextStyles.body20w7
+                      .copyWith(color: AppColors.white, height: 1.05),
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   "15 minutes",
-                  style: AppTextStyles.body12w6.copyWith(color: const Color(0xCCFFFFFF)),
+                  style: AppTextStyles.body12w6
+                      .copyWith(color: const Color(0xCCFFFFFF)),
                 ),
               ],
             ),
@@ -896,7 +1098,9 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
       _items[index] = item.copyWith(favorited: next);
     });
     unawaited(
-      inject<PlaylistRepository>().toggleAuditionFavorite(item.id).then((either) {
+      inject<PlaylistRepository>()
+          .toggleAuditionFavorite(item.id)
+          .then((either) {
         if (!mounted) return;
         either.fold(
           (_) => setState(() => _items[index] = item),
@@ -925,7 +1129,8 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
       children: [
         Text(
           "Your playlist",
-          style: AppTextStyles.body20w7.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+          style: AppTextStyles.body20w7
+              .copyWith(color: Colors.white.withValues(alpha: 0.95)),
         ),
         SizedBox(height: 2.h),
         Text(
@@ -1015,6 +1220,7 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
                   ),
                 );
               }
+
               return GestureDetector(
                 onTap: openAudio,
                 child: AudioListTile(
@@ -1049,4 +1255,3 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
     );
   }
 }
-

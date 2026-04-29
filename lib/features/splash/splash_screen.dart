@@ -165,62 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
                         );
                       },
                     ),
-                    SizedBox(height: 36.h),
-                    SlideTransition(
-                      position: _textSlide,
-                      child: FadeTransition(
-                        opacity: _textFade,
-                        child: Column(
-                          children: [
-                            Text(
-                              'Har bir nafas — yangi boshlanish',
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.body18w6.copyWith(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                height: 1.35,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            SizedBox(height: 10.h),
-                            Text(
-                              'O‘zing uchun tinchlik va kuchni his qil',
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.body14w4.copyWith(
-                                color: Colors.white.withValues(alpha: 0.72),
-                                height: 1.4,
-                              ),
-                            ),
-                            SizedBox(height: 22.h),
-                            AnimatedBuilder(
-                              animation: _intro,
-                              builder: (context, _) {
-                                return ClipRect(
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: _accentLine.value,
-                                    child: Container(
-                                      height: 2,
-                                      width: 160.w,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(2),
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.white.withValues(alpha: 0.0),
-                                            Colors.white
-                                                .withValues(alpha: 0.85),
-                                            Colors.white.withValues(alpha: 0.0),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),

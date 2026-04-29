@@ -1,8 +1,8 @@
+import 'package:bonoos/features/gratitude/gratitude_notes_screen.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/home/home_screen.dart';
-import 'package:bonoos/features/playlist/playlist_screen.dart';
-import 'package:bonoos/features/profile/profile_screen.dart';
+import 'package:bonoos/features/sections/sections_screen.dart';
 import 'package:bonoos/features/statistics/statistics_screen.dart';
 import 'package:bonoos/features/subscription/subscription_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_controller.dart';
@@ -43,13 +43,14 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = _index == 0 || _index == 1 || _index == 2 || _index == 3 || _index == 4;
+    final isDark =
+        _index == 0 || _index == 1 || _index == 2 || _index == 3 || _index == 4;
     final items = <_TabItem>[
       const _TabItem(label: "Home", icon: CupertinoIcons.house),
       const _TabItem(label: "Statistics", icon: CupertinoIcons.chart_bar),
-      const _TabItem(label: "Playlist", icon: CupertinoIcons.play_rectangle),
+      const _TabItem(label: "Shukrona", icon: CupertinoIcons.doc_text),
       const _TabItem(label: "Abonement", icon: CupertinoIcons.tickets),
-      const _TabItem(label: "Profile", icon: CupertinoIcons.person),
+      const _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2),
     ];
 
     return Scaffold(
@@ -62,8 +63,11 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
           final slide = Tween<Offset>(
             begin: const Offset(0.02, 0),
             end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-          return FadeTransition(opacity: animation, child: SlideTransition(position: slide, child: child));
+          ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+          return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: slide, child: child));
         },
         child: _buildBody(items, _index),
       ),
@@ -86,11 +90,11 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
       case 1:
         return const StatisticsScreen(key: ValueKey("statistics"));
       case 2:
-        return const PlaylistScreen(key: ValueKey("playlist"));
+        return const GratitudeNotesScreen(key: ValueKey("gratitude"));
       case 3:
         return const SubscriptionScreen(key: ValueKey("subscription"));
       case 4:
-        return const ProfileScreen(key: ValueKey("profile"));
+        return const SectionsScreen(key: ValueKey("sections"));
       default:
         return _PlaceholderTab(
           key: ValueKey(index),
@@ -130,7 +134,9 @@ class _BonoosBottomNav extends StatelessWidget {
           color: isDark ? const Color(0xFF140B2A) : AppColors.white,
           border: Border(
             top: BorderSide(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.transparent,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.transparent,
               width: 1,
             ),
           ),
@@ -172,7 +178,8 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = AppColors.c842D5F;
-    final inactiveColor = isDark ? Colors.white.withValues(alpha: 0.62) : AppColors.grey600;
+    final inactiveColor =
+        isDark ? Colors.white.withValues(alpha: 0.62) : AppColors.grey600;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -189,7 +196,9 @@ class _NavItem extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: selected
-                    ? (isDark ? Colors.white.withValues(alpha: 0.08) : activeColor.withValues(alpha: 0.14))
+                    ? (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : activeColor.withValues(alpha: 0.14))
                     : AppColors.transparent,
               ),
               child: Center(
@@ -227,10 +236,10 @@ class _PlaceholderTab extends StatelessWidget {
       child: Center(
         child: Text(
           title,
-          style: AppTextStyles.body22w7.copyWith(color: AppColors.textColorBlack),
+          style:
+              AppTextStyles.body22w7.copyWith(color: AppColors.textColorBlack),
         ),
       ),
     );
   }
 }
-

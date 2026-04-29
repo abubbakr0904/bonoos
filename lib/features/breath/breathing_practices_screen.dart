@@ -14,9 +14,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 class BreathingPracticesScreen extends StatefulWidget {
-  const BreathingPracticesScreen({super.key});
+  const BreathingPracticesScreen({
+    super.key,
+    this.openFavoritesOnStart = false,
+  });
 
   static const String routeName = "/breathing_practices";
+  final bool openFavoritesOnStart;
 
   @override
   State<BreathingPracticesScreen> createState() =>
@@ -31,6 +35,17 @@ class _BreathingPracticesScreenState extends State<BreathingPracticesScreen> {
   bool _favoritesLoading = false;
   String? _favoritesError;
   List<Audition> _favoriteAuditions = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openFavoritesOnStart) {
+      _showFavorites = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_loadFavoriteAuditions());
+      });
+    }
+  }
 
   Future<void> _onFavoritesTap() async {
     final next = !_showFavorites;

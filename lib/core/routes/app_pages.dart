@@ -113,7 +113,8 @@ class RouteGenerate {
             initialFavorited: args?.initialFavorited,
             categoryIdForSync: args?.categoryIdForSync,
             onAuditionsSynced: args?.onAuditionsSynced,
-            syncHomeAuditionsAfterFavorite: args?.syncHomeAuditionsAfterFavorite ?? false,
+            syncHomeAuditionsAfterFavorite:
+                args?.syncHomeAuditionsAfterFavorite ?? false,
           );
         },
       ),
@@ -134,39 +135,43 @@ class RouteGenerate {
       GoRoute(
         path: BreathingPracticesScreen.routeName,
         name: BreathingPracticesScreen.routeName,
-        builder: (_, __) => const BreathingPracticesScreen(),
+        builder: (_, state) {
+          final openFavorites = state.extra as bool? ?? false;
+          return BreathingPracticesScreen(
+            openFavoritesOnStart: openFavorites,
+          );
+        },
       ),
 
-
       ///navBar
-     // StatefulShellRoute.indexedStack(
-     //    builder:
-     //        (
-     //          BuildContext context,
-     //          GoRouterState state,
-     //          StatefulNavigationShell navigationShell,
-     //        ) {
-     //          return MainPage(child: navigationShell);
-     //        },
-     //    branches: <StatefulShellBranch>[
-     //      // StatefulShellBranch(
-     //      //   navigatorKey: _sectionANavigatorKey,
-     //      //   routes: <RouteBase>[
-     //      //     GoRoute(
-     //      //       path: AppRoutes.home,
-     //      //       name: AppRoutes.home,
-     //      //       pageBuilder: (BuildContext context, GoRouterState state) {
-     //      //         return buildPageWithDefaultTransition<void>(
-     //      //           context: context,
-     //      //           state: state,
-     //      //           child: const HomeScreen(),
-     //      //         );
-     //      //       },
-     //      //     ),
-     //      //   ],
-     //      // ),
-     //    ],
-     //  ),
+      // StatefulShellRoute.indexedStack(
+      //    builder:
+      //        (
+      //          BuildContext context,
+      //          GoRouterState state,
+      //          StatefulNavigationShell navigationShell,
+      //        ) {
+      //          return MainPage(child: navigationShell);
+      //        },
+      //    branches: <StatefulShellBranch>[
+      //      // StatefulShellBranch(
+      //      //   navigatorKey: _sectionANavigatorKey,
+      //      //   routes: <RouteBase>[
+      //      //     GoRoute(
+      //      //       path: AppRoutes.home,
+      //      //       name: AppRoutes.home,
+      //      //       pageBuilder: (BuildContext context, GoRouterState state) {
+      //      //         return buildPageWithDefaultTransition<void>(
+      //      //           context: context,
+      //      //           state: state,
+      //      //           child: const HomeScreen(),
+      //      //         );
+      //      //       },
+      //      //     ),
+      //      //   ],
+      //      // ),
+      //    ],
+      //  ),
     ],
   );
 }
