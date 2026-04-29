@@ -21,6 +21,7 @@ class TabBoxScreen extends StatefulWidget {
 
 class _TabBoxScreenState extends State<TabBoxScreen> {
   int _index = 0;
+  int _gratitudeViewVersion = 0;
   final _controller = TabBoxController.instance;
 
   @override
@@ -48,7 +49,7 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
     final items = <_TabItem>[
       const _TabItem(label: "Home", icon: CupertinoIcons.house),
       const _TabItem(label: "Statistics", icon: CupertinoIcons.chart_bar),
-      const _TabItem(label: "Shukrona", icon: CupertinoIcons.doc_text),
+      const _TabItem(label: "Shukrona", icon: CupertinoIcons.heart_fill),
       const _TabItem(label: "Abonement", icon: CupertinoIcons.tickets),
       const _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2),
     ];
@@ -76,6 +77,9 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
         index: _index,
         isDark: isDark,
         onChanged: (i) {
+          if (i == 2) {
+            _gratitudeViewVersion++;
+          }
           _controller.setIndex(i);
           setState(() => _index = i);
         },
@@ -90,7 +94,9 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
       case 1:
         return const StatisticsScreen(key: ValueKey("statistics"));
       case 2:
-        return const GratitudeNotesScreen(key: ValueKey("gratitude"));
+        return GratitudeNotesScreen(
+          key: ValueKey("gratitude_$_gratitudeViewVersion"),
+        );
       case 3:
         return const SubscriptionScreen(key: ValueKey("subscription"));
       case 4:

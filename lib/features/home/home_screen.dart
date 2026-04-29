@@ -39,17 +39,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _expanded = false;
   ClientProfile? _profile;
   final ScrollController _homeScroll = ScrollController();
+  late final AnimationController _entryController;
 
   void _toggleChallenge() => setState(() => _expanded = !_expanded);
 
   @override
   void initState() {
     super.initState();
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 950),
+    )..forward();
     _loadProfile();
   }
 
   @override
   void dispose() {
+    _entryController.dispose();
     _homeScroll.dispose();
     super.dispose();
   }
@@ -81,26 +87,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               controller: _homeScroll,
               padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 22.h),
               children: [
-                _Header(
-                  expanded: _expanded,
-                  profile: _profile,
-                  onAvatarTap: _goToProfile,
-                  onChevronTap: _toggleChallenge,
-                  onNotificationTap: () =>
-                      context.push(NotificationsScreen.routeName),
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
+                  ),
+                  child: _Header(
+                    expanded: _expanded,
+                    profile: _profile,
+                    onAvatarTap: _goToProfile,
+                    onChevronTap: _toggleChallenge,
+                    onNotificationTap: () =>
+                        context.push(NotificationsScreen.routeName),
+                  ),
                 ),
                 SizedBox(height: 12.h),
                 SizedBox(height: 14.h),
-                const _MessageOfDayCard(),
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                  ),
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.10),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _entryController,
+                        curve:
+                            const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                      ),
+                    ),
+                    child: const _MessageOfDayCard(),
+                  ),
+                ),
                 SizedBox(height: 14.h),
-                const WeeklyListeningChartCard(
-                  title: "Weekly listening (minutes)",
-                  subtitle: "Static demo data",
-                  values: [0, 6, 12, 8, 16, 10, 14],
-                  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+                  ),
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.10),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _entryController,
+                        curve:
+                            const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+                      ),
+                    ),
+                    child: const WeeklyListeningChartCard(
+                      title: "Weekly listening (minutes)",
+                      subtitle: "Static demo data",
+                      values: [0, 6, 12, 8, 16, 10, 14],
+                      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    ),
+                  ),
                 ),
                 SizedBox(height: 18.h),
-                const _HomePlaylistFromPlaylistSection(),
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+                  ),
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.10),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _entryController,
+                        curve:
+                            const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+                      ),
+                    ),
+                    child: const _HomePlaylistFromPlaylistSection(),
+                  ),
+                ),
                 SizedBox(height: 22.h),
               ],
             ),
@@ -704,35 +770,49 @@ class _HomePlaylistFromPlaylistSectionState
             itemBuilder: (context, index) {
               final item = _auditions[index];
               final colors = _gradientPalette[index % _gradientPalette.length];
-              return AudioListTile(
-                title: item.text,
-                subtitle: selectedCategoryName,
-                tag: item.formattedDuration,
-                duration: item.durationLabel,
-                colors: colors,
-                onTap: () {
-                  LastListenedManager.save(
-                    prefs: inject<SharedPreferences>(),
-                    title: item.text,
-                    durationLabel: item.durationLabel,
-                    audioUrl: item.fullAudioUrl,
-                    formattedDuration: item.formattedDuration,
-                  );
-                  context.push(
-                    AudioScreen.routeName,
-                    extra: AudioScreenArgs(
-                      title: item.text,
-                      durationLabel: item.durationLabel,
-                      audioUrl: item.fullAudioUrl,
-                      auditionId: item.id,
-                      auditionType: item.type,
-                      durationSeconds: item.duration,
-                      initialFavorited: item.favorited,
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 320 + (index * 70)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 16),
+                      child: child,
                     ),
                   );
                 },
-                isFavorite: item.favorited,
-                onFavoriteTap: () => _onFavoriteTapAudition(index),
+                child: AudioListTile(
+                  title: item.text,
+                  subtitle: selectedCategoryName,
+                  tag: item.formattedDuration,
+                  duration: item.durationLabel,
+                  colors: colors,
+                  onTap: () {
+                    LastListenedManager.save(
+                      prefs: inject<SharedPreferences>(),
+                      title: item.text,
+                      durationLabel: item.durationLabel,
+                      audioUrl: item.fullAudioUrl,
+                      formattedDuration: item.formattedDuration,
+                    );
+                    context.push(
+                      AudioScreen.routeName,
+                      extra: AudioScreenArgs(
+                        title: item.text,
+                        durationLabel: item.durationLabel,
+                        audioUrl: item.fullAudioUrl,
+                        auditionId: item.id,
+                        auditionType: item.type,
+                        durationSeconds: item.duration,
+                        initialFavorited: item.favorited,
+                      ),
+                    );
+                  },
+                  isFavorite: item.favorited,
+                  onFavoriteTap: () => _onFavoriteTapAudition(index),
+                ),
               );
             },
           ),
@@ -1221,17 +1301,31 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
                 );
               }
 
-              return GestureDetector(
-                onTap: openAudio,
-                child: AudioListTile(
-                  title: item.text,
-                  subtitle: item.durationLabel,
-                  tag: item.formattedDuration,
-                  duration: item.durationLabel,
-                  colors: colors,
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 320 + (index * 55)),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 14),
+                      child: child,
+                    ),
+                  );
+                },
+                child: GestureDetector(
                   onTap: openAudio,
-                  isFavorite: item.favorited,
-                  onFavoriteTap: () => _onFavoriteTap(index),
+                  child: AudioListTile(
+                    title: item.text,
+                    subtitle: item.durationLabel,
+                    tag: item.formattedDuration,
+                    duration: item.durationLabel,
+                    colors: colors,
+                    onTap: openAudio,
+                    isFavorite: item.favorited,
+                    onFavoriteTap: () => _onFavoriteTap(index),
+                  ),
                 ),
               );
             },

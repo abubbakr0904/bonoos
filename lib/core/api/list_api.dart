@@ -109,6 +109,30 @@ class ListAPI {
   /// Kategoriyalar ro'yxati (GET).
   static const String categories = 'api/v1/categories';
 
+  /// FAQ ro'yxati (GET).
+  static const String faqs = 'api/v1/faqs';
+
+  /// Onboarding savollari ro'yxati (GET).
+  static const String onboardingQuestions = 'api/v1/onboarding/questions';
+
+  /// Onboarding javoblarini yuborish (POST, Bearer).
+  static const String clientOnboardingAnswers = 'api/v1/client/onboarding/answers';
+
+  /// Shukrona daftari yozuvi qo'shish (POST, Bearer).
+  static const String clientGratitudeDiary = 'api/v1/client/gratitude-diary';
+
+  /// Shukrona daftari yozuvini yangilash (PUT, Bearer).
+  static String clientGratitudeDiaryById(int gratitudeDiaryId) =>
+      'api/v1/client/gratitude-diary/$gratitudeDiaryId';
+
+  /// Shukrona daftari yozuvlari (GET, Bearer).
+  static String clientGratitudeDiaryList({
+    int limit = 50,
+    int offset = 0,
+    String? day,
+  }) =>
+      'api/v1/client/gratitude-diary?limit=$limit&offset=$offset${day != null ? '&day=$day' : ''}';
+
   /// Auditionlar ro'yxati (GET). Query: `?category_id=N`.
   static const String auditions = 'api/v1/auditions';
 

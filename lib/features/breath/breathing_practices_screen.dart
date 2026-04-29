@@ -27,7 +27,8 @@ class BreathingPracticesScreen extends StatefulWidget {
       _BreathingPracticesScreenState();
 }
 
-class _BreathingPracticesScreenState extends State<BreathingPracticesScreen> {
+class _BreathingPracticesScreenState extends State<BreathingPracticesScreen>
+    with SingleTickerProviderStateMixin {
   /// 0 = Meditations, 1 = Melodies, 2 = Zen meditation, 3 = Breath
   int _filterIndex = 3;
   int _selectedCardIndex = 0; // 4 tadan 1 tasi select
@@ -35,10 +36,15 @@ class _BreathingPracticesScreenState extends State<BreathingPracticesScreen> {
   bool _favoritesLoading = false;
   String? _favoritesError;
   List<Audition> _favoriteAuditions = const [];
+  late final AnimationController _cardsEntryController;
 
   @override
   void initState() {
     super.initState();
+    _cardsEntryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
     if (widget.openFavoritesOnStart) {
       _showFavorites = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -76,6 +82,12 @@ class _BreathingPracticesScreenState extends State<BreathingPracticesScreen> {
         _favoriteAuditions = items;
       }),
     );
+  }
+
+  @override
+  void dispose() {
+    _cardsEntryController.dispose();
+    super.dispose();
   }
 
   @override
@@ -141,6 +153,7 @@ class _BreathingPracticesScreenState extends State<BreathingPracticesScreen> {
                 SizedBox(height: 18.h),
                 Expanded(
                   child: _BreathingList(
+                    entryAnimation: _cardsEntryController,
                     categoryIndex: _filterIndex,
                     showFavorites: _showFavorites,
                     favoriteAuditions: _favoriteAuditions,
@@ -329,6 +342,7 @@ class _CategoryStyle {
 
 class _BreathingList extends StatelessWidget {
   const _BreathingList({
+    required this.entryAnimation,
     required this.categoryIndex,
     required this.showFavorites,
     required this.favoriteAuditions,
@@ -340,6 +354,7 @@ class _BreathingList extends StatelessWidget {
     required this.onRefreshFavorites,
   });
 
+  final Animation<double> entryAnimation;
   final int categoryIndex;
   final bool showFavorites;
   final List<Audition> favoriteAuditions;
@@ -666,6 +681,12 @@ class _BreathingList extends StatelessWidget {
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final item = items[index];
+        final start = (0.08 + index * 0.08).clamp(0.0, 0.9);
+        final end = (start + 0.28).clamp(0.2, 1.0);
+        final anim = CurvedAnimation(
+          parent: entryAnimation,
+          curve: Interval(start, end, curve: Curves.easeOutCubic),
+        );
         if (showFavorites && item.isAudio) {
           void openAudio() {
             onSelect(index);
@@ -705,24 +726,42 @@ class _BreathingList extends StatelessWidget {
             );
           }
 
-          return AudioListTile(
-            title: item.title,
-            subtitle: item.categoryLabel,
-            tag: item.formattedDuration,
-            duration: item.duration,
-            colors: _favoriteAudioPalette[index % _favoriteAudioPalette.length],
-            onTap: openAudio,
-            onMoreTap: openDetail,
-            isFavorite: true,
-            onFavoriteTap: toggleFavorite,
+          return FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.10),
+                end: Offset.zero,
+              ).animate(anim),
+              child: AudioListTile(
+                title: item.title,
+                subtitle: item.categoryLabel,
+                tag: item.formattedDuration,
+                duration: item.duration,
+                colors: _favoriteAudioPalette[index % _favoriteAudioPalette.length],
+                onTap: openAudio,
+                onMoreTap: openDetail,
+                isFavorite: true,
+                onFavoriteTap: toggleFavorite,
+              ),
+            ),
           );
         }
-        return _BreathingTile(
-          item: item,
-          style: style,
-          selected: index == safeSelected,
-          onTap: () => onSelect(index),
-          onRefreshFavorites: onRefreshFavorites,
+        return FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.10),
+              end: Offset.zero,
+            ).animate(anim),
+            child: _BreathingTile(
+              item: item,
+              style: style,
+              selected: index == safeSelected,
+              onTap: () => onSelect(index),
+              onRefreshFavorites: onRefreshFavorites,
+            ),
+          ),
         );
       },
     );

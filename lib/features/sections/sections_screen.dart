@@ -1,15 +1,41 @@
 import 'package:bonoos/core/values/app_text_styles.dart';
+import 'package:bonoos/features/alarm/alarm_screen.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
+import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/playlist/playlist_screen.dart';
+import 'package:bonoos/features/sections/faq_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-class SectionsScreen extends StatelessWidget {
+class SectionsScreen extends StatefulWidget {
   const SectionsScreen({super.key});
 
   static const String routeName = "/sections";
+
+  @override
+  State<SectionsScreen> createState() => _SectionsScreenState();
+}
+
+class _SectionsScreenState extends State<SectionsScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entryController;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _entryController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,15 +46,19 @@ class SectionsScreen extends StatelessWidget {
         icon: CupertinoIcons.sparkles,
         onTap: () => context.push(BreathingPracticesScreen.routeName),
       ),
-      const _SectionItem(
+      _SectionItem(
         title: "Budilnik",
         subtitle: "Eslatmalar va vaqt nazorati",
         icon: CupertinoIcons.alarm_fill,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AlarmScreen()),
+        ),
       ),
-      const _SectionItem(
+      _SectionItem(
         title: "Kun sovg'asi",
         subtitle: "Har kunlik maxsus kontent",
         icon: CupertinoIcons.gift_fill,
+        onTap: () => context.push(MessageOfDayScreen.routeName),
       ),
       _SectionItem(
         title: "Playlist",
@@ -45,6 +75,14 @@ class SectionsScreen extends StatelessWidget {
         onTap: () => context.push(
           BreathingPracticesScreen.routeName,
           extra: true,
+        ),
+      ),
+      _SectionItem(
+        title: "Ko'p so'raladigan savollar",
+        subtitle: "FAQ — tez-tez beriladigan savollar",
+        icon: CupertinoIcons.question_circle_fill,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const FaqScreen()),
         ),
       ),
     ];
@@ -82,7 +120,22 @@ class SectionsScreen extends StatelessWidget {
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
-                    return _SectionCard(item: items[index]);
+                    final start = (0.10 + index * 0.10).clamp(0.0, 0.9);
+                    final end = (start + 0.30).clamp(0.2, 1.0);
+                    final anim = CurvedAnimation(
+                      parent: _entryController,
+                      curve: Interval(start, end, curve: Curves.easeOutCubic),
+                    );
+                    return FadeTransition(
+                      opacity: anim,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.12),
+                          end: Offset.zero,
+                        ).animate(anim),
+                        child: _SectionCard(item: items[index]),
+                      ),
+                    );
                   },
                 ),
               ),

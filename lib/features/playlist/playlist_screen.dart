@@ -5,6 +5,7 @@ import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
+import 'package:bonoos/features/common/widget/home_gradient_background.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
 import 'package:bonoos/features/playlist/domain/entity/category.dart';
@@ -18,12 +19,14 @@ import 'package:shimmer/shimmer.dart';
 
 class PlaylistScreen extends StatefulWidget {
   const PlaylistScreen({super.key});
+  static const String routeName = "/playlist";
 
   @override
   State<PlaylistScreen> createState() => _PlaylistScreenState();
 }
 
-class _PlaylistScreenState extends State<PlaylistScreen> {
+class _PlaylistScreenState extends State<PlaylistScreen>
+    with SingleTickerProviderStateMixin {
   bool _categoriesLoading = true;
   String? _categoriesError;
   List<Category> _categories = [];
@@ -32,11 +35,22 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
   bool _auditionsLoading = false;
   String? _auditionsError;
   List<Audition> _auditions = [];
+  late final AnimationController _entryController;
 
   @override
   void initState() {
     super.initState();
+    _entryController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 950),
+    )..forward();
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _entryController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCategories() async {
@@ -136,16 +150,40 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
       backgroundColor: const Color(0xFF140B2A),
       body: Stack(
         children: [
-          const _PlaylistBackground(),
+          const HomeGradientBackground(),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _PlaylistHeader(),
+                  FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _entryController,
+                      curve: const Interval(0.0, 0.40, curve: Curves.easeOutCubic),
+                    ),
+                    child: const _PlaylistHeader(),
+                  ),
                   SizedBox(height: 14.h),
-                  const _LastListenedCard(),
+                  FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: _entryController,
+                      curve: const Interval(0.10, 0.52, curve: Curves.easeOutCubic),
+                    ),
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.10),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _entryController,
+                          curve:
+                              const Interval(0.10, 0.52, curve: Curves.easeOutCubic),
+                        ),
+                      ),
+                      child: const _LastListenedCard(),
+                    ),
+                  ),
                   SizedBox(height: 18.h),
 
                   if (_categoriesLoading)
@@ -156,10 +194,17 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                       onRetry: _loadCategories,
                     )
                   else ...[
-                    _CategoriesChipRow(
-                      categories: _categories,
-                      selectedIndex: _selectedIndex,
-                      onSelected: _onCategorySelected,
+                    FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: _entryController,
+                        curve:
+                            const Interval(0.20, 0.62, curve: Curves.easeOutCubic),
+                      ),
+                      child: _CategoriesChipRow(
+                        categories: _categories,
+                        selectedIndex: _selectedIndex,
+                        onSelected: _onCategorySelected,
+                      ),
                     ),
                     SizedBox(height: 16.h),
                     Expanded(
@@ -204,46 +249,90 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                                               final categoryId = _selectedIndex < _categories.length
                                                   ? _categories[_selectedIndex].id
                                                   : null;
-                                              return AudioListTile(
-                                                title: item.text,
-                                                subtitle: categoryName,
-                                                tag: item.formattedDuration,
-                                                duration: item.durationLabel,
-                                                colors: colors,
-                                                onTap: () {
-                                                  LastListenedManager.save(
-                                                    prefs: inject<SharedPreferences>(),
+                                              final start =
+                                                  (0.28 + index * 0.08).clamp(0.0, 0.92);
+                                              final end =
+                                                  (start + 0.28).clamp(0.2, 1.0);
+                                              final anim = CurvedAnimation(
+                                                parent: _entryController,
+                                                curve: Interval(
+                                                  start,
+                                                  end,
+                                                  curve: Curves.easeOutCubic,
+                                                ),
+                                              );
+                                              return FadeTransition(
+                                                opacity: anim,
+                                                child: SlideTransition(
+                                                  position: Tween<Offset>(
+                                                    begin: const Offset(0, 0.10),
+                                                    end: Offset.zero,
+                                                  ).animate(anim),
+                                                  child: AudioListTile(
                                                     title: item.text,
-                                                    durationLabel: item.durationLabel,
-                                                    audioUrl: item.fullAudioUrl,
-                                                    formattedDuration: item.formattedDuration,
-                                                  );
-                                                  context.push(
-                                                    AudioScreen.routeName,
-                                                    extra: AudioScreenArgs(
-                                                      title: item.text,
-                                                      durationLabel: item.durationLabel,
-                                                      audioUrl: item.fullAudioUrl,
-                                                      auditionId: item.id,
-                                                      auditionType: item.type,
-                                                      durationSeconds: item.duration,
-                                                      initialFavorited: item.favorited,
-                                                      categoryIdForSync: categoryId,
-                                                      onAuditionsSynced: categoryId == null
-                                                          ? null
-                                                          : (List<Audition> list) {
-                                                              if (!mounted) return;
-                                                              if (_selectedIndex >= _categories.length) return;
-                                                              if (_categories[_selectedIndex].id != categoryId) {
-                                                                return;
-                                                              }
-                                                              setState(() => _auditions = list);
-                                                            },
-                                                    ),
-                                                  );
-                                                },
-                                                isFavorite: item.favorited,
-                                                onFavoriteTap: () => _onFavoriteTapAudition(index),
+                                                    subtitle: categoryName,
+                                                    tag: item.formattedDuration,
+                                                    duration: item.durationLabel,
+                                                    colors: colors,
+                                                    onTap: () {
+                                                      LastListenedManager.save(
+                                                        prefs:
+                                                            inject<SharedPreferences>(),
+                                                        title: item.text,
+                                                        durationLabel:
+                                                            item.durationLabel,
+                                                        audioUrl: item.fullAudioUrl,
+                                                        formattedDuration:
+                                                            item.formattedDuration,
+                                                      );
+                                                      context.push(
+                                                        AudioScreen.routeName,
+                                                        extra: AudioScreenArgs(
+                                                          title: item.text,
+                                                          durationLabel:
+                                                              item.durationLabel,
+                                                          audioUrl:
+                                                              item.fullAudioUrl,
+                                                          auditionId: item.id,
+                                                          auditionType: item.type,
+                                                          durationSeconds:
+                                                              item.duration,
+                                                          initialFavorited:
+                                                              item.favorited,
+                                                          categoryIdForSync:
+                                                              categoryId,
+                                                          onAuditionsSynced:
+                                                              categoryId == null
+                                                                  ? null
+                                                                  : (List<Audition>
+                                                                      list) {
+                                                                      if (!mounted) {
+                                                                        return;
+                                                                      }
+                                                                      if (_selectedIndex >=
+                                                                          _categories
+                                                                              .length) {
+                                                                        return;
+                                                                      }
+                                                                      if (_categories[
+                                                                                  _selectedIndex]
+                                                                              .id !=
+                                                                          categoryId) {
+                                                                        return;
+                                                                      }
+                                                                      setState(() =>
+                                                                          _auditions =
+                                                                              list);
+                                                                    },
+                                                        ),
+                                                      );
+                                                    },
+                                                    isFavorite: item.favorited,
+                                                    onFavoriteTap: () =>
+                                                        _onFavoriteTapAudition(
+                                                            index),
+                                                  ),
+                                                ),
                                               );
                                             },
                                           ),
@@ -534,13 +623,47 @@ class _PlaylistHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Pleylist",
-          style: AppTextStyles.body22w7.copyWith(
-            color: Colors.white.withValues(alpha: 0.95),
-          ),
+        Row(
+          children: [
+            SizedBox(
+              width: 42.w,
+              height: 42.w,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12.r),
+                  onTap: () => Navigator.of(context).maybePop(),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      color: Colors.white.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        CupertinoIcons.back,
+                        size: 20.sp,
+                        color: Colors.white.withValues(alpha: 0.92),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                "Pleylist",
+                style: AppTextStyles.body22w7.copyWith(
+                  color: Colors.white.withValues(alpha: 0.95),
+                ),
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 8.h),
         Text(
           "Tinch kunlar uchun tanlangan audiolar",
           style: AppTextStyles.body13w4.copyWith(

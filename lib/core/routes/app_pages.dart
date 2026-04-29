@@ -7,6 +7,7 @@ import 'package:bonoos/features/home/self_talk_topics_screen.dart';
 import 'package:bonoos/features/home/self_talk_questions_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/notification/notifications_screen.dart';
+import 'package:bonoos/features/playlist/playlist_screen.dart';
 import 'package:bonoos/features/breath/breath_session_screen.dart';
 import 'package:bonoos/features/splash/splash_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
@@ -78,6 +79,12 @@ class RouteGenerate {
         path: NotificationsScreen.routeName,
         name: NotificationsScreen.routeName,
         builder: (_, __) => const NotificationsScreen(),
+      ),
+
+      GoRoute(
+        path: PlaylistScreen.routeName,
+        name: PlaylistScreen.routeName,
+        builder: (_, __) => const PlaylistScreen(),
       ),
 
       GoRoute(
