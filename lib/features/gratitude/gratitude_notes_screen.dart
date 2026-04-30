@@ -34,7 +34,7 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: const Color(0xFF0C071A),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.c842D5F,
         foregroundColor: Colors.white,
@@ -50,37 +50,33 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
               )
             : const Icon(CupertinoIcons.add),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 10.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Shukrona daftari",
-                style: AppTextStyles.body24w7.copyWith(
-                  color: Colors.white.withValues(alpha: 0.95),
-                ),
+      body: Stack(
+        children: [
+          const _DecorativeBackground(),
+          SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 10.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _HeaderCard(
+                    notesCount: _notes.length,
+                    selectedDate: _selectedDate,
+                  ),
+                  SizedBox(height: 12.h),
+                  _DateSelector(
+                    selectedDate: _selectedDate,
+                    onSelect: _onDateSelected,
+                  ),
+                  SizedBox(height: 12.h),
+                  Expanded(
+                    child: _buildBody(),
+                  ),
+                ],
               ),
-              SizedBox(height: 3.h),
-              Text(
-                "${_notes.length} ta yozuv",
-                style: AppTextStyles.body13w4.copyWith(
-                  color: Colors.white.withValues(alpha: 0.65),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              _DateSelector(
-                selectedDate: _selectedDate,
-                onSelect: _onDateSelected,
-              ),
-              SizedBox(height: 12.h),
-              Expanded(
-                child: _buildBody(),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -159,23 +155,29 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                   child: Container(
                     padding: EdgeInsets.fromLTRB(14.w, 13.h, 14.w, 13.h),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18.r),
+                      borderRadius: BorderRadius.circular(20.r),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          const Color(0xFF2A1D4A).withValues(alpha: 0.95),
-                          const Color(0xFF1B1234).withValues(alpha: 0.95),
+                          const Color(0xFF302254).withValues(alpha: 0.94),
+                          const Color(0xFF19102F).withValues(alpha: 0.96),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: Colors.white.withValues(alpha: 0.15),
                       ),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x30110A22),
-                          blurRadius: 18,
-                          offset: Offset(0, 8),
+                          color: const Color(0x60130C26).withValues(alpha: 0.45),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.04),
+                          blurRadius: 6,
+                          spreadRadius: -1,
+                          offset: const Offset(0, -1),
                         ),
                       ],
                     ),
@@ -542,39 +544,189 @@ class _EmptyNotes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22.r),
+
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 58.w,
+              width: 58.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.c842D5F.withValues(alpha: 0.18),
+              ),
+              child: Icon(
+                CupertinoIcons.heart_fill,
+                size: 24.sp,
+                color: AppColors.c842D5F,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              "Hozircha yozuv yo'q",
+              style: AppTextStyles.body16w6.copyWith(
+                color: Colors.white.withValues(alpha: 0.88),
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              "Birinchi shukrona yozuvingizni yarating\nva kuningizni ijobiy yakunlang",
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body13w4.copyWith(
+                color: Colors.white.withValues(alpha: 0.58),
+                height: 1.35,
+              ),
+            ),
+            // SizedBox(height: 14.h),
+            // SizedBox(
+            //   width: 160.w,
+            //   child: ElevatedButton(
+            //     onPressed: onCreate,
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: AppColors.c842D5F,
+            //       foregroundColor: Colors.white,
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(12.r),
+            //       ),
+            //       padding: EdgeInsets.symmetric(vertical: 10.h),
+            //       elevation: 0,
+            //     ),
+            //     child: Text(
+            //       "Yangi yozuv",
+            //       style: AppTextStyles.body14w6,
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({
+    required this.notesCount,
+    required this.selectedDate,
+  });
+
+  final int notesCount;
+  final DateTime selectedDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16.w, 15.h, 16.w, 14.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3D2A69), Color(0xFF25183F)],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            CupertinoIcons.doc_text,
-            size: 46.sp,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
-          SizedBox(height: 10.h),
           Text(
-            "Hozircha yozuv yo'q",
-            style: AppTextStyles.body16w6.copyWith(
-              color: Colors.white.withValues(alpha: 0.78),
+            "Shukrona daftari",
+            style: AppTextStyles.body24w7.copyWith(
+              color: Colors.white.withValues(alpha: 0.96),
             ),
           ),
           SizedBox(height: 6.h),
           Text(
-            "Birinchi shukrona yozuvingizni yarating",
+            "Har bir kichik yaxshilik - katta baxtning boshlanishi",
             style: AppTextStyles.body13w4.copyWith(
-              color: Colors.white.withValues(alpha: 0.55),
+              color: Colors.white.withValues(alpha: 0.68),
+              height: 1.35,
             ),
           ),
           SizedBox(height: 12.h),
-          TextButton(
-            onPressed: onCreate,
-            child: Text(
-              "Yangi yozuv",
-              style: AppTextStyles.body14w6.copyWith(
-                color: AppColors.c842D5F,
+          Row(
+            children: [
+              _InfoBadge(
+                icon: CupertinoIcons.doc_text_fill,
+                label: "$notesCount ta yozuv",
               ),
+              SizedBox(width: 8.w),
+              _InfoBadge(
+                icon: CupertinoIcons.calendar_today,
+                label: _shortDate(selectedDate),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _shortDate(DateTime dt) {
+    final y = dt.year.toString();
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return "$d.$m.$y";
+  }
+}
+
+class _InfoBadge extends StatelessWidget {
+  const _InfoBadge({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 7.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999.r),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 13.sp, color: Colors.white.withValues(alpha: 0.9)),
+          SizedBox(width: 6.w),
+          Text(
+            label,
+            style: AppTextStyles.body11w5.copyWith(
+              color: Colors.white.withValues(alpha: 0.88),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DecorativeBackground extends StatelessWidget {
+  const _DecorativeBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1A1034),
+            Color(0xFF110923),
+            Color(0xFF090512),
+          ],
+        ),
       ),
     );
   }
@@ -647,98 +799,154 @@ class _DateSelectorState extends State<_DateSelector> {
   @override
   Widget build(BuildContext context) {
     const week = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
+    const monthNames = [
+      'Yanvar',
+      'Fevral',
+      'Mart',
+      'Aprel',
+      'May',
+      'Iyun',
+      'Iyul',
+      'Avgust',
+      'Sentyabr',
+      'Oktyabr',
+      'Noyabr',
+      'Dekabr',
+    ];
     final sel = _dateOnly(widget.selectedDate);
+    final monthLabel = "${monthNames[sel.month - 1]} ${sel.year}";
 
     return Container(
-      height: 75.h,
+      height: 80.h,
+      padding: EdgeInsets.fromLTRB(10.w, 7.h, 10.w, 7.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18.r),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        borderRadius: BorderRadius.circular(24.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF2E2053).withValues(alpha: 0.94),
+            const Color(0xFF1D1337).withValues(alpha: 0.96),
+          ],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: PageView.builder(
-        controller: _pageController,
-        physics: const BouncingScrollPhysics(),
-        onPageChanged: (pageIndex) {
-          final delta = pageIndex - _lastPageIndex;
-          _lastPageIndex = pageIndex;
-          if (delta == 0) return;
-          widget.onSelect(sel.add(Duration(days: 7 * delta)));
-        },
-        itemCount: 10000,
-        itemBuilder: (context, pageIndex) {
-          final monday = _mondayForPageIndex(pageIndex);
-          final days = List<DateTime>.generate(
-            7,
-            (i) => monday.add(Duration(days: i)),
-          );
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: List.generate(7, (index) {
-                final day = days[index];
-                final d = _dateOnly(day);
-                final isSelected =
-                    d.year == sel.year && d.month == sel.month && d.day == sel.day;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 2.w),
-                    child: GestureDetector(
-                      onTap: () => widget.onSelect(d),
-                      behavior: HitTestBehavior.opaque,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        padding: EdgeInsets.symmetric(vertical: 6.h),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: isSelected
-                              ? const Color(0x33C58AF9)
-                              : Colors.white.withValues(alpha: 0.03),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFFC58AF9)
-                                : Colors.white.withValues(alpha: 0.08),
-                            width: isSelected ? 1.6 : 1,
+      child: Column(
+        children: [
+
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: (pageIndex) {
+                final delta = pageIndex - _lastPageIndex;
+                _lastPageIndex = pageIndex;
+                if (delta == 0) return;
+                widget.onSelect(sel.add(Duration(days: 7 * delta)));
+              },
+              itemCount: 10000,
+              itemBuilder: (context, pageIndex) {
+                final monday = _mondayForPageIndex(pageIndex);
+                final days = List<DateTime>.generate(
+                  7,
+                  (i) => monday.add(Duration(days: i)),
+                );
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: List.generate(7, (index) {
+                    final day = days[index];
+                    final d = _dateOnly(day);
+                    final isToday = d == _dateOnly(DateTime.now());
+                    final isSelected = d == sel;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 3.w),
+                        child: GestureDetector(
+                          onTap: () => widget.onSelect(d),
+                          behavior: HitTestBehavior.opaque,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            padding: EdgeInsets.symmetric(vertical: 8.h),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14.r),
+                              gradient: isSelected
+                                  ? const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [AppColors.c842D5F, AppColors.c55004D],
+                                    )
+                                  : null,
+                              color: isSelected
+                                  ? null
+                                  : Colors.white.withValues(alpha: 0.03),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.white.withValues(alpha: 0.3)
+                                    : (isToday
+                                        ? AppColors.c842D5F.withValues(alpha: 0.45)
+                                        : Colors.white.withValues(alpha: 0.10)),
+                                width: isSelected ? 1.6 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  week[index],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.body11w5.copyWith(
+                                    fontSize: 10.sp,
+                                    color: Colors.white.withValues(
+                                      alpha: isSelected ? 0.95 : 0.58,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 3.h),
+                                Text(
+                                  '${d.day}',
+                                  maxLines: 1,
+                                  style: AppTextStyles.body16w6.copyWith(
+                                    fontSize: 14.sp,
+                                    color: Colors.white.withValues(
+                                      alpha: isSelected ? 0.98 : 0.78,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 220),
+                                  height: 4.w,
+                                  width: 4.w,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isToday
+                                            ? AppColors.c842D5F
+                                            : Colors.transparent),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              week[index],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.body11w5.copyWith(
-                                fontSize: 10.sp,
-                                height: 1.1,
-                                color: Colors.white
-                                    .withValues(alpha: isSelected ? 0.95 : 0.52),
-                              ),
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              '${d.day}',
-                              maxLines: 1,
-                              style: AppTextStyles.body16w6.copyWith(
-                                fontSize: 14.sp,
-                                height: 1.1,
-                                color: Colors.white
-                                    .withValues(alpha: isSelected ? 0.98 : 0.72),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 );
-              }),
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

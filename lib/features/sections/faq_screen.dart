@@ -24,6 +24,7 @@ class _FaqScreenState extends State<FaqScreen> {
   bool _loading = true;
   String? _error;
   bool _animateIn = false;
+  int? _expandedItemId;
 
   @override
   void initState() {
@@ -81,152 +82,10 @@ class _FaqScreenState extends State<FaqScreen> {
     }
   }
 
-  void _showAnswerSheet(FaqItem item) {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      enableDrag: true,
-      showDragHandle: false,
-      builder: (sheetContext) {
-        final mq = MediaQuery.of(sheetContext);
-        final keyboardBottom = mq.viewInsets.bottom;
-        final safeBottom = mq.padding.bottom;
-        final sheetH = mq.size.height * 0.78;
-
-        return Padding(
-          padding: EdgeInsets.only(bottom: keyboardBottom),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              height: sheetH,
-              width: double.infinity,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  width: double.infinity,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1B1234),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(22.r)),
-                    border: Border(
-                      top: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
-                      left: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-                      right: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 24,
-                        offset: Offset(0, -4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: 10.h),
-                      Center(
-                        child: Container(
-                          width: 42.w,
-                          height: 4.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.28),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 6.h),
-                      Center(
-                        child: Text(
-                          "Javob",
-                          style: AppTextStyles.body12w6.copyWith(
-                            color: Colors.white.withValues(alpha: 0.55),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 14.h),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.question_circle_fill,
-                                    color: AppColors.c842D5F,
-                                    size: 22.sp,
-                                  ),
-                                  SizedBox(width: 10.w),
-                                  Expanded(
-                                    child: Text(
-                                      item.question,
-                                      style: AppTextStyles.body17w5.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.96),
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 16.h),
-                              Container(
-                                height: 1,
-                                color: Colors.white.withValues(alpha: 0.12),
-                              ),
-                              SizedBox(height: 14.h),
-                              Text(
-                                item.answer,
-                                style: AppTextStyles.body15w5.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.84),
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          16.w,
-                          8.h,
-                          16.w,
-                          keyboardBottom > 0 ? 12.h : (safeBottom > 0 ? safeBottom : 12.h),
-                        ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.c842D5F,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 14.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14.r),
-                              ),
-                            ),
-                            child: Text(
-                              "Tushundim",
-                              style: AppTextStyles.body15w6.copyWith(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+  void _toggleItem(FaqItem item) {
+    setState(() {
+      _expandedItemId = _expandedItemId == item.id ? null : item.id;
+    });
   }
 
   @override
@@ -237,6 +96,29 @@ class _FaqScreenState extends State<FaqScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        leadingWidth: 62.w,
+        leading: Padding(
+          padding: EdgeInsets.only(left: 14.w, top: 6.h, bottom: 6.h),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12.r),
+              onTap: () => Navigator.of(context).maybePop(),
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.r),
+                  color: Colors.white.withValues(alpha: 0.08),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+                ),
+                child: Icon(
+                  CupertinoIcons.chevron_left,
+                  color: Colors.white.withValues(alpha: 0.94),
+                  size: 19.sp,
+                ),
+              ),
+            ),
+          ),
+        ),
         title: Text(
           "Ko'p so'raladigan savollar",
           style: AppTextStyles.body18w6.copyWith(color: Colors.white),
@@ -325,7 +207,7 @@ class _FaqScreenState extends State<FaqScreen> {
                       ),
                       SizedBox(height: 6.h),
                       Text(
-                        "Ro‘yxatdan savolni bosing — javob pastdan ochiladi. Yangilash uchun pastga torting.",
+                        "Ro‘yxatdan savolni bosing — javob shu kartaning pastida animatsiya bilan ochiladi. Yangilash uchun pastga torting.",
                         style: AppTextStyles.body13w4.copyWith(
                           color: Colors.white.withValues(alpha: 0.62),
                           height: 1.35,
@@ -352,7 +234,9 @@ class _FaqScreenState extends State<FaqScreen> {
                 child: _FaqQuestionRow(
                   key: ValueKey(item.id),
                   question: item.question,
-                  onTap: () => _showAnswerSheet(item),
+                  answer: item.answer,
+                  isExpanded: _expandedItemId == item.id,
+                  onTap: () => _toggleItem(item),
                 ),
               ),
             ),
@@ -393,10 +277,14 @@ class _FaqQuestionRow extends StatelessWidget {
   const _FaqQuestionRow({
     super.key,
     required this.question,
+    required this.answer,
+    required this.isExpanded,
     required this.onTap,
   });
 
   final String question;
+  final String answer;
+  final bool isExpanded;
   final VoidCallback onTap;
 
   @override
@@ -431,37 +319,114 @@ class _FaqQuestionRow extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.r),
-                  color: AppColors.c842D5F.withValues(alpha: 0.22),
-                ),
-                child: Icon(
-                  CupertinoIcons.chat_bubble_text_fill,
-                  color: AppColors.c842D5F,
-                  size: 18.sp,
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Text(
-                  question,
-                  style: AppTextStyles.body15w6.copyWith(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    height: 1.3,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 40.w,
+                    height: 40.w,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                      color: AppColors.c842D5F.withValues(alpha: 0.22),
+                    ),
+                    child: Icon(
+                      CupertinoIcons.chat_bubble_text_fill,
+                      color: AppColors.c842D5F,
+                      size: 18.sp,
+                    ),
                   ),
-                ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Text(
+                      question,
+                      style: AppTextStyles.body15w6.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    height: 28.w,
+                    width: 28.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isExpanded
+                          ? AppColors.c842D5F.withValues(alpha: 0.28)
+                          : Colors.white.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: isExpanded
+                            ? AppColors.c842D5F.withValues(alpha: 0.65)
+                            : Colors.white.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Center(
+                      child: AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
+                        child: Icon(
+                          CupertinoIcons.chevron_down,
+                          size: 14.sp,
+                          color: Colors.white.withValues(alpha: 0.88),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 8.w),
-              Icon(
-                CupertinoIcons.chevron_compact_down,
-                size: 22.sp,
-                color: Colors.white.withValues(alpha: 0.5),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                child: isExpanded
+                    ? Column(
+                        children: [
+                          SizedBox(height: 12.h),
+                          Container(
+                            height: 1,
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                          SizedBox(height: 12.h),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOut,
+                            builder: (context, value, child) => Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, (1 - value) * 8),
+                                child: child,
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  CupertinoIcons.question_circle_fill,
+                                  color: AppColors.c842D5F,
+                                  size: 18.sp,
+                                ),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    answer.trim().isEmpty ? "Javob mavjud emas." : answer,
+                                    style: AppTextStyles.body14w5.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.84),
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),

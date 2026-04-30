@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   ClientProfile? _profile;
   final ScrollController _homeScroll = ScrollController();
   late final AnimationController _entryController;
+  bool _moodSheetShown = false;
 
   void _toggleChallenge() => setState(() => _expanded = !_expanded);
 
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 950),
     )..forward();
     _loadProfile();
+    _showMoodSheetOnOpen();
   }
 
   @override
@@ -73,6 +75,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
+  }
+
+  void _showMoodSheetOnOpen() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _moodSheetShown) return;
+      _moodSheetShown = true;
+      showModalBottomSheet<void>(
+        context: context,
+        isDismissible: true,
+        enableDrag: true,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: Colors.black.withValues(alpha: 0.42),
+        builder: (_) => const _MoodCheckinSheet(),
+      );
+    });
   }
 
   @override
@@ -172,6 +190,305 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MoodOption {
+  const _MoodOption({
+    required this.label,
+    required this.assetPath,
+  });
+
+  final String label;
+  final String assetPath;
+}
+
+class _MoodCheckinSheet extends StatefulWidget {
+  const _MoodCheckinSheet();
+
+  @override
+  State<_MoodCheckinSheet> createState() => _MoodCheckinSheetState();
+}
+
+class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
+    with SingleTickerProviderStateMixin {
+  static const List<_MoodOption> _moods = [
+    _MoodOption(label: 'Great', assetPath: 'assets/images/mood1.jpg'),
+    _MoodOption(label: 'Good', assetPath: 'assets/images/mood2.jpg'),
+    _MoodOption(label: 'Okay', assetPath: 'assets/images/mood3.jpg'),
+    _MoodOption(label: 'Not Great', assetPath: 'assets/images/mood4.jpg'),
+    _MoodOption(label: 'Bad', assetPath: 'assets/images/mood5.jpg'),
+  ];
+
+  int? _selectedIndex;
+  late final AnimationController _floatController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      heightFactor: 0.60,
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF2A1751),
+                  Color(0xFF1B1037),
+                  Color(0xFF140B2A),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(18.w, 10.h, 18.w, 14.h),
+            child: Column(
+              children: [
+                Container(
+                  width: 42.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: Colors.white.withValues(alpha: 0.28),
+                  ),
+                ),
+                SizedBox(height: 14.h),
+                Row(
+                  children: [
+                    _TopIconButton(
+                      icon: CupertinoIcons.back,
+                      onTap: () => Navigator.of(context).maybePop(),
+                    ),
+                    const Spacer(),
+                    _TopIconButton(
+                      icon: CupertinoIcons.xmark,
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 22.h),
+                Text(
+                  "How are you feeling?",
+                  style: AppTextStyles.body24w7.copyWith(
+                    color: Colors.white.withValues(alpha: 0.96),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        spacing: 18.w,
+                        runSpacing: 18.h,
+                        children: List.generate(_moods.length, (index) {
+                          final mood = _moods[index];
+                          final selected = _selectedIndex == index;
+                          final row = index < 3 ? 0 : 1;
+                          final col = index < 3 ? index : (index - 3);
+                          final delay = (row * 220) + (col * 110);
+                          return TweenAnimationBuilder<double>(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: Duration(milliseconds: 460 + delay),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, child) => Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, (1 - value) * 18),
+                                child: child,
+                              ),
+                            ),
+                            child: SizedBox(
+                              width: 96.w,
+                              height: 96.w,
+                              child: _MoodItem(
+                                option: mood,
+                                selected: selected,
+                                floatController: _floatController,
+                                onTap: () => setState(() => _selectedIndex = index),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999.r),
+                    boxShadow: _selectedIndex == null
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: AppColors.c842D5F.withValues(alpha: 0.42),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _selectedIndex == null
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.14),
+                      backgroundColor: AppColors.c842D5F,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999.r),
+                      ),
+                    ),
+                    child: Text(
+                      "Saqlash",
+                      style: AppTextStyles.body16w7.copyWith(
+                        color: Colors.white.withValues(
+                          alpha: _selectedIndex == null ? 0.7 : 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopIconButton extends StatelessWidget {
+  const _TopIconButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 36.w,
+      width: 36.w,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(11.r),
+          onTap: onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(11.r),
+              color: Colors.white.withValues(alpha: 0.10),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white.withValues(alpha: 0.94),
+              size: 20.sp,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MoodItem extends StatelessWidget {
+  const _MoodItem({
+    required this.option,
+    required this.selected,
+    required this.floatController,
+    required this.onTap,
+  });
+
+  final _MoodOption option;
+  final bool selected;
+  final AnimationController floatController;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999.r),
+        onTap: onTap,
+        child: Center(
+          child: AnimatedBuilder(
+            animation: floatController,
+            builder: (context, child) {
+              final offsetY = selected ? (-4.2 * floatController.value) : 0.0;
+              return Transform.translate(
+                offset: Offset(0, offsetY),
+                child: AnimatedScale(
+                  scale: selected ? 1.20 : 1,
+                  duration: const Duration(milliseconds: 230),
+                  curve: Curves.easeOutBack,
+                  child: child,
+                ),
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              height: 96.w,
+              width: 96.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: selected
+                        ? AppColors.c842D5F.withValues(alpha: 0.44)
+                        : Colors.black.withValues(alpha: 0.22),
+                    blurRadius: selected ? 18 : 12,
+                    spreadRadius: selected ? 1 : 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                option.assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: const Color(0xFF2B2042),
+                  child: const Icon(CupertinoIcons.smiley, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/alarm/alarm_screen.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
@@ -95,11 +96,22 @@ class _SectionsScreenState extends State<SectionsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Bo'limlar",
-                style: AppTextStyles.body22w7.copyWith(
-                  color: Colors.white.withValues(alpha: 0.95),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "Bo'limlar",
+                      style: AppTextStyles.body22w7.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                      ),
+                    ),
+                  ),
+                  _SupportIconButton(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const FaqScreen()),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 4.h),
               Text(
@@ -137,6 +149,37 @@ class _SectionsScreenState extends State<SectionsScreen>
                       ),
                     );
                   },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SupportIconButton extends StatelessWidget {
+  const _SupportIconButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.r),
+        child: Ink(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 7.h),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Qo'llab-quvvatlash",
+                style: AppTextStyles.body11w6.copyWith(
+                  color: AppColors.c842D5F,
                 ),
               ),
             ],

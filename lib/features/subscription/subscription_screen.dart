@@ -19,6 +19,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   bool _loading = true;
   String? _error;
   List<Plan> _plans = [];
+  bool _animateIn = false;
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _animateIn = false;
     });
     final result = await inject<SubscriptionRepository>().fetchPlans();
     if (!mounted) return;
@@ -43,6 +45,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         _plans = plans;
       }),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _animateIn = true);
+    });
   }
 
   void _openPlanSheet(BuildContext context, Plan plan) {
@@ -67,78 +73,93 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Header(),
+                  _buildEntrance(
+                    index: 0,
+                    child: const _Header(),
+                  ),
                   SizedBox(height: 14.h),
                   if (_loading)
                     Expanded(
                       child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(
-                              color: AppColors.c842D5F,
-                              strokeWidth: 2.5,
-                            ),
-                            SizedBox(height: 16.h),
-                            Text(
-                              'Rejalar yuklanmoqda…',
-                              style: AppTextStyles.body14w5.copyWith(
-                                color: Colors.white.withValues(alpha: 0.88),
+                        child: _buildEntrance(
+                          index: 1,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(
+                                color: AppColors.c842D5F,
+                                strokeWidth: 2.5,
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 16.h),
+                              Text(
+                                'Rejalar yuklanmoqda…',
+                                style: AppTextStyles.body14w5.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.88),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
                   else if (_error != null)
                     Expanded(
                       child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              CupertinoIcons.exclamationmark_triangle,
-                              size: 40.sp,
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.body14w5.copyWith(
-                                color: Colors.white.withValues(alpha: 0.7),
+                        child: _buildEntrance(
+                          index: 1,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                CupertinoIcons.exclamationmark_triangle,
+                                size: 40.sp,
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
-                            ),
-                            SizedBox(height: 16.h),
-                            TextButton(
-                              onPressed: _loadPlans,
-                              child: Text(
-                                'Qayta urinish',
-                                style: AppTextStyles.body14w6.copyWith(
-                                  color: AppColors.c842D5F,
+                              SizedBox(height: 12.h),
+                              Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.body14w5.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 16.h),
+                              TextButton(
+                                onPressed: _loadPlans,
+                                child: Text(
+                                  'Qayta urinish',
+                                  style: AppTextStyles.body14w6.copyWith(
+                                    color: AppColors.c842D5F,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
                   else if (_plans.isEmpty)
                     Expanded(
                       child: Center(
-                        child: Text(
-                          'Hozircha rejalar mavjud emas',
-                          style: AppTextStyles.body14w5.copyWith(
-                            color: Colors.white.withValues(alpha: 0.6),
+                        child: _buildEntrance(
+                          index: 1,
+                          child: Text(
+                            'Hozircha rejalar mavjud emas',
+                            style: AppTextStyles.body14w5.copyWith(
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
                           ),
                         ),
                       ),
                     )
                   else ...[
                     if (_plans.length >= 3)
-                      _FeaturedPlanCard(
-                        plan: _plans.last,
-                        onTap: () => _openPlanSheet(context, _plans.last),
+                      _buildEntrance(
+                        index: 1,
+                        child: _FeaturedPlanCard(
+                          plan: _plans.last,
+                          onTap: () => _openPlanSheet(context, _plans.last),
+                        ),
                       ),
                     if (_plans.length >= 3) SizedBox(height: 18.h),
                     Expanded(
@@ -147,19 +168,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Obuna sotib olish",
-                              style: AppTextStyles.body17w5.copyWith(
-                                color: Colors.white.withValues(alpha: 0.92),
+                            _buildEntrance(
+                              index: 2,
+                              child: Text(
+                                "Obuna sotib olish",
+                                style: AppTextStyles.body17w5.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                ),
                               ),
                             ),
                             SizedBox(height: 12.h),
                             for (int i = 0; i < _plans.length; i++) ...[
-                              _PlanRow(
-                                plan: _plans[i],
-                                highlight: _plans.length >= 2 && i == 1,
-                                tag: _planTag(i, _plans.length),
-                                onTap: () => _openPlanSheet(context, _plans[i]),
+                              _buildEntrance(
+                                index: 3 + i,
+                                child: _PlanRow(
+                                  plan: _plans[i],
+                                  highlight: _plans.length >= 2 && i == 1,
+                                  tag: _planTag(i, _plans.length),
+                                  onTap: () => _openPlanSheet(context, _plans[i]),
+                                ),
                               ),
                               if (i < _plans.length - 1) SizedBox(height: 10.h),
                             ],
@@ -189,6 +216,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (index == 1) return 'Eng foydali';
     }
     return '';
+  }
+
+  Widget _buildEntrance({
+    required int index,
+    required Widget child,
+  }) {
+    final duration = Duration(milliseconds: 420 + (index * 80));
+    return AnimatedSlide(
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      offset: _animateIn ? Offset.zero : const Offset(0, 0.16),
+      child: AnimatedOpacity(
+        duration: duration,
+        curve: Curves.easeOut,
+        opacity: _animateIn ? 1 : 0,
+        child: child,
+      ),
+    );
   }
 }
 
