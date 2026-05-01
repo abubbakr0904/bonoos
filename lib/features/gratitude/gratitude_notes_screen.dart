@@ -18,7 +18,7 @@ class GratitudeNotesScreen extends StatefulWidget {
 
 class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
   final DioClient _dio = inject<DioClient>();
-  DateTime _selectedDate = DateTime.now();
+  // DateTime _selectedDate = DateTime.now(); // Calendar olib tashlandi
   bool _animateIn = false;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -61,12 +61,6 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                 children: [
                   _HeaderCard(
                     notesCount: _notes.length,
-                    selectedDate: _selectedDate,
-                  ),
-                  SizedBox(height: 12.h),
-                  _DateSelector(
-                    selectedDate: _selectedDate,
-                    onSelect: _onDateSelected,
                   ),
                   SizedBox(height: 12.h),
                   Expanded(
@@ -169,7 +163,8 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0x60130C26).withValues(alpha: 0.45),
+                          color:
+                              const Color(0x60130C26).withValues(alpha: 0.45),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -191,7 +186,8 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                               width: 28.w,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.c842D5F.withValues(alpha: 0.20),
+                                color:
+                                    AppColors.c842D5F.withValues(alpha: 0.20),
                               ),
                               child: Icon(
                                 CupertinoIcons.heart_fill,
@@ -242,15 +238,18 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                                     ),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(40.r),
-                                      color: Colors.white.withValues(alpha: 0.10),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.10),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.12),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.12),
                                       ),
                                     ),
                                     child: Text(
                                       '#$tag',
                                       style: AppTextStyles.body11w5.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.84),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.84),
                                       ),
                                     ),
                                   ),
@@ -332,7 +331,8 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
     }
   }
 
-  Future<void> _updateGratitudeNote(_NoteItem item, GratitudeDraft draft) async {
+  Future<void> _updateGratitudeNote(
+      _NoteItem item, GratitudeDraft draft) async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
@@ -384,7 +384,7 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
         ListAPI.clientGratitudeDiaryList(
           limit: 50,
           offset: 0,
-          day: _toApiDay(_selectedDate),
+          // day: _toApiDay(_selectedDate), // Kun filteri olib tashlandi
         ),
       );
       final response = raw as Response<dynamic>;
@@ -476,17 +476,7 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
     return "$d.$m.$y  $hh:$mm";
   }
 
-  Future<void> _onDateSelected(DateTime date) async {
-    setState(() => _selectedDate = date);
-    await _fetchNotes(showLoader: false);
-  }
-
-  String _toApiDay(DateTime d) {
-    final y = d.year.toString();
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$day';
-  }
+  // Calendar funksiyalari olib tashlandi
 }
 
 class _NoteItem {
@@ -549,7 +539,6 @@ class _EmptyNotes extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22.r),
-
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -613,26 +602,14 @@ class _EmptyNotes extends StatelessWidget {
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.notesCount,
-    required this.selectedDate,
   });
 
   final int notesCount;
-  final DateTime selectedDate;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(16.w, 15.h, 16.w, 14.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.r),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3D2A69), Color(0xFF25183F)],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -653,27 +630,17 @@ class _HeaderCard extends StatelessWidget {
           SizedBox(height: 12.h),
           Row(
             children: [
-              _InfoBadge(
-                icon: CupertinoIcons.doc_text_fill,
-                label: "$notesCount ta yozuv",
-              ),
+              // _InfoBadge(
+              //   icon: CupertinoIcons.doc_text_fill,
+              //   label: "$notesCount ta yozuv",
+              // ),
               SizedBox(width: 8.w),
-              _InfoBadge(
-                icon: CupertinoIcons.calendar_today,
-                label: _shortDate(selectedDate),
-              ),
+              // Calendar olib tashlandi
             ],
           ),
         ],
       ),
     );
-  }
-
-  String _shortDate(DateTime dt) {
-    final y = dt.year.toString();
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    return "$d.$m.$y";
   }
 }
 
@@ -732,222 +699,4 @@ class _DecorativeBackground extends StatelessWidget {
   }
 }
 
-class _DateSelector extends StatefulWidget {
-  const _DateSelector({
-    required this.selectedDate,
-    required this.onSelect,
-  });
-
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onSelect;
-
-  @override
-  State<_DateSelector> createState() => _DateSelectorState();
-}
-
-class _DateSelectorState extends State<_DateSelector> {
-  /// Doimiy dushanba — page indexlar orqali haftalarni hisoblash uchun.
-  static final DateTime _refMonday = DateTime(2024, 1, 1);
-  static const int _pageCenter = 5000;
-
-  late final PageController _pageController;
-  int _lastPageIndex = _pageCenter;
-
-  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
-
-  static DateTime _mondayOf(DateTime d) {
-    final n = _dateOnly(d);
-    return n.subtract(Duration(days: n.weekday - DateTime.monday));
-  }
-
-  static int _pageForMonday(DateTime monday) {
-    final days = _dateOnly(monday).difference(_refMonday).inDays;
-    return _pageCenter + (days ~/ 7);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = _pageForMonday(_mondayOf(widget.selectedDate));
-    _lastPageIndex = initial;
-    _pageController = PageController(initialPage: initial);
-  }
-
-  @override
-  void didUpdateWidget(covariant _DateSelector oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newPage = _pageForMonday(_mondayOf(widget.selectedDate));
-    if (newPage != _lastPageIndex &&
-        _mondayOf(oldWidget.selectedDate) != _mondayOf(widget.selectedDate)) {
-      _lastPageIndex = newPage;
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(newPage);
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  DateTime _mondayForPageIndex(int pageIndex) {
-    return _refMonday.add(Duration(days: (pageIndex - _pageCenter) * 7));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const week = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
-    const monthNames = [
-      'Yanvar',
-      'Fevral',
-      'Mart',
-      'Aprel',
-      'May',
-      'Iyun',
-      'Iyul',
-      'Avgust',
-      'Sentyabr',
-      'Oktyabr',
-      'Noyabr',
-      'Dekabr',
-    ];
-    final sel = _dateOnly(widget.selectedDate);
-    final monthLabel = "${monthNames[sel.month - 1]} ${sel.year}";
-
-    return Container(
-      height: 80.h,
-      padding: EdgeInsets.fromLTRB(10.w, 7.h, 10.w, 7.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.r),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2E2053).withValues(alpha: 0.94),
-            const Color(0xFF1D1337).withValues(alpha: 0.96),
-          ],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: (pageIndex) {
-                final delta = pageIndex - _lastPageIndex;
-                _lastPageIndex = pageIndex;
-                if (delta == 0) return;
-                widget.onSelect(sel.add(Duration(days: 7 * delta)));
-              },
-              itemCount: 10000,
-              itemBuilder: (context, pageIndex) {
-                final monday = _mondayForPageIndex(pageIndex);
-                final days = List<DateTime>.generate(
-                  7,
-                  (i) => monday.add(Duration(days: i)),
-                );
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(7, (index) {
-                    final day = days[index];
-                    final d = _dateOnly(day);
-                    final isToday = d == _dateOnly(DateTime.now());
-                    final isSelected = d == sel;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 3.w),
-                        child: GestureDetector(
-                          onTap: () => widget.onSelect(d),
-                          behavior: HitTestBehavior.opaque,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            padding: EdgeInsets.symmetric(vertical: 8.h),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14.r),
-                              gradient: isSelected
-                                  ? const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [AppColors.c842D5F, AppColors.c55004D],
-                                    )
-                                  : null,
-                              color: isSelected
-                                  ? null
-                                  : Colors.white.withValues(alpha: 0.03),
-                              border: Border.all(
-                                color: isSelected
-                                    ? Colors.white.withValues(alpha: 0.3)
-                                    : (isToday
-                                        ? AppColors.c842D5F.withValues(alpha: 0.45)
-                                        : Colors.white.withValues(alpha: 0.10)),
-                                width: isSelected ? 1.6 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  week[index],
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.body11w5.copyWith(
-                                    fontSize: 10.sp,
-                                    color: Colors.white.withValues(
-                                      alpha: isSelected ? 0.95 : 0.58,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 3.h),
-                                Text(
-                                  '${d.day}',
-                                  maxLines: 1,
-                                  style: AppTextStyles.body16w6.copyWith(
-                                    fontSize: 14.sp,
-                                    color: Colors.white.withValues(
-                                      alpha: isSelected ? 0.98 : 0.78,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  height: 4.w,
-                                  width: 4.w,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isToday
-                                            ? AppColors.c842D5F
-                                            : Colors.transparent),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// _DateSelector widget olib tashlandi

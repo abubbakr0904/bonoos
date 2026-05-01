@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:bonoos/core/api/dio_client.dart';
+import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/utils/last_listened_manager.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
+import 'package:dio/dio.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
 import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
@@ -227,6 +230,7 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
   ];
 
   int? _selectedIndex;
+  bool _isSaving = false;
   late final AnimationController _floatController;
 
   @override
@@ -244,6 +248,38 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
     super.dispose();
   }
 
+  Future<void> _saveMood() async {
+    if (_selectedIndex == null) return;
+    // API: 5 = eng hursand (Great), 1 = eng hafa (Bad)
+    // Index: 0=Great(5), 1=Good(4), 2=Okay(3), 3=Not Great(2), 4=Bad(1)
+    final moodValue = 5 - _selectedIndex!;
+    setState(() => _isSaving = true);
+    try {
+      final dio = inject<DioClient>();
+      await dio.post(
+        ListAPI.clientGratitudeDiaryMood,
+        data: {'mood': moodValue},
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final message = e.response?.data is Map
+          ? Map<String, dynamic>.from(e.response!.data)['message']?.toString()
+          : null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message ?? 'Kayfiyat saqlanmadi')),
+      );
+      setState(() => _isSaving = false);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kayfiyat saqlanmadi')),
+      );
+      setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
@@ -257,9 +293,9 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF2C1238),
-                  Color(0xFF24102F),
-                  Color(0xFF1A0C22),
+                  Color(0xFF2A1751),
+                  Color(0xFF1B1037),
+                  Color(0xFF140B2A),
                 ],
               ),
             ),
@@ -273,12 +309,16 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                   height: 4.h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withValues(alpha: 0.22),
+                    color: Colors.white.withValues(alpha: 0.28),
                   ),
                 ),
                 SizedBox(height: 14.h),
                 Row(
                   children: [
+                    _TopIconButton(
+                      icon: CupertinoIcons.back,
+                      onTap: () => Navigator.of(context).maybePop(),
+                    ),
                     const Spacer(),
                     _TopIconButton(
                       icon: CupertinoIcons.xmark,
@@ -344,49 +384,47 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999.r),
-                    gradient: _selectedIndex == null
-                        ? null
-                        : LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: <Color>[
-                              AppColors.c55004D.withValues(alpha: 0.86),
-                              AppColors.c55004D.withValues(alpha: 0.82),
-                            ],
-                          ),
                     boxShadow: _selectedIndex == null
                         ? null
                         : [
                             BoxShadow(
-                              color: AppColors.c55004D.withValues(alpha: 0.24),
-                              blurRadius: 14,
-                              offset: const Offset(0, 6),
+                              color: AppColors.c842D5F.withValues(alpha: 0.42),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                   ),
                   child: ElevatedButton(
-                    onPressed: _selectedIndex == null
-                        ? null
-                        : () => Navigator.of(context).pop(),
+                    onPressed:
+                        _selectedIndex == null || _isSaving ? null : _saveMood,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       disabledBackgroundColor:
                           Colors.white.withValues(alpha: 0.14),
-                      backgroundColor: Colors.transparent,
+                      backgroundColor: AppColors.c842D5F,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 15.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999.r),
                       ),
                     ),
-                    child: Text(
-                      "Saqlash",
-                      style: AppTextStyles.body16w7.copyWith(
-                        color: Colors.white.withValues(
-                          alpha: _selectedIndex == null ? 0.7 : 1,
-                        ),
-                      ),
-                    ),
+                    child: _isSaving
+                        ? SizedBox(
+                            width: 20.w,
+                            height: 20.w,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          )
+                        : Text(
+                            "Saqlash",
+                            style: AppTextStyles.body16w7.copyWith(
+                              color: Colors.white.withValues(
+                                alpha: _selectedIndex == null ? 0.7 : 1,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
                 SizedBox(height: 6.h),
@@ -421,10 +459,8 @@ class _TopIconButton extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(11.r),
-              color: AppColors.c55004D.withValues(alpha: 0.14),
-              border: Border.all(
-                color: AppColors.c55004D.withValues(alpha: 0.40),
-              ),
+              color: Colors.white.withValues(alpha: 0.10),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
             ),
             child: Icon(
               icon,
@@ -480,16 +516,10 @@ class _MoodItem extends StatelessWidget {
               width: 96.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: selected
-                    ? Border.all(
-                        color: AppColors.c55004D.withValues(alpha: 0.82),
-                        width: 2,
-                      )
-                    : null,
                 boxShadow: [
                   BoxShadow(
                     color: selected
-                        ? AppColors.c55004D.withValues(alpha: 0.38)
+                        ? AppColors.c842D5F.withValues(alpha: 0.44)
                         : Colors.black.withValues(alpha: 0.22),
                     blurRadius: selected ? 18 : 12,
                     spreadRadius: selected ? 1 : 0,

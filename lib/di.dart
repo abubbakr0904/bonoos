@@ -1,5 +1,7 @@
 import 'package:bonoos/features/auth/data/auth_repository_impl.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
+import 'package:bonoos/features/calendar/data/calendar_repository_impl.dart';
+import 'package:bonoos/features/calendar/domain/repository/calendar_repository.dart';
 import 'package:bonoos/features/common/cubit/settings_cubit.dart';
 import 'package:bonoos/features/home/data/banners_repository_impl.dart';
 import 'package:bonoos/features/home/data/quotes_repository_impl.dart';
@@ -44,7 +46,6 @@ void _dataSources() {
   // inject.registerLazySingleton<AuthDataSource>(
   //       () => AuthDataSourceImpl(inject()),
   // );
-
 }
 
 void _repositories() {
@@ -54,14 +55,16 @@ void _repositories() {
   inject.registerSingleton<BannersRepository>(BannersRepositoryImpl());
   inject.registerSingleton<TopicsRepository>(TopicsRepositoryImpl());
   inject.registerSingleton<ProfileRepository>(ProfileRepositoryImpl());
-  inject.registerSingleton<SubscriptionRepository>(SubscriptionRepositoryImpl());
+  inject
+      .registerSingleton<SubscriptionRepository>(SubscriptionRepositoryImpl());
   inject.registerSingleton<PlaylistRepository>(PlaylistRepositoryImpl());
-  inject.registerSingleton<NotificationsRepository>(NotificationsRepositoryImpl());
+  inject.registerSingleton<NotificationsRepository>(
+      NotificationsRepositoryImpl());
+  inject.registerSingleton<CalendarRepository>(CalendarRepositoryImpl());
 }
 
 void _useCases() {}
 
 void _cubits() {
   inject.registerSingleton(SettingsCubit(inject()));
-
 }

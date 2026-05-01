@@ -1,5 +1,8 @@
+import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/values/app_colors.dart';
+import 'package:bonoos/di.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -69,6 +72,7 @@ class _ChatScreenState extends State<ChatScreen> {
         repository: ChatRepository(
           seedLoaderService: ChatSeedLoaderService(),
           websocketService: ChatWebSocketService(),
+          dioClient: inject<DioClient>(),
         ),
       )..initialize(),
       child: BlocConsumer<ChatCubit, ChatState>(
@@ -94,8 +98,14 @@ class _ChatScreenState extends State<ChatScreen> {
               elevation: 0,
               surfaceTintColor: Colors.transparent,
               titleSpacing: 0,
+              leading: GestureDetector(
+                  onTap: (){
+                    Navigator.pop(context);
+                  },
+                  child: Icon(Icons.arrow_back_ios , color : Colors.white)),
               title: Row(
                 children: [
+
                   Container(
                     width: 38,
                     height: 38,
@@ -130,13 +140,13 @@ class _ChatScreenState extends State<ChatScreen> {
                             decoration: BoxDecoration(
                               color: state.isSocketConnected
                                   ? const Color(0xFF84F4A4)
-                                  : Colors.orangeAccent,
+                                  : const Color(0xFFFF3B30),
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            state.isSocketConnected ? 'Online' : 'Ulanmoqda...',
+                            state.isSocketConnected ? 'Online' : 'Disconnected',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white.withValues(alpha: 0.76),
@@ -148,8 +158,60 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ],
               ),
+              actions: [
+                // WebSocket reconnect button (debug)
+                if (kDebugMode)
+                  GestureDetector(
+                    onTap: () {
+                      print('[ChatScreen] Manual reconnect requested');
+                      context.read<ChatCubit>().reconnect();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: state.isSocketConnected
+                            ? const Color(0xFF84F4A4).withValues(alpha: 0.15)
+                            : const Color(0xFFFF3B30).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: state.isSocketConnected
+                              ? const Color(0xFF84F4A4)
+                              : const Color(0xFFFF3B30),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            state.isSocketConnected
+                                ? CupertinoIcons.wifi
+                                : CupertinoIcons.wifi_slash,
+                            color: state.isSocketConnected
+                                ? const Color(0xFF84F4A4)
+                                : const Color(0xFFFF3B30),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            state.isSocketConnected ? 'WS' : 'RE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: state.isSocketConnected
+                                  ? const Color(0xFF84F4A4)
+                                  : const Color(0xFFFF3B30),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            body: DecoratedBox(
+            body: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -157,24 +219,29 @@ class _ChatScreenState extends State<ChatScreen> {
                   colors: [AppColors.c30215A, AppColors.c55004D],
                 ),
               ),
-              child: Column(
-                children: [
-                  Expanded(child: _buildBody(state)),
-                  MessageInput(
-                    controller: _messageController,
-                    isSending: state.isSending,
-                    onSend: () {
-                      final text = _messageController.text.trim();
-                      if (text.isEmpty) return;
-                      context.read<ChatCubit>().sendMessage(
-                            content: text,
-                            currentUserId: _currentUserId,
-                          );
-                      _messageController.clear();
-                      _scrollToBottom();
-                    },
-                  ),
-                ],
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    Expanded(child: _buildBody(state)),
+                    // Only show input when there's an active conversation
+                    if (state.activeThread != null)
+                      MessageInput(
+                        controller: _messageController,
+                        isSending: state.isSending,
+                        onSend: () {
+                          final text = _messageController.text.trim();
+                          if (text.isEmpty) return;
+                          context.read<ChatCubit>().sendMessage(
+                                content: text,
+                                currentUserId: _currentUserId,
+                              );
+                          _messageController.clear();
+                          _scrollToBottom();
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           );
@@ -202,6 +269,23 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       case ChatStatus.loaded:
+        // No active conversation - auto-creating (show loading)
+        if (state.activeThread == null) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: Color(0xFF9D4DFF)),
+                SizedBox(height: 16),
+                Text(
+                  'Suhbat yaratilmoqda...',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          );
+        }
+
         if (state.messages.isEmpty) {
           return const Center(
             child: Text(
@@ -215,7 +299,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return ListView.separated(
           controller: _scrollController,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           itemCount: entries.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
@@ -224,7 +308,8 @@ class _ChatScreenState extends State<ChatScreen> {
               return _DateChip(date: entry.date!);
             }
             final message = entry.message!;
-            final isMine = message.senderId == _currentUserId;
+            // sender_role: 1 = client (user) -> right side, 2 = admin -> left side
+            final isMine = message.senderRole == 1;
             return TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.92, end: 1),
               duration: const Duration(milliseconds: 220),

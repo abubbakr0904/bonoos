@@ -1,5 +1,9 @@
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
+import 'package:bonoos/di.dart';
+import 'package:bonoos/features/calendar/add_event_screen.dart';
+import 'package:bonoos/features/calendar/domain/entity/calendar_event.dart';
+import 'package:bonoos/features/calendar/domain/repository/calendar_repository.dart';
 import 'package:bonoos/features/statistics/statistics_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,230 +17,60 @@ class CalendarTasksScreen extends StatefulWidget {
 }
 
 class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
+  final CalendarRepository _repository = inject<CalendarRepository>();
   DateTime _selectedDate = DateTime.now();
-  final Map<String, List<String>> _tasksByDay = <String, List<String>>{};
+  List<CalendarEvent> _events = [];
+  bool _isLoading = false;
+  String? _error;
 
   @override
-  Widget build(BuildContext context) {
-    final tasks = _tasksByDay[_toApiDay(_selectedDate)] ?? const <String>[];
-    return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddTaskSheet,
-        backgroundColor: AppColors.c842D5F,
-        foregroundColor: Colors.white,
-        child: const Icon(CupertinoIcons.add),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "Kalendar",
-                      style: AppTextStyles.body24w7.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const StatisticsScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      CupertinoIcons.chart_bar_alt_fill,
-                      color: Colors.white,
-                    ),
-                    tooltip: "Statistika",
-                  ),
-                ],
-              ),
-              Text(
-                "${tasks.length} ta task",
-                style: AppTextStyles.body13w4.copyWith(
-                  color: Colors.white.withValues(alpha: 0.68),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              _WeekDateSelector(
-                selectedDate: _selectedDate,
-                onSelect: (date) => setState(() => _selectedDate = date),
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: tasks.isEmpty
-                    ? _CalendarEmptyState(onAdd: _openAddTaskSheet)
-                    : ListView.separated(
-                        physics: const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics(),
-                        ),
-                        itemCount: tasks.length,
-                        separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                        itemBuilder: (context, index) {
-                          return Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 13.h,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16.r),
-                              color: Colors.white.withValues(alpha: 0.08),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  height: 22.w,
-                                  width: 22.w,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.c842D5F.withValues(alpha: 0.18),
-                                  ),
-                                  child: Icon(
-                                    CupertinoIcons.checkmark_alt,
-                                    color: AppColors.c842D5F,
-                                    size: 14.sp,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Expanded(
-                                  child: Text(
-                                    tasks[index],
-                                    style: AppTextStyles.body14w5.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.92),
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () => _deleteTask(index),
-                                  child: Icon(
-                                    CupertinoIcons.delete_simple,
-                                    size: 18.sp,
-                                    color: Colors.white.withValues(alpha: 0.62),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadEvents();
   }
 
-  Future<void> _openAddTaskSheet() async {
-    final controller = TextEditingController();
-    final value = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 14.w,
-            right: 14.w,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 10.h,
-          ),
-          child: Container(
-            padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 14.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1032),
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Yangi task qo'shish",
-                  style: AppTextStyles.body16w6.copyWith(
-                    color: Colors.white.withValues(alpha: 0.95),
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: AppTextStyles.body14w5.copyWith(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Task matni...",
-                    hintStyle: AppTextStyles.body14w4.copyWith(
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.c842D5F),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.c842D5F,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: const Text("Saqlash"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+  Future<void> _loadEvents() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final day = _toApiDay(_selectedDate);
+    final result = await _repository.fetchEventsByDay(day);
+
+    result.fold(
+      (failure) {
+        setState(() {
+          _error = failure.message ?? 'Xatolik yuz berdi';
+          _isLoading = false;
+        });
+      },
+      (events) {
+        setState(() {
+          _events = events;
+          _isLoading = false;
+        });
       },
     );
-    controller.dispose();
-    if (value == null || value.isEmpty) return;
-    final key = _toApiDay(_selectedDate);
-    setState(() {
-      final list = List<String>.from(_tasksByDay[key] ?? const <String>[]);
-      list.add(value);
-      _tasksByDay[key] = list;
-    });
   }
 
-  void _deleteTask(int index) {
-    final key = _toApiDay(_selectedDate);
-    final list = List<String>.from(_tasksByDay[key] ?? const <String>[]);
-    if (index < 0 || index >= list.length) return;
+  void _onDateSelected(DateTime date) {
     setState(() {
-      list.removeAt(index);
-      _tasksByDay[key] = list;
+      _selectedDate = date;
     });
+    _loadEvents();
+  }
+
+  Future<void> _openAddEventScreen() async {
+    final result = await Navigator.of(context).push<CalendarEvent>(
+      MaterialPageRoute(
+        builder: (_) => AddEventScreen(selectedDate: _selectedDate),
+      ),
+    );
+
+    if (result != null) {
+      _loadEvents();
+    }
   }
 
   String _toApiDay(DateTime d) {
@@ -245,10 +79,212 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
     final day = d.day.toString().padLeft(2, '0');
     return '$y-$m-$day';
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF140B2A),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddEventScreen,
+        backgroundColor: AppColors.c842D5F,
+        foregroundColor: Colors.white,
+        child: const Icon(CupertinoIcons.add),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Kalendar",
+                        style: AppTextStyles.body24w7.copyWith(
+                          color: Colors.white.withValues(alpha: 0.95),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const StatisticsScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        CupertinoIcons.chart_bar_alt_fill,
+                        color: Colors.white,
+                      ),
+                      tooltip: "Statistika",
+                    ),
+                  ],
+                ),
+                Text(
+                  "${_events.length} ta task",
+                  style: AppTextStyles.body13w4.copyWith(
+                    color: Colors.white.withValues(alpha: 0.68),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _TableCalendar(
+                  selectedDate: _selectedDate,
+                  onSelect: _onDateSelected,
+                  events: _events,
+                ),
+                SizedBox(height: 16.h),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.2),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildBody(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return Center(
+        key: ValueKey('loading'),
+        child: CircularProgressIndicator(color: AppColors.c842D5F),
+      );
+    }
+
+    if (_error != null) {
+      return _CalendarErrorState(
+        key: ValueKey('error'),
+        message: _error!,
+        onRetry: _loadEvents,
+        onAdd: _openAddEventScreen,
+      );
+    }
+
+    if (_events.isEmpty) {
+      return _CalendarEmptyState(
+        key: ValueKey('empty'),
+        onAdd: _openAddEventScreen,
+      );
+    }
+
+    return Column(
+      key: ValueKey('events_${_selectedDate.day}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _events.map((event) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 10.h),
+          child: _EventCard(
+            event: event,
+            onEdit: () => _editEvent(event),
+            onDelete: () => _deleteEvent(event),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _editEvent(CalendarEvent event) async {
+    final result = await Navigator.of(context).push<CalendarEvent>(
+      MaterialPageRoute(
+        builder: (_) => AddEventScreen(
+          selectedDate: _selectedDate,
+          eventToEdit: event,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      _loadEvents();
+    }
+  }
+
+  Future<void> _deleteEvent(CalendarEvent event) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1032),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text(
+          'Taskni o\'chirish',
+          style: AppTextStyles.body16w6.copyWith(color: Colors.white),
+        ),
+        content: Text(
+          'Rostdan ham bu taskni o\'chirmoqchimisiz?',
+          style: AppTextStyles.body14w5.copyWith(
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Bekor',
+              style: AppTextStyles.body14w5.copyWith(
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('O\'chirish'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await _repository.deleteEvent(event.id);
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message ?? 'O\'chirishda xatolik'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      },
+      (_) {
+        _loadEvents();
+      },
+    );
+  }
 }
 
 class _CalendarEmptyState extends StatelessWidget {
-  const _CalendarEmptyState({required this.onAdd});
+  const _CalendarEmptyState({super.key, required this.onAdd});
 
   final VoidCallback onAdd;
 
@@ -284,73 +320,233 @@ class _CalendarEmptyState extends StatelessWidget {
   }
 }
 
-class _WeekDateSelector extends StatefulWidget {
-  const _WeekDateSelector({
-    required this.selectedDate,
-    required this.onSelect,
+class _CalendarErrorState extends StatelessWidget {
+  const _CalendarErrorState({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    required this.onAdd,
   });
 
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onSelect;
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onAdd;
 
   @override
-  State<_WeekDateSelector> createState() => _WeekDateSelectorState();
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            CupertinoIcons.exclamationmark_circle,
+            size: 46.sp,
+            color: Colors.red.withValues(alpha: 0.7),
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            message,
+            style: AppTextStyles.body14w5.copyWith(
+              color: Colors.white.withValues(alpha: 0.84),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: onRetry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.c842D5F,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Qayta yuklash'),
+              ),
+              SizedBox(width: 10.w),
+              TextButton(
+                onPressed: onAdd,
+                child: Text(
+                  "Task qo'shish",
+                  style:
+                      AppTextStyles.body14w6.copyWith(color: AppColors.c842D5F),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _WeekDateSelectorState extends State<_WeekDateSelector> {
-  static final DateTime _refMonday = DateTime(2024, 1, 1);
-  static const int _pageCenter = 5000;
+class _EventCard extends StatelessWidget {
+  const _EventCard({
+    required this.event,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  late final PageController _pageController;
-  int _lastPageIndex = _pageCenter;
+  final CalendarEvent event;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
-  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
-
-  static DateTime _mondayOf(DateTime d) {
-    final n = _dateOnly(d);
-    return n.subtract(Duration(days: n.weekday - DateTime.monday));
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 14.w,
+        vertical: 13.h,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  event.title,
+                  style: AppTextStyles.body14w5.copyWith(
+                    color: Colors.white.withValues(alpha: 0.92),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: onEdit,
+                    child: Icon(
+                      CupertinoIcons.pencil,
+                      size: 18.sp,
+                      color: Colors.white.withValues(alpha: 0.62),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  GestureDetector(
+                    onTap: onDelete,
+                    child: Icon(
+                      CupertinoIcons.delete_simple,
+                      size: 18.sp,
+                      color: Colors.white.withValues(alpha: 0.62),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (event.eventTime != null && event.eventTime!.isNotEmpty) ...[
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Icon(
+                  CupertinoIcons.clock,
+                  size: 14.sp,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  event.eventTime!,
+                  style: AppTextStyles.body12w4.copyWith(
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (event.note != null && event.note!.isNotEmpty) ...[
+            SizedBox(height: 6.h),
+            Text(
+              event.note!,
+              style: AppTextStyles.body12w4.copyWith(
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
+}
 
-  static int _pageForMonday(DateTime monday) {
-    final days = _dateOnly(monday).difference(_refMonday).inDays;
-    return _pageCenter + (days ~/ 7);
-  }
+class _TableCalendar extends StatefulWidget {
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onSelect;
+  final List<CalendarEvent> events;
+
+  const _TableCalendar({
+    required this.selectedDate,
+    required this.onSelect,
+    required this.events,
+  });
+
+  @override
+  State<_TableCalendar> createState() => _TableCalendarState();
+}
+
+class _TableCalendarState extends State<_TableCalendar> {
+  late DateTime _displayedMonth;
 
   @override
   void initState() {
     super.initState();
-    final initial = _pageForMonday(_mondayOf(widget.selectedDate));
-    _lastPageIndex = initial;
-    _pageController = PageController(initialPage: initial);
+    _displayedMonth =
+        DateTime(widget.selectedDate.year, widget.selectedDate.month);
   }
 
   @override
-  void didUpdateWidget(covariant _WeekDateSelector oldWidget) {
+  void didUpdateWidget(_TableCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newPage = _pageForMonday(_mondayOf(widget.selectedDate));
-    if (newPage != _lastPageIndex &&
-        _mondayOf(oldWidget.selectedDate) != _mondayOf(widget.selectedDate)) {
-      _lastPageIndex = newPage;
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(newPage);
-      }
+    if (oldWidget.selectedDate.month != widget.selectedDate.month ||
+        oldWidget.selectedDate.year != widget.selectedDate.year) {
+      _displayedMonth =
+          DateTime(widget.selectedDate.year, widget.selectedDate.month);
     }
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void _previousMonth() {
+    setState(() {
+      _displayedMonth =
+          DateTime(_displayedMonth.year, _displayedMonth.month - 1);
+    });
   }
 
-  DateTime _mondayForPageIndex(int pageIndex) {
-    return _refMonday.add(Duration(days: (pageIndex - _pageCenter) * 7));
+  void _nextMonth() {
+    setState(() {
+      _displayedMonth =
+          DateTime(_displayedMonth.year, _displayedMonth.month + 1);
+    });
+  }
+
+  List<DateTime?> _getDaysInMonth(DateTime month) {
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0);
+    final daysInMonth = lastDay.day;
+    final firstWeekday = firstDay.weekday;
+
+    final days = <DateTime?>[];
+
+    for (var i = 1; i < firstWeekday; i++) {
+      days.add(null);
+    }
+
+    for (var i = 1; i <= daysInMonth; i++) {
+      days.add(DateTime(month.year, month.month, i));
+    }
+
+    return days;
   }
 
   @override
   Widget build(BuildContext context) {
-    const week = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
-    const monthNames = [
+    final days = _getDaysInMonth(_displayedMonth);
+    final monthNames = [
       'Yanvar',
       'Fevral',
       'Mart',
@@ -362,138 +558,158 @@ class _WeekDateSelectorState extends State<_WeekDateSelector> {
       'Sentyabr',
       'Oktyabr',
       'Noyabr',
-      'Dekabr',
+      'Dekabr'
     ];
-    final sel = _dateOnly(widget.selectedDate);
-    final monthLabel = "${monthNames[sel.month - 1]} ${sel.year}";
+    final weekDays = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
 
     return Container(
-      height: 85.h,
-      padding: EdgeInsets.fromLTRB(10.w, 7.h, 10.w, 7.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24.r),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2E2053).withValues(alpha: 0.94),
-            const Color(0xFF1D1337).withValues(alpha: 0.96),
-          ],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: const Color(0xFF1A1032),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: (pageIndex) {
-                final delta = pageIndex - _lastPageIndex;
-                _lastPageIndex = pageIndex;
-                if (delta == 0) return;
-                widget.onSelect(sel.add(Duration(days: 7 * delta)));
-              },
-              itemCount: 10000,
-              itemBuilder: (context, pageIndex) {
-                final monday = _mondayForPageIndex(pageIndex);
-                final days = List<DateTime>.generate(
-                  7,
-                  (i) => monday.add(Duration(days: i)),
+          // Header with month navigation
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: _previousMonth,
+                  icon: Icon(
+                    CupertinoIcons.chevron_left,
+                    color: Colors.white,
+                    size: 20.sp,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                Text(
+                  '${monthNames[_displayedMonth.month - 1]} ${_displayedMonth.year}',
+                  style: AppTextStyles.body16w6.copyWith(color: Colors.white),
+                ),
+                IconButton(
+                  onPressed: _nextMonth,
+                  icon: Icon(
+                    CupertinoIcons.chevron_right,
+                    color: Colors.white,
+                    size: 20.sp,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(
+            color: Colors.white.withValues(alpha: 0.08),
+            height: 1,
+          ),
+
+          // Week day headers
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: weekDays.map((day) {
+                return Expanded(
+                  child: Text(
+                    day,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.body12w5.copyWith(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
                 );
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(7, (index) {
-                    final day = days[index];
-                    final d = _dateOnly(day);
-                    final isToday = d == _dateOnly(DateTime.now());
-                    final isSelected = d == sel;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 3.w),
-                        child: GestureDetector(
-                          onTap: () => widget.onSelect(d),
-                          behavior: HitTestBehavior.opaque,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            padding: EdgeInsets.symmetric(vertical: 8.h),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14.r),
-                              gradient: isSelected
-                                  ? const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [AppColors.c842D5F, AppColors.c55004D],
-                                    )
-                                  : null,
-                              color: isSelected
-                                  ? null
-                                  : Colors.white.withValues(alpha: 0.03),
-                              border: Border.all(
-                                color: isSelected
-                                    ? Colors.white.withValues(alpha: 0.3)
-                                    : (isToday
-                                        ? AppColors.c842D5F.withValues(alpha: 0.45)
-                                        : Colors.white.withValues(alpha: 0.10)),
-                                width: isSelected ? 1.6 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  week[index],
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.body11w5.copyWith(
-                                    fontSize: 10.sp,
-                                    color: Colors.white.withValues(
-                                      alpha: isSelected ? 0.95 : 0.58,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 3.h),
-                                Text(
-                                  '${d.day}',
-                                  maxLines: 1,
-                                  style: AppTextStyles.body16w6.copyWith(
-                                    fontSize: 14.sp,
-                                    color: Colors.white.withValues(
-                                      alpha: isSelected ? 0.98 : 0.78,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 220),
-                                  height: 4.w,
-                                  width: 4.w,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isToday
-                                            ? AppColors.c842D5F
-                                            : Colors.transparent),
-                                  ),
-                                ),
-                              ],
+              }).toList(),
+            ),
+          ),
+
+          // Calendar grid
+          Padding(
+            padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 16.h),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 7,
+              mainAxisSpacing: 6.h,
+              crossAxisSpacing: 0,
+              childAspectRatio: 1,
+              children: days.map((date) {
+                if (date == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final isSelected = date.year == widget.selectedDate.year &&
+                    date.month == widget.selectedDate.month &&
+                    date.day == widget.selectedDate.day;
+                final isToday = date.year == DateTime.now().year &&
+                    date.month == DateTime.now().month &&
+                    date.day == DateTime.now().day;
+                final hasEvents = widget.events.any((e) {
+                  final eventDate = DateTime.tryParse(e.eventDate);
+                  if (eventDate == null) return false;
+                  return eventDate.year == date.year &&
+                      eventDate.month == date.month &&
+                      eventDate.day == date.day;
+                });
+
+                return GestureDetector(
+                  onTap: () => widget.onSelect(date),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: EdgeInsets.all(2.w),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? AppColors.c842D5F
+                          : isToday
+                              ? AppColors.c842D5F.withValues(alpha: 0.25)
+                              : Colors.transparent,
+                      border: isToday && !isSelected
+                          ? Border.all(
+                              color: AppColors.c842D5F.withValues(alpha: 0.6),
+                              width: 1.5,
+                            )
+                          : null,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
+                          child: Text(
+                            '${date.day}',
+                            style: AppTextStyles.body14w5.copyWith(
+                              color: isSelected || isToday
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.85),
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
+                        if (hasEvents && !isSelected)
+                          Positioned(
+                            bottom: 4.h,
+                            child: Container(
+                              width: 4.w,
+                              height: 4.w,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.c842D5F,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 );
-              },
+              }).toList(),
             ),
           ),
         ],

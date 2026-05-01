@@ -116,7 +116,8 @@ class ListAPI {
   static const String onboardingQuestions = 'api/v1/onboarding/questions';
 
   /// Onboarding javoblarini yuborish (POST, Bearer).
-  static const String clientOnboardingAnswers = 'api/v1/client/onboarding/answers';
+  static const String clientOnboardingAnswers =
+      'api/v1/client/onboarding/answers';
 
   /// Shukrona daftari yozuvi qo'shish (POST, Bearer).
   static const String clientGratitudeDiary = 'api/v1/client/gratitude-diary';
@@ -132,6 +133,11 @@ class ListAPI {
     String? day,
   }) =>
       'api/v1/client/gratitude-diary?limit=$limit&offset=$offset${day != null ? '&day=$day' : ''}';
+
+  /// Shukrona daftari kayfiyatini saqlash (POST, Bearer). Body: `{ "mood": 1-5 }`.
+  /// 5 = eng hursand, 1 = eng hafa
+  static const String clientGratitudeDiaryMood =
+      'api/v1/client/gratitude-diary/mood';
 
   /// Auditionlar ro'yxati (GET). Query: `?category_id=N`.
   static const String auditions = 'api/v1/auditions';
@@ -151,15 +157,56 @@ class ListAPI {
   /// Abumarket API host — asosiy `BASE_URL` dan alohida. `.env` → `ABUMARKET_BASE_URL`.
   static String get abuMarketBaseUrl {
     final raw = dotenv.env['ABUMARKET_BASE_URL']?.trim();
-    final s = (raw != null && raw.isNotEmpty)
-        ? raw
-        : 'https://abumarket.sahiy.uz/';
+    final s =
+        (raw != null && raw.isNotEmpty) ? raw : 'https://abumarket.sahiy.uz/';
     return s.replaceAll(RegExp(r'/$'), '');
   }
 
   /// Bannerlar ro‘yxati (GET). To‘liq URL — [abuMarketBaseUrl] + yo‘l; `DioClient` `BASE_URL` ga ulanmaydi.
   static String get abuMarketBannersAllUrl =>
       '$abuMarketBaseUrl/api/v1/clients/banners/all';
+
+  /// Chat conversationlar ro'yxati (GET, Bearer). Query: `?limit=50`.
+  static String clientChatConversations({int limit = 50}) =>
+      'api/v1/client/chat/conversations?limit=$limit';
+
+  /// Chat conversation yaratish (POST, Bearer). Body: `{ "admin_id": 2 }`.
+  static const String clientChatConversationsCreate =
+      'api/v1/client/chat/conversations';
+
+  /// Chat messagelarni olish (GET, Bearer). Query: `?conversation_id=N&limit=50&before_id=0`.
+  static String clientChatMessages({
+    required int conversationId,
+    int limit = 50,
+    int beforeId = 0,
+  }) =>
+      'api/v1/client/chat/messages?conversation_id=$conversationId&limit=$limit&before_id=$beforeId';
+
+  /// Chat message yuborish (POST, Bearer). Body: `{ "conversation_id": N, "content": "..." }`.
+  static const String clientChatMessagesSend = 'api/v1/client/chat/messages';
+
+  /// Event turlari ro'yxati (GET, Bearer).
+  static const String eventTypes = 'api/v1/event-types';
+
+  /// Mijoz kalendar voqealarini olish (GET, Bearer). Query: `?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+  static String clientCalendarEvents({String? from, String? to}) {
+    final params = <String>[];
+    if (from != null) params.add('from=$from');
+    if (to != null) params.add('to=$to');
+    return 'api/v1/client/calendar/events${params.isNotEmpty ? '?${params.join('&')}' : ''}';
+  }
+
+  /// Mijoz kalendariga voqea qo'shish (POST, Bearer).
+  static const String clientCalendarEventsCreate =
+      'api/v1/client/calendar/events';
+
+  /// Mijoz kalendaridagi voqeani yangilash (PUT, Bearer).
+  static String clientCalendarEventsUpdate(int eventId) =>
+      'api/v1/client/calendar/events/$eventId';
+
+  /// Mijoz kalendaridagi voqeani o'chirish (DELETE, Bearer).
+  static String clientCalendarEventsDelete(int eventId) =>
+      'api/v1/client/calendar/events/$eventId';
 }
 
 class SharedModel {

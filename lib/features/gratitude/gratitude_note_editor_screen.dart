@@ -125,7 +125,7 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        "Bugun sizni quvontirgan 1-2 narsani yozing.",
+                        "Bugun sizni quvontirgan narsani yozing.",
                         style: AppTextStyles.body13w4.copyWith(
                           color: Colors.white.withValues(alpha: 0.78),
                         ),
