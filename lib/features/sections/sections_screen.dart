@@ -2,6 +2,7 @@ import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/alarm/alarm_screen.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
+import 'package:bonoos/features/chat/ui/chat_screen.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/playlist/playlist_screen.dart';
 import 'package:bonoos/features/sections/faq_screen.dart';
@@ -108,7 +109,7 @@ class _SectionsScreenState extends State<SectionsScreen>
                   ),
                   _SupportIconButton(
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const FaqScreen()),
+                      MaterialPageRoute(builder: (_) => const ChatScreen()),
                     ),
                   ),
                 ],

@@ -738,7 +738,8 @@ class _BreathingList extends StatelessWidget {
                 subtitle: item.categoryLabel,
                 tag: item.formattedDuration,
                 duration: item.duration,
-                colors: _favoriteAudioPalette[index % _favoriteAudioPalette.length],
+                colors:
+                    _favoriteAudioPalette[index % _favoriteAudioPalette.length],
                 onTap: openAudio,
                 onMoreTap: openDetail,
                 isFavorite: true,
@@ -881,13 +882,32 @@ class _BreathingTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22.r),
-          color: const Color(0xFF23173F),
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.c842D5F,
+                    AppColors.c55004D,
+                  ],
+                )
+              : null,
+          color: selected ? null : const Color(0xFF23173F),
           border: Border.all(
             color: selected
-                ? Colors.white.withValues(alpha: 0.35)
+                ? AppColors.c842D5F.withValues(alpha: 0.9)
                 : Colors.transparent,
             width: 1.5,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.c842D5F.withValues(alpha: 0.30),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [

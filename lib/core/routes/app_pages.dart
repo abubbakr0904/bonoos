@@ -12,6 +12,7 @@ import 'package:bonoos/features/breath/breath_session_screen.dart';
 import 'package:bonoos/features/splash/splash_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
+import 'package:bonoos/features/chat/ui/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -148,6 +149,12 @@ class RouteGenerate {
             openFavoritesOnStart: openFavorites,
           );
         },
+      ),
+
+      GoRoute(
+        path: ChatScreen.routeName,
+        name: ChatScreen.routeName,
+        builder: (_, __) => const ChatScreen(),
       ),
 
       ///navBar

@@ -60,6 +60,7 @@ flutter:
 
   assets:
     - assets/.env
+    - assets/Bonoos Chat API (REST + WebSocket).postman_collection.json
     - assets/icons/
     - assets/images/
     - assets/voice/

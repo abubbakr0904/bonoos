@@ -108,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 FadeTransition(
                   opacity: CurvedAnimation(
                     parent: _entryController,
-                    curve: const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
+                    curve:
+                        const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
                   ),
                   child: _Header(
                     expanded: _expanded,
@@ -124,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 FadeTransition(
                   opacity: CurvedAnimation(
                     parent: _entryController,
-                    curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                    curve:
+                        const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
                   ),
                   child: SlideTransition(
                     position: Tween<Offset>(
@@ -133,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ).animate(
                       CurvedAnimation(
                         parent: _entryController,
-                        curve:
-                            const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                        curve: const Interval(0.10, 0.50,
+                            curve: Curves.easeOutCubic),
                       ),
                     ),
                     child: const _MessageOfDayCard(),
@@ -144,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 FadeTransition(
                   opacity: CurvedAnimation(
                     parent: _entryController,
-                    curve: const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+                    curve:
+                        const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
                   ),
                   child: SlideTransition(
                     position: Tween<Offset>(
@@ -153,8 +156,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ).animate(
                       CurvedAnimation(
                         parent: _entryController,
-                        curve:
-                            const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+                        curve: const Interval(0.18, 0.60,
+                            curve: Curves.easeOutCubic),
                       ),
                     ),
                     child: const WeeklyListeningChartCard(
@@ -169,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 FadeTransition(
                   opacity: CurvedAnimation(
                     parent: _entryController,
-                    curve: const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+                    curve:
+                        const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
                   ),
                   child: SlideTransition(
                     position: Tween<Offset>(
@@ -178,8 +182,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ).animate(
                       CurvedAnimation(
                         parent: _entryController,
-                        curve:
-                            const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+                        curve: const Interval(0.26, 0.75,
+                            curve: Curves.easeOutCubic),
                       ),
                     ),
                     child: const _HomePlaylistFromPlaylistSection(),
@@ -253,9 +257,9 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF2A1751),
-                  Color(0xFF1B1037),
-                  Color(0xFF140B2A),
+                  Color(0xFF2C1238),
+                  Color(0xFF24102F),
+                  Color(0xFF1A0C22),
                 ],
               ),
             ),
@@ -269,16 +273,12 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                   height: 4.h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withValues(alpha: 0.28),
+                    color: Colors.white.withValues(alpha: 0.22),
                   ),
                 ),
                 SizedBox(height: 14.h),
                 Row(
                   children: [
-                    _TopIconButton(
-                      icon: CupertinoIcons.back,
-                      onTap: () => Navigator.of(context).maybePop(),
-                    ),
                     const Spacer(),
                     _TopIconButton(
                       icon: CupertinoIcons.xmark,
@@ -327,7 +327,8 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                                 option: mood,
                                 selected: selected,
                                 floatController: _floatController,
-                                onTap: () => setState(() => _selectedIndex = index),
+                                onTap: () =>
+                                    setState(() => _selectedIndex = index),
                               ),
                             ),
                           );
@@ -343,13 +344,23 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999.r),
+                    gradient: _selectedIndex == null
+                        ? null
+                        : LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: <Color>[
+                              AppColors.c55004D.withValues(alpha: 0.86),
+                              AppColors.c55004D.withValues(alpha: 0.82),
+                            ],
+                          ),
                     boxShadow: _selectedIndex == null
                         ? null
                         : [
                             BoxShadow(
-                              color: AppColors.c842D5F.withValues(alpha: 0.42),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
+                              color: AppColors.c55004D.withValues(alpha: 0.24),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                   ),
@@ -359,8 +370,9 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                         : () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
-                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.14),
-                      backgroundColor: AppColors.c842D5F,
+                      disabledBackgroundColor:
+                          Colors.white.withValues(alpha: 0.14),
+                      backgroundColor: Colors.transparent,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 15.h),
                       shape: RoundedRectangleBorder(
@@ -409,8 +421,10 @@ class _TopIconButton extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(11.r),
-              color: Colors.white.withValues(alpha: 0.10),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              color: AppColors.c55004D.withValues(alpha: 0.14),
+              border: Border.all(
+                color: AppColors.c55004D.withValues(alpha: 0.40),
+              ),
             ),
             child: Icon(
               icon,
@@ -466,10 +480,16 @@ class _MoodItem extends StatelessWidget {
               width: 96.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                border: selected
+                    ? Border.all(
+                        color: AppColors.c55004D.withValues(alpha: 0.82),
+                        width: 2,
+                      )
+                    : null,
                 boxShadow: [
                   BoxShadow(
                     color: selected
-                        ? AppColors.c842D5F.withValues(alpha: 0.44)
+                        ? AppColors.c55004D.withValues(alpha: 0.38)
                         : Colors.black.withValues(alpha: 0.22),
                     blurRadius: selected ? 18 : 12,
                     spreadRadius: selected ? 1 : 0,
