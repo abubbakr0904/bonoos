@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:animate_do/animate_do.dart';
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
@@ -22,7 +23,8 @@ import 'package:bonoos/features/playlist/domain/repository/playlist_repository.d
 import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
 import 'package:bonoos/features/profile/profile_screen.dart';
-import 'package:bonoos/features/tabbox/tabbox_controller.dart';
+import 'package:bonoos/features/profile/security_service.dart';
+import 'package:bonoos/features/profile/passcode_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +59,155 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     )..forward();
     _loadProfile();
     _showMoodSheetOnOpen();
+    _checkPinSetup();
+  }
+
+  Future<void> _checkPinSetup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final promptShown = prefs.getBool('pin_prompt_shown') ?? false;
+    if (promptShown) return;
+
+    final pinSet = await SecurityService.isPinSet();
+    if (pinSet) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      
+      final shouldSet = await showDialog<bool>(
+        context: context,
+        builder: (context) => BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: Container(
+              padding: EdgeInsets.all(28.w),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.mainBgColor.withValues(alpha: 0.95),
+                    AppColors.c842D5F.withValues(alpha: 0.9),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(32.r),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      CupertinoIcons.lock_fill,
+                      color: Colors.white,
+                      size: 42.sp,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Text(
+                    "PIN-kod o'rnatilsinmi?",
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.body22w7.copyWith(
+                      color: Colors.white,
+                      fontFamily: 'DancingScript',
+                      fontSize: 28.sp,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    "Ilovangiz xavfsizligini ta'minlash uchun 4 xonali PIN-kod o'rnatishni tavsiya qilamiz",
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.body14w4.copyWith(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            foregroundColor: Colors.white.withValues(alpha: 0.7),
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                              side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                          ),
+                          child: Text(
+                            "Keyinroq",
+                            style: AppTextStyles.body15w5,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.c842D5F.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.mainBgColor,
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                            ),
+                            child: Text(
+                              "O'rnatish",
+                              style: AppTextStyles.body15w7.copyWith(
+                                color: AppColors.mainBgColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await prefs.setBool('pin_prompt_shown', true);
+      
+      if (shouldSet == true && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PasscodeScreen(mode: PasscodeMode.setup)),
+        );
+      }
+    });
   }
 
   @override
@@ -77,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _goToProfile() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      MaterialPageRoute(builder: (_) => ProfileScreen()),
     );
   }
 

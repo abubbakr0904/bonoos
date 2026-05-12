@@ -210,9 +210,9 @@ class _QuestionScreenState extends State<QuestionScreen>
                           hasQuestions &&
                           !_isSubmitting,
                       height: 48.h,
-                      radius: BorderRadius.circular(999),
-                      bgColor: AppColors.c842D5F,
-                      textColor: AppColors.white,
+                      radius: BorderRadius.circular(16),
+                      bgColor: AppColors.white,
+                      textColor: AppColors.mainBgColor,
                       disabledBgColor: Colors.white.withValues(alpha: 0.08),
                       disabledTextColor: Colors.white.withValues(alpha: 0.38),
                       padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -301,7 +301,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(AppImages.appLogoPurple, width: 46.w, height: 46.w),
+        Image.asset(AppImages.splashImage, width: 46.w, height: 46.w),
         SizedBox(width: 12.w),
         Expanded(
           child: ClipRRect(
@@ -332,7 +332,8 @@ class _Header extends StatelessWidget {
                               gradient: const LinearGradient(
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
-                                colors: [AppColors.c842D5F, AppColors.c55004D],
+                                colors: [AppColors.white, AppColors.white
+                                ],
                               ),
                             ),
                           ),
@@ -433,13 +434,8 @@ class _OptionTile extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.r),
-            color: selected
-                ? AppColors.c842D5F.withValues(alpha: 0.14)
-                : Colors.white.withValues(alpha: 0.06),
             border: Border.all(
-              color: selected
-                  ? AppColors.c842D5F.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.10),
+              color: Colors.white.withValues(alpha: 0.10),
               width: selected ? 1.5 : 1,
             ),
             boxShadow: selected
@@ -491,9 +487,7 @@ class _RadioCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected
-              ? AppColors.c842D5F
-              : Colors.white.withValues(alpha: 0.35),
+          color: Colors.white.withValues(alpha: 0.35),
           width: 2,
         ),
       ),
@@ -506,7 +500,8 @@ class _RadioCircle extends StatelessWidget {
             width: 10.w,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.c842D5F,
+              color: AppColors.white
+              ,
             ),
           ),
         ),

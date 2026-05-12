@@ -10,18 +10,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/utils/last_listened_manager.dart';
 import 'core/values/app_theme.dart';
+import 'core/values/app_colors.dart';
 import 'di.dart';
 import 'features/common/cubit/settings_cubit.dart';
+import 'package:bonoos/features/splash/splash_screen.dart';
+import 'package:bonoos/features/profile/security_service.dart';
+import 'package:bonoos/features/profile/passcode_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'generated/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppUpdateService.getCloudVersion();
-
   await dotenv.load(fileName: "assets/.env");
 
   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -74,11 +78,10 @@ class MyApp extends StatelessWidget {
                       Locale('uz', 'Cyrl'),
                     ],
                     routerConfig: RouteGenerate.router,
-                    // navigatorKey: navigatorKey,
                     builder: (context, child) {
                       return ScrollConfiguration(
                         behavior: MyBehavior(),
-                        child: child!,
+                        child: AuthWrapper(child: child!),
                       );
                     },
                   ),
@@ -92,8 +95,75 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class AuthWrapper extends StatefulWidget {
+  final Widget child;
+  const AuthWrapper({super.key, required this.child});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _authenticated = false;
+  bool _checking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+    // Listen to route changes to rebuild AuthWrapper
+    RouteGenerate.router.routerDelegate.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    RouteGenerate.router.routerDelegate.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _checkAuth() async {
+    final enabled = await SecurityService.isPinEnabled();
+    if (mounted) {
+      setState(() {
+        _authenticated = !enabled;
+        _checking = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) return Scaffold(backgroundColor: AppColors.mainBgColor);
+
+    // Get current path from the router
+    final String currentPath = RouteGenerate.router.routerDelegate.currentConfiguration.uri.path;
+
+    // 1. If we are on Splash screen, ALWAYS show it.
+    // Also if path is empty/root during init, assume splash is coming.
+    if (currentPath == SplashScreen.routeName || currentPath == '/splash' || currentPath == '/') {
+      return widget.child;
+    }
+
+    // 2. If PIN is enabled and not yet authenticated, show PasscodeScreen
+    if (!_authenticated) {
+      return PasscodeScreen(
+        mode: PasscodeMode.verify,
+        onSuccess: () {
+          setState(() => _authenticated = true);
+        },
+      );
+    }
+
+    // 3. Otherwise show the actual content
+    return widget.child;
+  }
+}
+
 class MyBehavior extends ScrollBehavior {
   @override
-  ScrollPhysics getScrollPhysics(BuildContext context) =>
-      const ClampingScrollPhysics();
+  ScrollPhysics getScrollPhysics(BuildContext context) => const ClampingScrollPhysics();
 }

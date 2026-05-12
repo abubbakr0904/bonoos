@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:bonoos/features/profile/profile_edit_screen.dart';
 import 'package:bonoos/features/profile/profile_avatar_controller.dart';
 import 'package:bonoos/features/profile/passcode_screen.dart';
+import 'package:bonoos/features/profile/security_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,10 +31,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _error;
   ClientProfile? _profile;
 
+  bool _pinEnabled = false;
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _checkSecurity();
+  }
+
+  Future<void> _checkSecurity() async {
+    final enabled = await SecurityService.isPinEnabled();
+    setState(() => _pinEnabled = enabled);
+  }
+
+  Future<void> _togglePin(bool val) async {
+    if (val) {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const PasscodeScreen(mode: PasscodeMode.setup)),
+      );
+      if (result == true) {
+        setState(() => _pinEnabled = true);
+      }
+    } else {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const PasscodeScreen(mode: PasscodeMode.verify)),
+      );
+      if (result == true) {
+        await SecurityService.setPinEnabled(false);
+        setState(() => _pinEnabled = false);
+      }
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -214,7 +244,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 22.h),
-                  _SectionHeader(title: "Men haqimda"),
+                  _SectionLabel(title: "Xavfsizlik"),
+                  SizedBox(height: 10.h),
+                  _SecurityCard(
+                    pinEnabled: _pinEnabled,
+                    onTogglePin: _togglePin,
+                    onChangePin: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PasscodeScreen(mode: PasscodeMode.change)),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 24.h),
+                  _SectionLabel(title: "Sozlamalar"),
                   SizedBox(height: 8.h),
                   _AboutMeCard(
                     hasText: bio.isNotEmpty,
@@ -238,7 +281,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _SettingsListCard(
                     items: const [
                       _SettingsItem(title: "Obunani boshqarish"),
-                      _SettingsItem(title: "Ilova paroli"),
                       _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
                     ],
                     onTap: (item) {
@@ -593,7 +635,7 @@ class _Avatar extends StatelessWidget {
                     padding: EdgeInsets.all(10.w),
                     color: Colors.white.withValues(alpha: 0.12),
                     child: Image.asset(
-                      AppImages.appLogoPurple,
+                      AppImages.splashImage,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -643,8 +685,8 @@ class _ContactPill extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.title});
 
   final String title;
 
@@ -835,6 +877,84 @@ class _SettingsItem {
 
   final String title;
   final bool isDestructive;
+}
+
+class _SecurityCard extends StatelessWidget {
+  const _SecurityCard({
+    required this.pinEnabled,
+    required this.onTogglePin,
+    required this.onChangePin,
+  });
+
+  final bool pinEnabled;
+  final ValueChanged<bool> onTogglePin;
+  final VoidCallback onChangePin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(22.r),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        children: [
+          _SecurityTile(
+            title: "Ilova paroli",
+            icon: CupertinoIcons.lock_fill,
+            trailing: CupertinoSwitch(
+              value: pinEnabled,
+              onChanged: onTogglePin,
+              activeTrackColor: AppColors.c842D5F,
+            ),
+          ),
+          if (pinEnabled) ...[
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.05), margin: EdgeInsets.symmetric(horizontal: 16.w)),
+            _SecurityTile(
+              title: "Parolni o'zgartirish",
+              icon: CupertinoIcons.padlock,
+              onTap: onChangePin,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SecurityTile extends StatelessWidget {
+  const _SecurityTile({
+    required this.title,
+    required this.icon,
+    this.trailing,
+    this.onTap,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        child: Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 18.sp),
+      ),
+      title: Text(
+        title,
+        style: AppTextStyles.body15w5.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+      ),
+      trailing: trailing ?? Icon(CupertinoIcons.chevron_right, color: Colors.white.withValues(alpha: 0.2), size: 16.sp),
+    );
+  }
 }
 
 class _SettingsListCard extends StatelessWidget {

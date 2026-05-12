@@ -59,5 +59,7 @@
 	<array>
 		<string>com.gdelataillade.fetch</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Ilovaga xavfsiz kirish uchun Face ID dan foydalanishga ruxsat bering</string>
 </dict>
 </plist>

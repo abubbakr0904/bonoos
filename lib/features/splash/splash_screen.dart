@@ -8,6 +8,7 @@ import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/auth/login_phone_screen.dart';
 import 'package:bonoos/features/on_boarding/first_enter_screen.dart';
+import 'package:bonoos/features/profile/passcode_screen.dart';
 import 'package:bonoos/features/questions/question_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:flutter/material.dart';

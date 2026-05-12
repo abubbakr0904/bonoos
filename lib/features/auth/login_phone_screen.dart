@@ -99,7 +99,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     FadeInLeft(
                       duration: const Duration(milliseconds: 600),
                       from: 30,
-                      child: Image.asset(AppImages.appLogoPurple, width: 80.w, height: 80.w),
+                      child: Image.asset(AppImages.splashImage, width: 80.w, height: 80.w),
                     ),
                     SizedBox(height: 16.h),
                     FadeInLeft(

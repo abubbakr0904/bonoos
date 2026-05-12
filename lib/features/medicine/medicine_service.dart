@@ -135,8 +135,8 @@ class MedicineService {
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'medicine_channel',
-          'Medicine Reminders',
-          channelDescription: 'Notifications for medicine intake',
+          'Dori eslatmalari',
+          channelDescription: 'Dorilarni ichish vaqti haqida bildirishnomalar',
           importance: Importance.max,
           priority: Priority.high,
         ),
