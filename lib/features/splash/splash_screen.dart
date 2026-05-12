@@ -7,7 +7,7 @@ import 'package:bonoos/di.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/auth/login_phone_screen.dart';
-import 'package:bonoos/features/on_boarding/on_boarding_screen.dart';
+import 'package:bonoos/features/on_boarding/first_enter_screen.dart';
 import 'package:bonoos/features/questions/question_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_screen.dart';
 import 'package:flutter/material.dart';
@@ -47,15 +47,15 @@ class _SplashScreenState extends State<SplashScreen>
     final hasPendingQuestions = prefs.getBool(SharedModel.newUser) ?? false;
 
     if (!hasSeenOnboarding) {
-      context.go(OnBoardingScreen.routeName);
+      context.go(FirstEnterScreen.routeName);
       return;
     }
-
+    //
     if (!hasToken) {
       context.go(LoginPhoneScreen.routeName);
       return;
     }
-
+    //
     if (hasPendingQuestions) {
       context.go(QuestionScreen.routeName);
     } else {
@@ -126,21 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF3D0F45),
-                  AppColors.c55004D,
-                  AppColors.c842D5F,
-                  Color(0xFF5C1A4A),
-                ],
-                stops: [0.0, 0.35, 0.72, 1.0],
-              ),
-            ),
-          ),
+          Container(color: AppColors.mainBgColor),
           RepaintBoundary(child: _AmbientGlow(controller: _glow)),
           SafeArea(
             child: Center(
@@ -208,8 +194,8 @@ class _AmbientGlow extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            Colors.white.withValues(alpha: 0.22),
-                            Colors.white.withValues(alpha: 0.0),
+                            Colors.white.withOpacity(0.22),
+                            Colors.white.withOpacity(0.0),
                           ],
                         ),
                       ),
@@ -232,7 +218,7 @@ class _AmbientGlow extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFF9B6DFF).withValues(alpha: 0.18),
+                            const Color(0xFF9B6DFF).withOpacity(0.18),
                             Colors.transparent,
                           ],
                         ),

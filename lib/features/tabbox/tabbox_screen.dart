@@ -44,38 +44,32 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        _index == 0 || _index == 1 || _index == 2 || _index == 3 || _index == 4;
     final items = <_TabItem>[
-      const _TabItem(label: "Home", icon: CupertinoIcons.house),
-      const _TabItem(label: "Calendar", icon: CupertinoIcons.calendar_today),
+      const _TabItem(label: "Home", icon: CupertinoIcons.house_fill),
+      const _TabItem(label: "Calendar", icon: CupertinoIcons.calendar),
       const _TabItem(label: "Shukrona", icon: CupertinoIcons.heart_fill),
-      const _TabItem(label: "Abonement", icon: CupertinoIcons.tickets),
-      const _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2),
+      const _TabItem(label: "Abonement", icon: CupertinoIcons.tickets_fill),
+      const _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2_fill),
     ];
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF140B2A) : AppColors.white,
+      backgroundColor: AppColors.mainBgColor,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 300),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, animation) {
           final slide = Tween<Offset>(
             begin: const Offset(0.02, 0),
             end: Offset.zero,
-          ).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-          return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(position: slide, child: child));
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+          return FadeTransition(opacity: animation, child: SlideTransition(position: slide, child: child));
         },
         child: _buildBody(items, _index),
       ),
       bottomNavigationBar: _BonoosBottomNav(
         items: items,
         index: _index,
-        isDark: isDark,
         onChanged: (i) {
           if (i == 2) {
             _gratitudeViewVersion++;
@@ -120,47 +114,50 @@ class _BonoosBottomNav extends StatelessWidget {
   const _BonoosBottomNav({
     required this.items,
     required this.index,
-    required this.isDark,
     required this.onChanged,
   });
 
   final List<_TabItem> items;
   final int index;
-  final bool isDark;
   final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final height = 70.h;
-    return SafeArea(
-      top: false,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF140B2A) : AppColors.white,
-          border: Border(
-            top: BorderSide(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : AppColors.transparent,
-              width: 1,
-            ),
+    final height = 75.h;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.mainBgColor,
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withOpacity(0.08),
+            width: 1,
           ),
         ),
-        child: Padding(
-          padding: EdgeInsets.only(left: 10.w, right: 10.w, bottom: 2.h),
-          child: Row(
-            children: [
-              for (int i = 0; i < items.length; i++)
-                Expanded(
-                  child: _NavItem(
-                    item: items[i],
-                    selected: i == index,
-                    isDark: isDark,
-                    onTap: () => onChanged(i),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: height,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            child: Row(
+              children: [
+                for (int i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _NavItem(
+                      item: items[i],
+                      selected: i == index,
+                      onTap: () => onChanged(i),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -172,61 +169,49 @@ class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.item,
     required this.selected,
-    required this.isDark,
     required this.onTap,
   });
 
   final _TabItem item;
   final bool selected;
-  final bool isDark;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.c842D5F;
-    final inactiveColor =
-        isDark ? Colors.white.withValues(alpha: 0.62) : AppColors.grey600;
+    final activeColor = Colors.white;
+    final inactiveColor = Colors.white.withOpacity(0.45);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              height: 40.w,
-              width: 40.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selected
-                    ? (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : activeColor.withValues(alpha: 0.14))
-                    : AppColors.transparent,
-              ),
-              child: Center(
-                child: Icon(
-                  item.icon,
-                  size: 22.sp,
-                  color: selected ? activeColor : inactiveColor,
-                ),
-              ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? Colors.white.withOpacity(0.12) : Colors.transparent,
             ),
-            SizedBox(height: 4.h),
-            Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body10w6.copyWith(
-                color: selected ? activeColor : inactiveColor,
-                fontSize: 10,
-              ),
+            child: Icon(
+              item.icon,
+              size: 24.sp,
+              color: selected ? activeColor : inactiveColor,
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            item.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.body10w6.copyWith(
+              color: selected ? activeColor : inactiveColor,
+              fontSize: 10.sp,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -242,8 +227,7 @@ class _PlaceholderTab extends StatelessWidget {
       child: Center(
         child: Text(
           title,
-          style:
-              AppTextStyles.body22w7.copyWith(color: AppColors.textColorBlack),
+          style: AppTextStyles.body22w7.copyWith(color: Colors.white),
         ),
       ),
     );

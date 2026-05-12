@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:animate_do/animate_do.dart';
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/utils/last_listened_manager.dart';
@@ -8,7 +8,7 @@ import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:dio/dio.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
-import 'package:bonoos/features/common/widget/home_gradient_background.dart';
+import 'package:bonoos/features/common/widget/custom_button.dart';
 import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final ScrollController _homeScroll = ScrollController();
   late final AnimationController _entryController;
   bool _moodSheetShown = false;
+  bool _giftOpenedToday = false;
 
   void _toggleChallenge() => setState(() => _expanded = !_expanded);
 
@@ -90,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         enableDrag: true,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        barrierColor: Colors.black.withValues(alpha: 0.42),
+        barrierColor: Colors.black.withOpacity(0.42),
         builder: (_) => const _MoodCheckinSheet(),
       );
     });
@@ -99,104 +100,98 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
-      body: Stack(
-        children: [
-          HomeGradientBackground(),
-          SafeArea(
-            child: ListView(
-              controller: _homeScroll,
-              padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 22.h),
-              children: [
-                FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _entryController,
-                    curve:
-                        const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
-                  ),
-                  child: _Header(
-                    expanded: _expanded,
-                    profile: _profile,
-                    onAvatarTap: _goToProfile,
-                    onChevronTap: _toggleChallenge,
-                    onNotificationTap: () =>
-                        context.push(NotificationsScreen.routeName),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                SizedBox(height: 14.h),
-                FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _entryController,
-                    curve:
-                        const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
-                  ),
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.10),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: _entryController,
-                        curve: const Interval(0.10, 0.50,
-                            curve: Curves.easeOutCubic),
-                      ),
-                    ),
-                    child: const _MessageOfDayCard(),
-                  ),
-                ),
-                SizedBox(height: 14.h),
-                FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _entryController,
-                    curve:
-                        const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
-                  ),
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.10),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: _entryController,
-                        curve: const Interval(0.18, 0.60,
-                            curve: Curves.easeOutCubic),
-                      ),
-                    ),
-                    child: const WeeklyListeningChartCard(
-                      title: "Weekly listening (minutes)",
-                      subtitle: "Static demo data",
-                      values: [0, 6, 12, 8, 16, 10, 14],
-                      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: _entryController,
-                    curve:
-                        const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
-                  ),
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.10),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: _entryController,
-                        curve: const Interval(0.26, 0.75,
-                            curve: Curves.easeOutCubic),
-                      ),
-                    ),
-                    child: const _HomePlaylistFromPlaylistSection(),
-                  ),
-                ),
-                SizedBox(height: 22.h),
-              ],
+      backgroundColor: AppColors.mainBgColor,
+      body: SafeArea(
+        child: ListView(
+          controller: _homeScroll,
+          padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 22.h),
+          children: [
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _entryController,
+                curve: const Interval(0.0, 0.35, curve: Curves.easeOutCubic),
+              ),
+              child: _Header(
+                expanded: _expanded,
+                profile: _profile,
+                onAvatarTap: _goToProfile,
+                onChevronTap: _toggleChallenge,
+                onNotificationTap: () => context.push(NotificationsScreen.routeName),
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: 16.h),
+            if (!_giftOpenedToday) ...[
+              FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _entryController,
+                  curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                ),
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.10),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: _entryController,
+                      curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+                    ),
+                  ),
+                  child: _DailyGiftCard(
+                    onTap: () {
+                      context.push(MessageOfDayScreen.routeName).then((_) {
+                        if (mounted) setState(() => _giftOpenedToday = true);
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.h),
+            ],
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _entryController,
+                curve: const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+              ),
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.10),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
+                  ),
+                ),
+                child: const WeeklyListeningChartCard(
+                  title: "Haftalik tinglash (daqiqa)",
+                  subtitle: "Statistik ma'lumotlar",
+                  values: [0, 6, 12, 8, 16, 10, 14],
+                  labels: ["Du", "Se", "Ch", "Pa", "Ju", "Sha", "Ya"],
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _entryController,
+                curve: const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+              ),
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.10),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.26, 0.75, curve: Curves.easeOutCubic),
+                  ),
+                ),
+                child: const _HomePlaylistFromPlaylistSection(),
+              ),
+            ),
+            SizedBox(height: 22.h),
+          ],
+        ),
       ),
     );
   }
@@ -219,14 +214,13 @@ class _MoodCheckinSheet extends StatefulWidget {
   State<_MoodCheckinSheet> createState() => _MoodCheckinSheetState();
 }
 
-class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
-    with SingleTickerProviderStateMixin {
+class _MoodCheckinSheetState extends State<_MoodCheckinSheet> with SingleTickerProviderStateMixin {
   static const List<_MoodOption> _moods = [
-    _MoodOption(label: 'Great', assetPath: 'assets/images/mood1.jpg'),
-    _MoodOption(label: 'Good', assetPath: 'assets/images/mood2.jpg'),
-    _MoodOption(label: 'Okay', assetPath: 'assets/images/mood3.jpg'),
-    _MoodOption(label: 'Not Great', assetPath: 'assets/images/mood4.jpg'),
-    _MoodOption(label: 'Bad', assetPath: 'assets/images/mood5.jpg'),
+    _MoodOption(label: 'Zo\'r', assetPath: 'assets/images/mood1.jpg'),
+    _MoodOption(label: 'Yaxshi', assetPath: 'assets/images/mood2.jpg'),
+    _MoodOption(label: 'Oddiy', assetPath: 'assets/images/mood3.jpg'),
+    _MoodOption(label: 'Yomonroq', assetPath: 'assets/images/mood4.jpg'),
+    _MoodOption(label: 'Yomon', assetPath: 'assets/images/mood5.jpg'),
   ];
 
   int? _selectedIndex;
@@ -250,8 +244,6 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
 
   Future<void> _saveMood() async {
     if (_selectedIndex == null) return;
-    // API: 5 = eng hursand (Great), 1 = eng hafa (Bad)
-    // Index: 0=Great(5), 1=Good(4), 2=Okay(3), 3=Not Great(2), 4=Bad(1)
     final moodValue = 5 - _selectedIndex!;
     setState(() => _isSaving = true);
     try {
@@ -264,9 +256,7 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
       Navigator.of(context).pop();
     } on DioException catch (e) {
       if (!mounted) return;
-      final message = e.response?.data is Map
-          ? Map<String, dynamic>.from(e.response!.data)['message']?.toString()
-          : null;
+      final message = e.response?.data is Map ? Map<String, dynamic>.from(e.response!.data)['message']?.toString() : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message ?? 'Kayfiyat saqlanmadi')),
       );
@@ -283,25 +273,17 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
-      heightFactor: 0.60,
+      heightFactor: 0.65,
       child: Stack(
         children: [
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2A1751),
-                  Color(0xFF1B1037),
-                  Color(0xFF140B2A),
-                ],
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+              color: AppColors.mainBgColor,
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(18.w, 10.h, 18.w, 14.h),
+            padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 14.h),
             child: Column(
               children: [
                 Container(
@@ -309,10 +291,10 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                   height: 4.h,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withValues(alpha: 0.28),
+                    color: Colors.white.withOpacity(0.2),
                   ),
                 ),
-                SizedBox(height: 14.h),
+                SizedBox(height: 16.h),
                 Row(
                   children: [
                     _TopIconButton(
@@ -326,11 +308,13 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                     ),
                   ],
                 ),
-                SizedBox(height: 22.h),
+                SizedBox(height: 20.h),
                 Text(
-                  "How are you feeling?",
+                  "Bugungi kayfiyatingiz?",
                   style: AppTextStyles.body24w7.copyWith(
-                    color: Colors.white.withValues(alpha: 0.96),
+                    color: Colors.white,
+                    fontFamily: 'DancingScript',
+                    fontSize: 34.sp,
                   ),
                 ),
                 SizedBox(height: 24.h),
@@ -346,12 +330,9 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                         children: List.generate(_moods.length, (index) {
                           final mood = _moods[index];
                           final selected = _selectedIndex == index;
-                          final row = index < 3 ? 0 : 1;
-                          final col = index < 3 ? index : (index - 3);
-                          final delay = (row * 220) + (col * 110);
                           return TweenAnimationBuilder<double>(
                             tween: Tween<double>(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 460 + delay),
+                            duration: Duration(milliseconds: 400 + (index * 100)),
                             curve: Curves.easeOutCubic,
                             builder: (context, value, child) => Opacity(
                               opacity: value,
@@ -367,8 +348,7 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                                 option: mood,
                                 selected: selected,
                                 floatController: _floatController,
-                                onTap: () =>
-                                    setState(() => _selectedIndex = index),
+                                onTap: () => setState(() => _selectedIndex = index),
                               ),
                             ),
                           );
@@ -377,57 +357,24 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet>
                     ),
                   ),
                 ),
-                SizedBox(height: 10.h),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
+                SizedBox(height: 20.h),
+                SizedBox(
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999.r),
-                    boxShadow: _selectedIndex == null
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: AppColors.c842D5F.withValues(alpha: 0.42),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed:
-                        _selectedIndex == null || _isSaving ? null : _saveMood,
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      disabledBackgroundColor:
-                          Colors.white.withValues(alpha: 0.14),
-                      backgroundColor: AppColors.c842D5F,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999.r),
-                      ),
-                    ),
-                    child: _isSaving
-                        ? SizedBox(
-                            width: 20.w,
-                            height: 20.w,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                          )
-                        : Text(
-                            "Saqlash",
-                            style: AppTextStyles.body16w7.copyWith(
-                              color: Colors.white.withValues(
-                                alpha: _selectedIndex == null ? 0.7 : 1,
-                              ),
-                            ),
-                          ),
+                  child: CustomButton(
+                    text: "Saqlash",
+                    onTap: _saveMood,
+                    isEnabled: _selectedIndex != null && !_isSaving,
+                    isLoading: _isSaving,
+                    height: 50.h,
+                    radius: BorderRadius.circular(16.r),
+                    bgColor: Colors.white,
+                    textColor: AppColors.mainBgColor,
+                    disabledBgColor: Colors.white.withOpacity(0.1),
+                    disabledTextColor: Colors.white.withOpacity(0.3),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                   ),
                 ),
-                SizedBox(height: 6.h),
+                SizedBox(height: 12.h),
               ],
             ),
           ),
@@ -449,22 +396,22 @@ class _TopIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 36.w,
-      width: 36.w,
+      height: 38.w,
+      width: 38.w,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(11.r),
+          borderRadius: BorderRadius.circular(12.r),
           onTap: onTap,
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(11.r),
-              color: Colors.white.withValues(alpha: 0.10),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              borderRadius: BorderRadius.circular(12.r),
+              color: Colors.black.withOpacity(0.12),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
             ),
             child: Icon(
               icon,
-              color: Colors.white.withValues(alpha: 0.94),
+              color: Colors.white,
               size: 20.sp,
             ),
           ),
@@ -498,12 +445,12 @@ class _MoodItem extends StatelessWidget {
           child: AnimatedBuilder(
             animation: floatController,
             builder: (context, child) {
-              final offsetY = selected ? (-4.2 * floatController.value) : 0.0;
+              final offsetY = selected ? (-5.0 * floatController.value) : 0.0;
               return Transform.translate(
                 offset: Offset(0, offsetY),
                 child: AnimatedScale(
-                  scale: selected ? 1.20 : 1,
-                  duration: const Duration(milliseconds: 230),
+                  scale: selected ? 1.25 : 1,
+                  duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutBack,
                   child: child,
                 ),
@@ -516,14 +463,12 @@ class _MoodItem extends StatelessWidget {
               width: 96.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                border: selected ? Border.all(color: Colors.white, width: 2) : null,
                 boxShadow: [
                   BoxShadow(
-                    color: selected
-                        ? AppColors.c842D5F.withValues(alpha: 0.44)
-                        : Colors.black.withValues(alpha: 0.22),
-                    blurRadius: selected ? 18 : 12,
-                    spreadRadius: selected ? 1 : 0,
-                    offset: const Offset(0, 6),
+                    color: selected ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.2),
+                    blurRadius: selected ? 20 : 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -532,7 +477,7 @@ class _MoodItem extends StatelessWidget {
                 option.assetPath,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFF2B2042),
+                  color: Colors.black.withOpacity(0.1),
                   child: const Icon(CupertinoIcons.smiley, color: Colors.white),
                 ),
               ),
@@ -582,65 +527,48 @@ class _Header extends StatelessWidget {
           onTap: onAvatarTap,
           child: avatarUrl.isNotEmpty
               ? Container(
-                  height: 46.w,
-                  width: 46.w,
+                  height: 48.w,
+                  width: 48.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.c842D5F, AppColors.c55004D],
-                    ),
-                    boxShadow: const [
+                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x2A842D5F),
-                        blurRadius: 18,
-                        offset: Offset(0, 10),
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: ClipOval(
                     child: CachedNetworkImage(
                       imageUrl: avatarUrl,
-                      width: 46.w,
-                      height: 46.w,
+                      width: 48.w,
+                      height: 48.w,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Center(
-                        child: Icon(CupertinoIcons.person,
-                            color: Colors.white, size: 22),
+                      placeholder: (_, __) => const Center(
+                        child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
                       ),
-                      errorWidget: (_, __, ___) => Center(
-                        child: Icon(CupertinoIcons.person,
-                            color: Colors.white, size: 22),
+                      errorWidget: (_, __, ___) => const Center(
+                        child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
                       ),
                     ),
                   ),
                 )
               : Container(
-                  height: 46.w,
-                  width: 46.w,
+                  height: 48.w,
+                  width: 48.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.c842D5F, AppColors.c55004D],
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x2A842D5F),
-                        blurRadius: 18,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
+                    color: Colors.white.withOpacity(0.1),
+                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
                   ),
                   child: const Center(
-                    child: Icon(CupertinoIcons.person,
-                        color: Colors.white, size: 22),
+                    child: Icon(CupertinoIcons.person, color: Colors.white, size: 22),
                   ),
                 ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 14.w),
         Expanded(
           child: GestureDetector(
             onTap: onAvatarTap,
@@ -652,15 +580,16 @@ class _Header extends StatelessWidget {
                   displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.body20w7
-                      .copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                  style: AppTextStyles.body22w7.copyWith(
+                    color: Colors.white,
+                    fontFamily: 'DancingScript',
+                    fontSize: 28.sp,
+                  ),
                 ),
-                SizedBox(height: 2.h),
                 Text(
                   "Bugungi challengeni boshlang!",
-                  style: AppTextStyles.body14w4.copyWith(
-                    color: Colors.white.withValues(alpha: 0.70),
-                    height: 1.2,
+                  style: AppTextStyles.body13w4.copyWith(
+                    color: Colors.white.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -668,55 +597,31 @@ class _Header extends StatelessWidget {
           ),
         ),
         SizedBox(width: 10.w),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _HeaderActionTile(
-              onTap: onNotificationTap,
-              child: Icon(
-                CupertinoIcons.bell_fill,
-                size: 21.sp,
-                color: Colors.white.withValues(alpha: 0.92),
-              ),
-            ),
-            // SizedBox(width: 10.w),
-            // _HeaderActionTile(
-            //   onTap: onChevronTap,
-            //   emphasize: false,
-            //   child: AnimatedRotation(
-            //     duration: const Duration(milliseconds: 260),
-            //     curve: Curves.easeOutCubic,
-            //     turns: expanded ? 0.5 : 0,
-            //     child: Icon(
-            //       CupertinoIcons.chevron_down,
-            //       size: 18.sp,
-            //       color: Colors.white.withValues(alpha: 0.72),
-            //     ),
-            //   ),
-            // ),
-          ],
+        _HeaderActionTile(
+          onTap: onNotificationTap,
+          child: Icon(
+            CupertinoIcons.bell_fill,
+            size: 20.sp,
+            color: Colors.white.withOpacity(0.9),
+          ),
         ),
       ],
     );
   }
 }
 
-/// Bir xil o‘lcham va uslub — qo‘ng‘iroq va chevron tekis, oraliq aniq.
 class _HeaderActionTile extends StatelessWidget {
   const _HeaderActionTile({
     required this.onTap,
     required this.child,
-    this.emphasize = true,
   });
 
   final VoidCallback onTap;
   final Widget child;
-  final bool emphasize;
 
   @override
   Widget build(BuildContext context) {
     final side = 44.w;
-    final radius = BorderRadius.circular(13.r);
     return SizedBox(
       width: side,
       height: side,
@@ -724,18 +629,12 @@ class _HeaderActionTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: radius,
+          borderRadius: BorderRadius.circular(14.r),
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: radius,
-              color: emphasize
-                  ? Colors.white.withValues(alpha: 0.09)
-                  : Colors.white.withValues(alpha: 0.055),
-              border: Border.all(
-                color: emphasize
-                    ? Colors.white.withValues(alpha: 0.14)
-                    : Colors.white.withValues(alpha: 0.10),
-              ),
+              borderRadius: BorderRadius.circular(14.r),
+              color: Colors.black.withOpacity(0.12),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
             ),
             child: Center(child: child),
           ),
@@ -745,144 +644,69 @@ class _HeaderActionTile extends StatelessWidget {
   }
 }
 
-class _ChallengeCard extends StatelessWidget {
-  const _ChallengeCard();
+class _DailyGiftCard extends StatelessWidget {
+  const _DailyGiftCard({required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    const primary = AppColors.c842D5F;
-    const primaryDark = AppColors.c55004D;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.r),
-        color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x20842D5F),
-            blurRadius: 22,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: 14.h),
-            child: Text(
-              "Start meditating and we’ll mark the days completed in the tracker.",
-              style: AppTextStyles.body14w4.copyWith(
-                color: Colors.white.withValues(alpha: 0.72),
-                height: 1.45,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: double.infinity,
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    primary.withValues(alpha: 0.88),
-                    primaryDark.withValues(alpha: 0.88),
-                  ],
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  "Start the challenge",
-                  style:
-                      AppTextStyles.body16w7.copyWith(color: AppColors.white),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessageOfDayCard extends StatelessWidget {
-  const _MessageOfDayCard();
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () =>
-          context.push(MessageOfDayScreen.routeName, extra: UniqueKey()),
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
+        width: double.infinity,
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22.r),
-          color: Colors.white.withValues(alpha: 0.06),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x20842D5F),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-            ),
-          ],
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.15),
+              Colors.white.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+      
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                "Bonoo\$ ilovasi \nkun sovg'asi",
-                style: AppTextStyles.body20w7.copyWith(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  height: 1.05,
-                ),
-              ),
-            ),
+            // Gift Icon with Glow
             Container(
-              height: 42.w,
-              width: 42.w,
+              padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.10),
+                color: Colors.white.withOpacity(0.15),
+           
               ),
-              child: Center(
-                child: Icon(
-                  CupertinoIcons.cube_box,
-                  color: Colors.white,
-                  size: 20.sp,
-                ),
+              child: Icon(CupertinoIcons.gift_fill, color: Colors.white, size: 28.sp),
+            ),
+            SizedBox(width: 18.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Kun sovg'asi",
+                    style: AppTextStyles.body20w7.copyWith(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      height: 1.1,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    "Siz uchun maxsus motivatsiya",
+                    style: AppTextStyles.body14w4.copyWith(
+                      color: Colors.white.withOpacity(0.65),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
             ),
+            // Interactive button-like indicator
+     
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExpandableChallenge extends StatelessWidget {
-  const _ExpandableChallenge({required this.expanded});
-  final bool expanded;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22.r),
-      child: AnimatedAlign(
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.topCenter,
-        heightFactor: expanded ? 1 : 0,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: 2.h),
-          child: const _ChallengeCard(),
         ),
       ),
     );
@@ -893,601 +717,29 @@ class _HomePlaylistFromPlaylistSection extends StatefulWidget {
   const _HomePlaylistFromPlaylistSection();
 
   @override
-  State<_HomePlaylistFromPlaylistSection> createState() =>
-      _HomePlaylistFromPlaylistSectionState();
+  State<_HomePlaylistFromPlaylistSection> createState() => _HomePlaylistFromPlaylistSectionState();
 }
 
-class _HomePlaylistFromPlaylistSectionState
-    extends State<_HomePlaylistFromPlaylistSection> {
-  bool _categoriesLoading = true;
-  String? _categoriesError;
-  List<Category> _categories = [];
-  int _selectedIndex = 0;
-
-  bool _auditionsLoading = false;
-  String? _auditionsError;
-  List<Audition> _auditions = [];
-
-  static const _gradientPalette = <List<Color>>[
-    [Color(0xFFB77BCB), Color(0xFF8F5FB0)],
-    [Color(0xFFA883CF), Color(0xFF6F5AB6)],
-    [Color(0xFFC78DB7), Color(0xFF8C66A7)],
-    [Color(0xFF8A8CD6), Color(0xFF5F6BB8)],
-    [Color(0xFFD27DA8), Color(0xFF9A5B90)],
-    [Color(0xFFC48ABF), Color(0xFF7A5AA0)],
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategories();
-  }
-
-  Future<void> _loadCategories() async {
-    setState(() {
-      _categoriesLoading = true;
-      _categoriesError = null;
-    });
-    final result = await inject<PlaylistRepository>().fetchCategories();
-    if (!mounted) return;
-    result.fold(
-      (f) => setState(() {
-        _categoriesLoading = false;
-        _categoriesError = f.message ?? 'Xatolik';
-      }),
-      (cats) {
-        setState(() {
-          _categoriesLoading = false;
-          _categories = cats;
-          _selectedIndex = 0;
-        });
-        if (cats.isNotEmpty) {
-          _loadAuditions(cats.first.id);
-        }
-      },
-    );
-  }
-
-  Future<void> _loadAuditions(int categoryId) async {
-    setState(() {
-      _auditionsLoading = true;
-      _auditionsError = null;
-      _auditions = [];
-    });
-    final result =
-        await inject<PlaylistRepository>().fetchAuditions(categoryId);
-    if (!mounted) return;
-    result.fold(
-      (f) => setState(() {
-        _auditionsLoading = false;
-        _auditionsError = f.message ?? 'Xatolik';
-      }),
-      (list) => setState(() {
-        _auditionsLoading = false;
-        _auditionsError = null;
-        _auditions = list;
-      }),
-    );
-  }
-
-  void _onCategorySelected(int index) {
-    if (index == _selectedIndex) return;
-    setState(() => _selectedIndex = index);
-    if (index < _categories.length) {
-      _loadAuditions(_categories[index].id);
-    }
-  }
-
-  void _onFavoriteTapAudition(int index) {
-    if (index < 0 || index >= _auditions.length) return;
-    final item = _auditions[index];
-    final next = !item.favorited;
-    setState(() {
-      _auditions = List<Audition>.from(_auditions);
-      _auditions[index] = item.copyWith(favorited: next);
-    });
-    unawaited(
-      inject<PlaylistRepository>()
-          .toggleAuditionFavorite(item.id)
-          .then((either) {
-        if (!mounted) return;
-        either.fold(
-          (_) => setState(() {
-            _auditions = List<Audition>.from(_auditions);
-            _auditions[index] = item;
-          }),
-          (_) {},
-        );
-      }),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_categoriesLoading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.h),
-        child: Center(
-          child: SizedBox(
-            width: 26.w,
-            height: 26.w,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white.withValues(alpha: 0.45),
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (_categoriesError != null) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _categoriesError!,
-              style: AppTextStyles.body14w5.copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-            TextButton(
-              onPressed: _loadCategories,
-              child: Text(
-                'Qayta urinish',
-                style: AppTextStyles.body14w6.copyWith(
-                  color: AppColors.c842D5F,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final selectedCategoryName = _selectedIndex < _categories.length
-        ? _categories[_selectedIndex].name
-        : '';
-    final selectedCategoryId = _selectedIndex < _categories.length
-        ? _categories[_selectedIndex].id
-        : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: List.generate(_categories.length, (index) {
-              final selected = index == _selectedIndex;
-              return Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: GestureDetector(
-                  onTap: () => _onCategorySelected(index),
-                  child: _HomeCategoryChip(
-                    label: _categories[index].name,
-                    selected: selected,
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-        SizedBox(height: 12.h),
-        if (_auditionsLoading)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.h),
-            child: Center(
-              child: SizedBox(
-                width: 24.w,
-                height: 24.w,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white.withValues(alpha: 0.45),
-                ),
-              ),
-            ),
-          )
-        else if (_auditionsError != null)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _auditionsError!,
-                  style: AppTextStyles.body14w5.copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (selectedCategoryId != null) {
-                      _loadAuditions(selectedCategoryId);
-                    }
-                  },
-                  child: Text(
-                    'Qayta urinish',
-                    style: AppTextStyles.body14w6.copyWith(
-                      color: AppColors.c842D5F,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        else if (_auditions.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: 8.h, bottom: 6.h),
-            child: Text(
-              "Bu kategoriyada hozircha audio yo'q",
-              style: AppTextStyles.body13w5.copyWith(
-                color: Colors.white.withValues(alpha: 0.55),
-              ),
-            ),
-          )
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _auditions.length,
-            separatorBuilder: (_, __) => SizedBox(height: 10.h),
-            itemBuilder: (context, index) {
-              final item = _auditions[index];
-              final colors = _gradientPalette[index % _gradientPalette.length];
-              return TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: Duration(milliseconds: 320 + (index * 70)),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * 16),
-                      child: child,
-                    ),
-                  );
-                },
-                child: AudioListTile(
-                  title: item.text,
-                  subtitle: selectedCategoryName,
-                  tag: item.formattedDuration,
-                  duration: item.durationLabel,
-                  colors: colors,
-                  onTap: () {
-                    LastListenedManager.save(
-                      prefs: inject<SharedPreferences>(),
-                      title: item.text,
-                      durationLabel: item.durationLabel,
-                      audioUrl: item.fullAudioUrl,
-                      formattedDuration: item.formattedDuration,
-                    );
-                    context.push(
-                      AudioScreen.routeName,
-                      extra: AudioScreenArgs(
-                        title: item.text,
-                        durationLabel: item.durationLabel,
-                        audioUrl: item.fullAudioUrl,
-                        auditionId: item.id,
-                        auditionType: item.type,
-                        durationSeconds: item.duration,
-                        initialFavorited: item.favorited,
-                      ),
-                    );
-                  },
-                  isFavorite: item.favorited,
-                  onFavoriteTap: () => _onFavoriteTapAudition(index),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-class _HomeCategoryChip extends StatelessWidget {
-  const _HomeCategoryChip({
-    required this.label,
-    this.selected = false,
-  });
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: selected
-            ? Colors.white.withValues(alpha: 0.14)
-            : Colors.white.withValues(alpha: 0.06),
-        border: Border.all(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.10),
-        ),
-        boxShadow: selected
-            ? const [
-                BoxShadow(
-                  color: Color(0x20842D5F),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.body12w5.copyWith(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.92)
-              : Colors.white.withValues(alpha: 0.70),
-        ),
-      ),
-    );
-  }
-}
-
-/// Abumarket bannerlar (`ListAPI.abuMarketBaseUrl` + `.../banners/all?type=1`) — asosiy `BASE_URL` dan mustaqil.
-class _HomeBannersCarousel extends StatefulWidget {
-  const _HomeBannersCarousel();
-
-  @override
-  State<_HomeBannersCarousel> createState() => _HomeBannersCarouselState();
-}
-
-class _HomeBannersCarouselState extends State<_HomeBannersCarousel> {
-  final PageController _pageController = PageController();
-  List<ClientBannerDto> _items = [];
-  bool _loading = true;
-  int _pageIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final r = await inject<BannersRepository>().fetchAbuMarketBanners();
-    if (!mounted) return;
-    r.fold(
-      (_) => setState(() {
-        _loading = false;
-        _items = [];
-      }),
-      (list) => setState(() {
-        _loading = false;
-        _items = list;
-      }),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return SizedBox(
-        height: 132.h,
-        child: Center(
-          child: SizedBox(
-            width: 26.w,
-            height: 26.w,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white.withValues(alpha: 0.45),
-            ),
-          ),
-        ),
-      );
-    }
-    if (_items.isEmpty) return const SizedBox.shrink();
-
-    final locale = Localizations.localeOf(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20.r),
-          child: SizedBox(
-            height: 132.h,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _items.length,
-              onPageChanged: (i) => setState(() => _pageIndex = i),
-              itemBuilder: (context, i) {
-                final url = _items[i].imageUrlForLocale(locale);
-                if (url.isEmpty) {
-                  return ColoredBox(
-                      color: Colors.white.withValues(alpha: 0.06));
-                }
-                return CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) =>
-                      ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
-                  errorWidget: (_, __, ___) =>
-                      ColoredBox(color: Colors.white.withValues(alpha: 0.06)),
-                );
-              },
-            ),
-          ),
-        ),
-        if (_items.length > 1) ...[
-          SizedBox(height: 8.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_items.length, (i) {
-              final active = i == _pageIndex;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                margin: EdgeInsets.symmetric(horizontal: 3.w),
-                width: active ? 18.w : 6.w,
-                height: 6.w,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(99),
-                  color: active
-                      ? AppColors.c842D5F.withValues(alpha: 0.95)
-                      : Colors.white.withValues(alpha: 0.22),
-                ),
-              );
-            }),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _BreathingCards extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 150.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: 3,
-        separatorBuilder: (_, __) => SizedBox(width: 12.w),
-        itemBuilder: (context, index) {
-          final card = Container(
-            width: 210.w,
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22.r),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: index == 0
-                    ? [
-                        AppColors.c842D5F.withValues(alpha: 0.82),
-                        AppColors.c55004D.withValues(alpha: 0.82),
-                      ]
-                    : index == 1
-                        ? [
-                            AppColors.c30215A.withValues(alpha: 0.82),
-                            AppColors.c55004D.withValues(alpha: 0.82),
-                          ]
-                        : [
-                            AppColors.c55004D.withValues(alpha: 0.82),
-                            AppColors.c842D5F.withValues(alpha: 0.82),
-                          ],
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x24842D5F),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 44.w,
-                  width: 44.w,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0x1EFFFFFF),
-                  ),
-                  child: const Center(
-                    child: Icon(CupertinoIcons.wind,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  index == 0
-                      ? "Breathing\npractices"
-                      : index == 1
-                          ? "Shall we take a\nwalk by the sea?"
-                          : "A\nfocus",
-                  style: AppTextStyles.body20w7
-                      .copyWith(color: AppColors.white, height: 1.05),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  "15 minutes",
-                  style: AppTextStyles.body12w6
-                      .copyWith(color: const Color(0xCCFFFFFF)),
-                ),
-              ],
-            ),
-          );
-
-          if (index == 0) {
-            return GestureDetector(
-              onTap: () => context.push(BreathingPracticesScreen.routeName),
-              child: card,
-            );
-          }
-
-          return card;
-        },
-      ),
-    );
-  }
-}
-
-class _AudioPlaylistSection extends StatefulWidget {
-  const _AudioPlaylistSection({required this.scrollController});
-
-  final ScrollController scrollController;
-
-  @override
-  State<_AudioPlaylistSection> createState() => _AudioPlaylistSectionState();
-}
-
-class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
-  static const int _pageSize = 20;
-
-  static const List<List<Color>> _gradientPalette = [
-    [Color(0xFFB77BCB), Color(0xFF8F5FB0)],
-    [Color(0xFFA883CF), Color(0xFF6F5AB6)],
-    [Color(0xFFC78DB7), Color(0xFF8C66A7)],
-    [Color(0xFF8A8CD6), Color(0xFF5F6BB8)],
-    [Color(0xFFD27DA8), Color(0xFF9A5B90)],
-    [Color(0xFFC48ABF), Color(0xFF7A5AA0)],
-  ];
-
+class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlaylistSection> {
   final List<Audition> _items = [];
   bool _loadingInitial = true;
   bool _loadingMore = false;
-  bool _hasMore = true;
   String? _error;
   int _nextOffset = 0;
+  bool _hasMore = true;
+  static const int _pageSize = 10;
+
+  static const List<List<Color>> _gradientPalette = [
+    [Color(0xFF8E44AD), Color(0xFF9B59B6)],
+    [Color(0xFF2980B9), Color(0xFF3498DB)],
+    [Color(0xFF16A085), Color(0xFF1ABC9C)],
+    [Color(0xFFD35400), Color(0xFFE67E22)],
+  ];
 
   @override
   void initState() {
     super.initState();
-    widget.scrollController.addListener(_onScroll);
     _loadInitial();
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController.removeListener(_onScroll);
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!widget.scrollController.hasClients) return;
-    if (_loadingInitial || _loadingMore || !_hasMore) return;
-    final pos = widget.scrollController.position;
-    if (pos.pixels + 380 >= pos.maxScrollExtent) {
-      _loadMore();
-    }
   }
 
   Future<void> _loadInitial() async {
@@ -1498,10 +750,7 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
       _nextOffset = 0;
       _hasMore = true;
     });
-    final r = await inject<PlaylistRepository>().fetchAuditionsPage(
-      limit: _pageSize,
-      offset: 0,
-    );
+    final r = await inject<PlaylistRepository>().fetchAuditionsPage(limit: _pageSize, offset: 0);
     if (!mounted) return;
     r.fold(
       (f) => setState(() {
@@ -1518,43 +767,15 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
     );
   }
 
-  Future<void> _loadMore() async {
-    if (_loadingMore || !_hasMore) return;
-    setState(() => _loadingMore = true);
-    final r = await inject<PlaylistRepository>().fetchAuditionsPage(
-      limit: _pageSize,
-      offset: _nextOffset,
-    );
-    if (!mounted) return;
-    r.fold(
-      (_) => setState(() => _loadingMore = false),
-      (page) => setState(() {
-        _loadingMore = false;
-        _items.addAll(page.items);
-        _nextOffset = page.offset + page.items.length;
-        _hasMore = page.hasMore;
-      }),
-    );
-  }
-
   void _onFavoriteTap(int index) {
     if (index < 0 || index >= _items.length) return;
     final item = _items[index];
     final next = !item.favorited;
-    setState(() {
-      _items[index] = item.copyWith(favorited: next);
-    });
-    unawaited(
-      inject<PlaylistRepository>()
-          .toggleAuditionFavorite(item.id)
-          .then((either) {
-        if (!mounted) return;
-        either.fold(
-          (_) => setState(() => _items[index] = item),
-          (_) {},
-        );
-      }),
-    );
+    setState(() => _items[index] = item.copyWith(favorited: next));
+    unawaited(inject<PlaylistRepository>().toggleAuditionFavorite(item.id).then((either) {
+      if (!mounted) return;
+      either.fold((_) => setState(() => _items[index] = item), (_) {});
+    }));
   }
 
   void _mergeSynced(List<Audition> fresh) {
@@ -1562,9 +783,7 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
     setState(() {
       for (final a in fresh) {
         final i = _items.indexWhere((x) => x.id == a.id);
-        if (i >= 0) {
-          _items[i] = a;
-        }
+        if (i >= 0) _items[i] = a;
       }
     });
   }
@@ -1575,72 +794,28 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Your playlist",
-          style: AppTextStyles.body20w7
-              .copyWith(color: Colors.white.withValues(alpha: 0.95)),
+          "Sizning pleylistingiz",
+          style: AppTextStyles.body20w7.copyWith(color: Colors.white, fontFamily: 'DancingScript', fontSize: 26.sp),
         ),
         SizedBox(height: 2.h),
         Text(
-          "Soft sessions for your mood",
-          style: AppTextStyles.body13w4.copyWith(
-            color: Colors.white.withValues(alpha: 0.70),
-          ),
+          "Kayfiyatingizga mos taronalar",
+          style: AppTextStyles.body13w4.copyWith(color: Colors.white.withOpacity(0.6)),
         ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 14.h),
         if (_loadingInitial)
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 24.h),
-            child: Center(
-              child: SizedBox(
-                width: 28.w,
-                height: 28.w,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
+            padding: EdgeInsets.symmetric(vertical: 32.h),
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
           )
         else if (_error != null)
-          Padding(
-            padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _error!,
-                  style: AppTextStyles.body14w5.copyWith(
-                    color: Colors.white.withValues(alpha: 0.65),
-                  ),
-                ),
-                TextButton(
-                  onPressed: _loadInitial,
-                  child: Text(
-                    'Qayta urinish',
-                    style: AppTextStyles.body14w6.copyWith(
-                      color: AppColors.c842D5F,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        else if (_items.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: 16.h, bottom: 8.h),
-            child: Text(
-              'Hozircha audio yo‘q',
-              style: AppTextStyles.body14w5.copyWith(
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
-            ),
-          )
+          Text(_error!, style: AppTextStyles.body14w5.copyWith(color: Colors.white.withOpacity(0.6)))
         else ...[
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _items.length,
-            separatorBuilder: (_, __) => SizedBox(height: 8.h),
+            separatorBuilder: (_, __) => SizedBox(height: 10.h),
             itemBuilder: (context, index) {
               final item = _items[index];
               final colors = _gradientPalette[index % _gradientPalette.length];
@@ -1652,35 +827,26 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
                   audioUrl: item.fullAudioUrl,
                   formattedDuration: item.formattedDuration,
                 );
-                context.push(
-                  AudioScreen.routeName,
-                  extra: AudioScreenArgs(
-                    title: item.text,
-                    durationLabel: item.durationLabel,
-                    audioUrl: item.fullAudioUrl,
-                    auditionId: item.id,
-                    auditionType: item.type,
-                    durationSeconds: item.duration,
-                    initialFavorited: item.favorited,
-                    syncHomeAuditionsAfterFavorite: true,
-                    onAuditionsSynced: _mergeSynced,
-                  ),
-                );
+                context.push(AudioScreen.routeName, extra: AudioScreenArgs(
+                  title: item.text,
+                  durationLabel: item.durationLabel,
+                  audioUrl: item.fullAudioUrl,
+                  auditionId: item.id,
+                  auditionType: item.type,
+                  durationSeconds: item.duration,
+                  initialFavorited: item.favorited,
+                  syncHomeAuditionsAfterFavorite: true,
+                  onAuditionsSynced: _mergeSynced,
+                ));
               }
-
               return TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: Duration(milliseconds: 320 + (index * 55)),
+                duration: Duration(milliseconds: 320 + (index * 50)),
                 curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * 14),
-                      child: child,
-                    ),
-                  );
-                },
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(offset: Offset(0, (1 - value) * 14), child: child),
+                ),
                 child: GestureDetector(
                   onTap: openAudio,
                   child: AudioListTile(
@@ -1697,20 +863,6 @@ class _AudioPlaylistSectionState extends State<_AudioPlaylistSection> {
               );
             },
           ),
-          if (_loadingMore)
-            Padding(
-              padding: EdgeInsets.only(top: 12.h, bottom: 8.h),
-              child: Center(
-                child: SizedBox(
-                  width: 22.w,
-                  height: 22.w,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
-                ),
-              ),
-            ),
         ],
       ],
     );

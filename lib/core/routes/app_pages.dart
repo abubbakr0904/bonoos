@@ -1,4 +1,4 @@
-import 'package:bonoos/features/on_boarding/on_boarding_screen.dart';
+import 'package:bonoos/features/on_boarding/first_enter_screen.dart';
 import 'package:bonoos/features/auth/login_phone_screen.dart';
 import 'package:bonoos/features/auth/otp_screen.dart';
 import 'package:bonoos/features/questions/question_screen.dart';
@@ -33,9 +33,9 @@ class RouteGenerate {
       ),
 
       GoRoute(
-        path: OnBoardingScreen.routeName,
-        name: OnBoardingScreen.routeName,
-        builder: (_, __) => const OnBoardingScreen(),
+        path: FirstEnterScreen.routeName,
+        name: FirstEnterScreen.routeName,
+        builder: (_, __) => const FirstEnterScreen(),
       ),
 
       GoRoute(

@@ -89,6 +89,7 @@ class AppColors {
 
   static const c55004D = Color(0xff55004D);
   static const c842D5F = Color(0xff842D5F);
+  static const mainBgColor = Color(0xFF842E5F);
 
   static const _nearBlack = Color(0xFF080410);
 
@@ -182,14 +183,14 @@ class AppColors {
 
     final radialTopRight = RadialGradient(
       colors: [
-        c842D5F.withValues(alpha: topA),
-        c842D5F.withValues(alpha: 0),
+        c842D5F.withOpacity(topA),
+        c842D5F.withOpacity(0),
       ],
     );
     final radialBottomLeft = RadialGradient(
       colors: [
-        c55004D.withValues(alpha: botA),
-        c55004D.withValues(alpha: 0),
+        c55004D.withOpacity(botA),
+        c55004D.withOpacity(0),
       ],
     );
 

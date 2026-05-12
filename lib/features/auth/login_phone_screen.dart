@@ -1,10 +1,10 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:bonoos/core/resources/assets/images/app_images.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
 import 'package:bonoos/features/common/widget/custom_button.dart';
-import 'package:bonoos/features/common/widget/home_gradient_background.dart';
 import 'package:bonoos/features/auth/otp_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -85,92 +85,125 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
-      body: Stack(
-        children: [
-          HomeGradientBackground(),
-          SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 14.h),
-                  Center(
-                    child: Column(
-                      children: [
-                        Image.asset(AppImages.appLogoPurple, width: 64.w, height: 64.w),
-                        SizedBox(height: 10.h),
-                        Text(
-                          "Xush kelibsiz!",
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.body22w7.copyWith(
-                            color: Colors.white.withValues(alpha: 0.95),
-                          ),
+      backgroundColor: AppColors.mainBgColor,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 32.h),
+              Center(
+                child: Column(
+                  children: [
+                    FadeInLeft(
+                      duration: const Duration(milliseconds: 600),
+                      from: 30,
+                      child: Image.asset(AppImages.appLogoPurple, width: 80.w, height: 80.w),
+                    ),
+                    SizedBox(height: 16.h),
+                    FadeInLeft(
+                      duration: const Duration(milliseconds: 600),
+                      delay: const Duration(milliseconds: 100),
+                      from: 30,
+                      child: Text(
+                        "Xush kelibsiz!",
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.body22w7.copyWith(
+                          color: Colors.white.withOpacity(0.95),
+                          fontFamily: 'DancingScript',
+                          fontSize: 32.sp,
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          "Davom etish uchun telefon raqamingizni kiriting —\nkeyin sizga tasdiqlash kodi yuboramiz.",
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.body14w4.copyWith(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            height: 1.45,
-                          ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    FadeInLeft(
+                      duration: const Duration(milliseconds: 600),
+                      delay: const Duration(milliseconds: 200),
+                      from: 30,
+                      child: Text(
+                        "Davom etish uchun telefon raqamingizni kiriting —\nkeyin sizga tasdiqlash kodi yuboramiz.",
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.body14w4.copyWith(
+                          color: Colors.white.withOpacity(0.7),
+                          height: 1.45,
                         ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Text(
-                    "Telefon raqam",
-                    style: AppTextStyles.body14w6.copyWith(
-                      color: Colors.white.withValues(alpha: 0.88),
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  _PhoneField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    inputFormatters: [_mask],
-                    readOnly: _loading,
-                  ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    "Masalan: +998 (90) 900 90 90",
-                    style: AppTextStyles.body12w4.copyWith(
-                      color: Colors.white.withValues(alpha: 0.55),
-                    ),
-                  ),
-                  if (_errorText != null) ...[
-                    SizedBox(height: 12.h),
-                    Text(
-                      _errorText!,
-                      style: AppTextStyles.body12w6.copyWith(color: AppColors.red),
+                      ),
                     ),
                   ],
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: "Davom etish",
-                      onTap: _submit,
-                      isEnabled: _isComplete,
-                      isLoading: _loading,
-                      height: 56.h,
-                      radius: BorderRadius.circular(999),
-                      textColor: AppColors.white,
-                      disabledBgColor: Colors.white.withValues(alpha: 0.08),
-                      disabledTextColor: Colors.white.withValues(alpha: 0.38),
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      bgColor: AppColors.c842D5F,
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-                ],
+                ),
               ),
-            ),
+              SizedBox(height: 40.h),
+              FadeInLeft(
+                duration: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 300),
+                from: 20,
+                child: Text(
+                  "Telefon raqam",
+                  style: AppTextStyles.body14w6.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10.h),
+              FadeInUp(
+                duration: const Duration(milliseconds: 600),
+                delay: const Duration(milliseconds: 400),
+                from: 30,
+                child: _PhoneField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  inputFormatters: [_mask],
+                  readOnly: _loading,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              FadeInUp(
+                duration: const Duration(milliseconds: 600),
+                delay: const Duration(milliseconds: 500),
+                from: 20,
+                child: Text(
+                  "Masalan: +998 (90) 900 90 90",
+                  style: AppTextStyles.body12w4.copyWith(
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ),
+              if (_errorText != null) ...[
+                SizedBox(height: 12.h),
+                FadeIn(
+                  child: Text(
+                    _errorText!,
+                    style: AppTextStyles.body12w6.copyWith(color: AppColors.red),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              FadeInUp(
+                duration: const Duration(milliseconds: 800),
+                delay: const Duration(milliseconds: 600),
+                from: 40,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: "Davom etish",
+                    onTap: _submit,
+                    isEnabled: _isComplete,
+                    isLoading: _loading,
+                    height: 50.h,
+                    radius: BorderRadius.circular(16.r),
+                    textColor: AppColors.mainBgColor,
+                    disabledBgColor: Colors.white.withOpacity(0.1),
+                    disabledTextColor: Colors.white.withOpacity(0.3),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    bgColor: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -193,30 +226,29 @@ class _PhoneField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        color: Colors.black.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.white.withOpacity(0.15)),
       ),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
         readOnly: readOnly,
         keyboardType: TextInputType.phone,
-        cursorColor: AppColors.c842D5F,
+        cursorColor: Colors.white,
         inputFormatters: inputFormatters.cast(),
         style: AppTextStyles.body16w6.copyWith(
-          color: Colors.white.withValues(alpha: 0.95),
+          color: Colors.white.withOpacity(0.95),
         ),
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           border: InputBorder.none,
           hintText: "+998 (__) ___ __ __",
           hintStyle: AppTextStyles.body16w4.copyWith(
-            color: Colors.white.withValues(alpha: 0.42),
+            color: Colors.white.withOpacity(0.35),
           ),
         ),
       ),
     );
   }
 }
-
