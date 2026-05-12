@@ -83,10 +83,10 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddEventScreen,
-        backgroundColor: AppColors.c842D5F,
+        backgroundColor: AppColors.mainBgColor,
         foregroundColor: Colors.white,
         child: const Icon(CupertinoIcons.add),
       ),
@@ -163,9 +163,9 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return Center(
+      return const Center(
         key: ValueKey('loading'),
-        child: CircularProgressIndicator(color: AppColors.c842D5F),
+        child: CircularProgressIndicator(color: Colors.white),
       );
     }
 
@@ -217,43 +217,127 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
   }
 
   Future<void> _deleteEvent(CalendarEvent event) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showGeneralDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1032),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Text(
-          'Taskni o\'chirish',
-          style: AppTextStyles.body16w6.copyWith(color: Colors.white),
-        ),
-        content: Text(
-          'Rostdan ham bu taskni o\'chirmoqchimisiz?',
-          style: AppTextStyles.body14w5.copyWith(
-            color: Colors.white.withValues(alpha: 0.7),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Bekor',
-              style: AppTextStyles.body14w5.copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: anim1.value,
+          child: Opacity(
+            opacity: anim1.value,
+            child: Center(
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 40.w),
+                padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 20.h),
+                decoration: BoxDecoration(
+                  color: AppColors.mainBgColor,
+                  borderRadius: BorderRadius.circular(24.r),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 54.w,
+                        width: 54.w,
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          CupertinoIcons.trash_fill,
+                          color: Colors.redAccent,
+                          size: 26.sp,
+                        ),
+                      ),
+                      SizedBox(height: 18.h),
+                      Text(
+                        'Taskni o\'chirish',
+                        style: AppTextStyles.body18w6
+                            .copyWith(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        'Rostdan ham bu taskni o\'chirmoqchimisiz?',
+                        style: AppTextStyles.body14w4.copyWith(
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 24.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(false),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                                child: Text(
+                                  'Bekor',
+                                  style: AppTextStyles.body14w6.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(true),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.redAccent
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  'O\'chirish',
+                                  style: AppTextStyles.body14w6
+                                      .copyWith(color: Colors.white),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('O\'chirish'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed != true) return;
@@ -311,7 +395,7 @@ class _CalendarEmptyState extends StatelessWidget {
             onPressed: onAdd,
             child: Text(
               "Task qo'shish",
-              style: AppTextStyles.body14w6.copyWith(color: AppColors.c842D5F),
+              style: AppTextStyles.body14w6.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -358,7 +442,7 @@ class _CalendarErrorState extends StatelessWidget {
               ElevatedButton(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.c842D5F,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Qayta yuklash'),
@@ -369,7 +453,7 @@ class _CalendarErrorState extends StatelessWidget {
                 child: Text(
                   "Task qo'shish",
                   style:
-                      AppTextStyles.body14w6.copyWith(color: AppColors.c842D5F),
+                      AppTextStyles.body14w6.copyWith(color: Colors.white),
                 ),
               ),
             ],
@@ -564,7 +648,7 @@ class _TableCalendarState extends State<_TableCalendar> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1032),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
@@ -666,13 +750,13 @@ class _TableCalendarState extends State<_TableCalendar> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isSelected
-                          ? AppColors.c842D5F
+                          ? Colors.white
                           : isToday
-                              ? AppColors.c842D5F.withValues(alpha: 0.25)
+                              ? Colors.white.withValues(alpha: 0.25)
                               : Colors.transparent,
                       border: isToday && !isSelected
                           ? Border.all(
-                              color: AppColors.c842D5F.withValues(alpha: 0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               width: 1.5,
                             )
                           : null,
@@ -684,9 +768,9 @@ class _TableCalendarState extends State<_TableCalendar> {
                           child: Text(
                             '${date.day}',
                             style: AppTextStyles.body14w5.copyWith(
-                              color: isSelected || isToday
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.85),
+                              color: isSelected
+                                  ? AppColors.mainBgColor
+                                  : Colors.white,
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w500,
@@ -699,9 +783,9 @@ class _TableCalendarState extends State<_TableCalendar> {
                             child: Container(
                               width: 4.w,
                               height: 4.w,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.c842D5F,
+                                color: Colors.white,
                               ),
                             ),
                           ),

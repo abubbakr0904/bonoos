@@ -6,6 +6,7 @@ import 'package:bonoos/features/chat/ui/chat_screen.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/playlist/playlist_screen.dart';
 import 'package:bonoos/features/sections/faq_screen.dart';
+import 'package:bonoos/features/medicine/medicine_list_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -44,7 +45,7 @@ class _SectionsScreenState extends State<SectionsScreen>
     final items = <_SectionItem>[
       _SectionItem(
         title: "Meditatsiya",
-        subtitle: "Mavjud meditatsiya ro'yxati",
+        subtitle: "Xotirjam bolish uchun eshit",
         icon: CupertinoIcons.sparkles,
         onTap: () => context.push(BreathingPracticesScreen.routeName),
       ),
@@ -72,7 +73,7 @@ class _SectionsScreenState extends State<SectionsScreen>
       ),
       _SectionItem(
         title: "Sevimlilar",
-        subtitle: "Tanlangan amaliyotlar",
+        subtitle: "Menga foyda bergan audiolar",
         icon: CupertinoIcons.heart_fill,
         onTap: () => context.push(
           BreathingPracticesScreen.routeName,
@@ -80,8 +81,16 @@ class _SectionsScreenState extends State<SectionsScreen>
         ),
       ),
       _SectionItem(
-        title: "Ko'p so'raladigan savollar",
-        subtitle: "FAQ — tez-tez beriladigan savollar",
+        title: "Dori ichish vaqti",
+        subtitle: "Kunlik dori eslatmalari",
+        icon: CupertinoIcons.capsule_fill,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MedicineListScreen()),
+        ),
+      ),
+      _SectionItem(
+        title: "FAQ",
+        subtitle: "Tez-tez beriladigan savollar",
         icon: CupertinoIcons.question_circle_fill,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FaqScreen()),
@@ -90,7 +99,7 @@ class _SectionsScreenState extends State<SectionsScreen>
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 12.h),
@@ -237,7 +246,7 @@ class _SectionCard extends StatelessWidget {
               child: Icon(
                 item.icon,
                 size: 82.sp,
-                color: const Color(0xFF842D5F).withValues(alpha: 0.26),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
             ),
             // Positioned(

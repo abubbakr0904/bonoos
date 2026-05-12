@@ -1,3 +1,4 @@
+import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,31 +34,20 @@ class AudioListTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18.r),
           color: Colors.white.withValues(alpha: 0.06),
           border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x20842D5F),
-              blurRadius: 16,
-              offset: Offset(0, 8),
-            ),
-          ],
         ),
         child: Row(
           children: [
             Container(
-              height: 50.w,
-              width: 50.w,
+              height: 40.w,
+              width: 40.w,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(100.r),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: colors,
-                ),
+             color : Colors.white.withValues(alpha: 0.2)
               ),
               child: const Icon(
                 CupertinoIcons.play_fill,

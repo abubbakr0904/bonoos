@@ -122,7 +122,7 @@ class _AddAlarmScreenState extends State<AddAlarmScreen>
         );
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF140B2A),
+        backgroundColor: AppColors.mainBgColor,
         body: Stack(
           children: [
             const HomeGradientBackground(),

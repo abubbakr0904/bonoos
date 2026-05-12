@@ -56,7 +56,7 @@ class _SelfTalkTopicsScreenState extends State<SelfTalkTopicsScreen> {
     final locale = Localizations.localeOf(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const HomeGradientBackground(),

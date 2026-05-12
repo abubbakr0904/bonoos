@@ -1,3 +1,4 @@
+import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/common/widget/home_gradient_background.dart';
@@ -84,7 +85,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const HomeGradientBackground(),

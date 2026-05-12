@@ -45,7 +45,7 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   Widget build(BuildContext context) {
     final isEditing = (widget.initialText ?? '').trim().isNotEmpty;
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -78,22 +78,116 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
           if (isEditing)
             IconButton(
               onPressed: () async {
-                final sure = await showDialog<bool>(
+                final sure = await showGeneralDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Yozuvni o'chirish"),
-                    content: const Text("Rostdan ham ushbu yozuvni o'chirasizmi?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text("Bekor qilish"),
+                  barrierDismissible: true,
+                  barrierLabel: '',
+                  barrierColor: Colors.black.withValues(alpha: 0.4),
+                  transitionDuration: const Duration(milliseconds: 300),
+                  pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
+                  transitionBuilder: (context, anim1, anim2, child) {
+                    return Transform.scale(
+                      scale: anim1.value,
+                      child: Opacity(
+                        opacity: anim1.value,
+                        child: Center(
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 40.w),
+                            padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 20.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.mainBgColor,
+                              borderRadius: BorderRadius.circular(24.r),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    height: 54.w,
+                                    width: 54.w,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      CupertinoIcons.trash_fill,
+                                      color: Colors.redAccent,
+                                      size: 26.sp,
+                                    ),
+                                  ),
+                                  SizedBox(height: 18.h),
+                                  Text(
+                                    'Yozuvni o\'chirish',
+                                    style: AppTextStyles.body18w6.copyWith(color: Colors.white),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  Text(
+                                    'Rostdan ham ushbu yozuvni o\'chirasizmi?',
+                                    style: AppTextStyles.body14w4.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 24.h),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => Navigator.of(context).pop(false),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(alpha: 0.06),
+                                              borderRadius: BorderRadius.circular(14.r),
+                                            ),
+                                            child: Text(
+                                              'Bekor',
+                                              style: AppTextStyles.body14w6.copyWith(
+                                                color: Colors.white.withValues(alpha: 0.7),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 12.w),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => Navigator.of(context).pop(true),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                                            decoration: BoxDecoration(
+                                              color: Colors.redAccent,
+                                              borderRadius: BorderRadius.circular(14.r),
+                                            ),
+                                            child: Text(
+                                              'O\'chirish',
+                                              style: AppTextStyles.body14w6.copyWith(color: Colors.white),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text("O'chirish"),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 );
                 if (sure != true || !context.mounted) return;
                 Navigator.of(context).pop(const GratitudeDraft.delete());
@@ -112,14 +206,14 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18.r),
-                  color: Colors.white.withValues(alpha: 0.06),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       CupertinoIcons.sparkles,
-                      color: AppColors.c842D5F,
+                      color: Colors.white,
                       size: 18.sp,
                     ),
                     SizedBox(width: 8.w),
@@ -187,15 +281,16 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                               isPrivate: _isPrivate,
                             ),
                           ),
-                  icon: const Icon(CupertinoIcons.check_mark, color: Colors.white),
-                  label: Text(
+                  icon: const Icon(CupertinoIcons.check_mark),
+                  label: const Text(
                     "Saqlash",
-                    style: AppTextStyles.body15w6.copyWith(color: Colors.white),
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
-                    backgroundColor: AppColors.c842D5F,
-                    disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.mainBgColor,
+                    disabledBackgroundColor: Colors.white.withValues(alpha: 0.12),
                     minimumSize: Size(double.infinity, 52.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),

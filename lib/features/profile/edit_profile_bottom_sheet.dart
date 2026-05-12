@@ -301,7 +301,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -424,13 +424,6 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
                   ),
                 ],
                 SizedBox(height: 14.h),
-                _FieldLabel("Email"),
-                SizedBox(height: 8.h),
-                _DarkTextField(
-                  controller: _emailController,
-                  hintText: "email@example.com",
-                ),
-                SizedBox(height: 14.h),
                 _FieldLabel("Tug'ilgan kun"),
                 SizedBox(height: 8.h),
                 _DateField(
@@ -445,17 +438,6 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
                   isLoading: _regionsLoading,
                   isSelected: _selectedRegion != null,
                   onTap: _openRegionPicker,
-                ),
-                SizedBox(height: 14.h),
-                _FieldLabel("Daromad oralig'i"),
-                SizedBox(height: 8.h),
-                _SelectField(
-                  value: _selectedIncome != null
-                      ? _selectedIncome!.nameUz
-                      : "Daromad oralig'ini tanlang",
-                  isLoading: _incomeLoading,
-                  isSelected: _selectedIncome != null,
-                  onTap: _openIncomePicker,
                 ),
                 SizedBox(height: 14.h),
                 _FieldLabel("Faoliyat turi"),
@@ -485,9 +467,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
                       elevation: 0,
                       padding: EdgeInsets.symmetric(vertical: 15.h),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      backgroundColor: AppColors.c842D5F,
+                      backgroundColor: AppColors.white,
                     ),
                     onPressed: _saving ? null : _save,
                     child: _saving
@@ -501,7 +483,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
                           )
                         : Text(
                             "Saqlash",
-                            style: AppTextStyles.body16w7.copyWith(color: Colors.white),
+                            style: AppTextStyles.body16w7.copyWith(color: AppColors.mainBgColor),
                           ),
                   ),
                 ),
@@ -574,7 +556,7 @@ class _RegionPickerSheetState extends State<_RegionPickerSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -767,7 +749,7 @@ class _IncomePickerSheetState extends State<_IncomePickerSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -904,7 +886,7 @@ class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -1301,7 +1283,7 @@ class _BirthdayPickerSheetState extends State<_BirthdayPickerSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),

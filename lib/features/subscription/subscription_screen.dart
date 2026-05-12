@@ -63,7 +63,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const _SubscriptionBackground(),
@@ -246,15 +246,7 @@ class _SubscriptionBackground extends StatelessWidget {
       children: [
         const DecoratedBox(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF26114B),
-                Color(0xFF1B0F38),
-                Color(0xFF140B2A),
-              ],
-            ),
+            color: AppColors.mainBgColor,
           ),
         ),
         Positioned(
@@ -347,18 +339,8 @@ class _FeaturedPlanCard extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.r),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.c842D5F, AppColors.c55004D],
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33842D5F),
-              blurRadius: 24,
-              offset: Offset(0, 14),
-            ),
-          ],
+          color: Colors.white.withValues(alpha: 0.1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +404,7 @@ class _FeaturedPlanCard extends StatelessWidget {
                   ? plan.description
                   : "Yil davomida barcha imkoniyatlardan foydalaning.",
               style: AppTextStyles.body13w4.copyWith(
-                color: const Color(0xFFEFE7FF),
+                color: Colors.white.withValues(alpha: 0.7),
                 height: 1.3,
               ),
             ),
@@ -443,7 +425,7 @@ class _FeaturedPlanCard extends StatelessWidget {
                     Text(
                       "Obuna bo'lgan kundan boshlanadi",
                       style: AppTextStyles.body12w4.copyWith(
-                        color: const Color(0xFFEFE7FF),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -460,14 +442,14 @@ class _FeaturedPlanCard extends StatelessWidget {
                       Text(
                         "Batafsil",
                         style: AppTextStyles.body13w5.copyWith(
-                          color: AppColors.c30215A,
+                          color: AppColors.mainBgColor,
                         ),
                       ),
                       SizedBox(width: 6.w),
                       const Icon(
                         CupertinoIcons.chevron_right,
                         size: 16,
-                        color: AppColors.c30215A,
+                        color: AppColors.mainBgColor,
                       ),
                     ],
                   ),
@@ -502,19 +484,12 @@ class _PlanRow extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18.r),
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.white.withValues(alpha: 0.08),
           border: Border.all(
             color: highlight
-                ? Colors.white.withValues(alpha: 0.14)
-                : Colors.white.withValues(alpha: 0.10),
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.1),
           ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x20842D5F),
-              blurRadius: 12,
-              offset: Offset(0, 5),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -662,7 +637,7 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -807,29 +782,29 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    onPressed: _subscribing ? null : _subscribe,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.mainBgColor,
+                      disabledBackgroundColor: Colors.white.withValues(alpha: 0.12),
+                      minimumSize: Size(double.infinity, 54.h),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
-                      backgroundColor: AppColors.c842D5F,
                     ),
-                    onPressed: _subscribing ? null : _subscribe,
                     child: _subscribing
                         ? SizedBox(
                             width: 22.w,
                             height: 22.w,
-                            child: const CircularProgressIndicator(
+                            child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: Colors.white,
+                              color: AppColors.mainBgColor,
                             ),
                           )
                         : Text(
                             "Faollashtirish",
-                            style: AppTextStyles.body16w7.copyWith(
-                              color: Colors.white,
-                            ),
+                            style: AppTextStyles.body16w7,
                           ),
                   ),
                 ),

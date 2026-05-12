@@ -135,22 +135,13 @@ class _PlaylistScreenState extends State<PlaylistScreen>
     }
   }
 
-  static const _gradientPalette = <List<Color>>[
-    [Color(0xFFB77BCB), Color(0xFF8F5FB0)],
-    [Color(0xFFA883CF), Color(0xFF6F5AB6)],
-    [Color(0xFFC78DB7), Color(0xFF8C66A7)],
-    [Color(0xFF8A8CD6), Color(0xFF5F6BB8)],
-    [Color(0xFFD27DA8), Color(0xFF9A5B90)],
-    [Color(0xFFC48ABF), Color(0xFF7A5AA0)],
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
-          const HomeGradientBackground(),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
@@ -242,7 +233,7 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                                             separatorBuilder: (_, __) => SizedBox(height: 10.h),
                                             itemBuilder: (context, index) {
                                               final item = _auditions[index];
-                                              final colors = _gradientPalette[index % _gradientPalette.length];
+                                              final colors = const [Colors.white, Colors.white];
                                               final categoryName = _selectedIndex < _categories.length
                                                   ? _categories[_selectedIndex].name
                                                   : '';
@@ -552,65 +543,10 @@ class _PlaylistBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF26114B),
-                Color(0xFF1B0F38),
-                Color(0xFF140B2A),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          top: -70,
-          right: -40,
-          child: Container(
-            height: 220,
-            width: 220,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [Color(0x3A842D5F), Color(0x00842D5F)],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 180,
-          left: -55,
-          child: Container(
-            height: 190,
-            width: 190,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [Color(0x2A55004D), Color(0x0055004D)],
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.04),
-                  Colors.white.withValues(alpha: 0.00),
-                  Colors.black.withValues(alpha: 0.10),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.mainBgColor,
+      ),
     );
   }
 }
@@ -700,18 +636,10 @@ class _LastListenedCard extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20.r),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFB77BCB), Color(0xFF8F5FB0)],
+              color: Colors.white.withValues(alpha: 0.1),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
               ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33842D5F),
-                  blurRadius: 20,
-                  offset: Offset(0, 10),
-                ),
-              ],
             ),
             child: Row(
               children: [
@@ -738,7 +666,7 @@ class _LastListenedCard extends StatelessWidget {
                       Text(
                         "Oxirgi tinglangan",
                         style: AppTextStyles.body11w5.copyWith(
-                          color: const Color(0xFFE9D7FF),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                       SizedBox(height: 3.h),
@@ -756,7 +684,7 @@ class _LastListenedCard extends StatelessWidget {
                             ? item.formattedDuration
                             : item.durationLabel,
                         style: AppTextStyles.body11w5.copyWith(
-                          color: const Color(0xFFEFE5FF),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -772,7 +700,7 @@ class _LastListenedCard extends StatelessWidget {
                   child: const Center(
                     child: Icon(
                       CupertinoIcons.play_fill,
-                      color: AppColors.c55004D,
+                      color: AppColors.mainBgColor,
                       size: 22,
                     ),
                   ),
@@ -813,15 +741,6 @@ class _CategoryChip extends StatelessWidget {
               ? Colors.white.withValues(alpha: 0.14)
               : Colors.white.withValues(alpha: 0.10),
         ),
-        boxShadow: selected
-            ? const [
-                BoxShadow(
-                  color: Color(0x20842D5F),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ]
-            : null,
       ),
       child: Text(
         label,

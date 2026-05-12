@@ -36,6 +36,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
   DateTime _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isSubmitting = false;
+  bool _isEventTypeExpanded = false;
 
   _AddEventScreenState() : _selectedDate = DateTime.now();
 
@@ -216,7 +217,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -231,7 +232,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.c842D5F),
+              child: CircularProgressIndicator(color: Colors.white),
             )
           : _error != null
               ? _buildError()
@@ -259,8 +260,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
           ElevatedButton(
             onPressed: _loadEventTypes,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.c842D5F,
-              foregroundColor: Colors.white,
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.mainBgColor,
             ),
             child: const Text('Qayta yuklash'),
           ),
@@ -321,21 +322,21 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.c842D5F,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.mainBgColor,
                     padding: EdgeInsets.zero,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     disabledBackgroundColor:
-                        AppColors.c842D5F.withValues(alpha: 0.5),
+                        Colors.white.withValues(alpha: 0.5),
                   ),
                   child: _isSubmitting
                       ? const SizedBox(
                           height: 18,
                           width: 18,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: AppColors.mainBgColor,
                             strokeWidth: 2,
                           ),
                         )
@@ -362,42 +363,102 @@ class _AddEventScreenState extends State<AddEventScreen> {
   }
 
   Widget _buildEventTypeDropdown() {
-    return Container(
-      height: 40.h,
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<EventType>(
-          value: _selectedEventType,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF1A1032),
-          icon: Icon(
-            CupertinoIcons.chevron_down,
-            color: Colors.white,
-            size: 18.sp,
-          ),
-          style: AppTextStyles.body13w5.copyWith(color: Colors.white),
-          onChanged: (value) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
             setState(() {
-              _selectedEventType = value;
+              _isEventTypeExpanded = !_isEventTypeExpanded;
             });
           },
-          items: _eventTypes.map((type) {
-            return DropdownMenuItem<EventType>(
-              value: type,
-              child: Row(
-                children: [
-                  Text(type.name),
-                ],
+          child: Container(
+            height: 44.h,
+            padding: EdgeInsets.symmetric(horizontal: 14.w),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: _isEventTypeExpanded
+                    ? Colors.white.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.12),
               ),
-            );
-          }).toList(),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedEventType?.name ?? 'Turini tanlash',
+                    style: AppTextStyles.body14w5.copyWith(color: Colors.white),
+                  ),
+                ),
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: _isEventTypeExpanded ? 0.5 : 0,
+                  child: Icon(
+                    CupertinoIcons.chevron_down,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    size: 16.sp,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+        if (_isEventTypeExpanded) ...[
+          SizedBox(height: 8.h),
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              children: _eventTypes.map((type) {
+                final isSelected = _selectedEventType?.id == type.id;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedEventType = type;
+                      _isEventTypeExpanded = false;
+                    });
+                  },
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            type.name,
+                            style: AppTextStyles.body13w5.copyWith(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(
+                            CupertinoIcons.checkmark_alt,
+                            color: Colors.white,
+                            size: 16.sp,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -434,7 +495,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.r),
-            borderSide: const BorderSide(color: AppColors.c842D5F),
+            borderSide: const BorderSide(color: Colors.white),
           ),
         ),
       ),
@@ -616,7 +677,7 @@ class _CalendarPickerDialogState extends State<_CalendarPickerDialog> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1032),
+        color: AppColors.mainBgColor,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
@@ -707,21 +768,23 @@ class _CalendarPickerDialogState extends State<_CalendarPickerDialog> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isSelected
-                          ? AppColors.c842D5F
+                          ? Colors.white
                           : isToday
-                              ? AppColors.c842D5F.withValues(alpha: 0.3)
+                              ? Colors.white.withValues(alpha: 0.3)
                               : Colors.transparent,
                       border: isToday && !isSelected
-                          ? Border.all(color: AppColors.c842D5F, width: 1)
+                          ? Border.all(color: Colors.white, width: 1)
                           : null,
                     ),
                     child: Center(
                       child: Text(
                         '${date.day}',
                         style: AppTextStyles.body14w5.copyWith(
-                          color: isSelected || isToday
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.8),
+                          color: isSelected
+                              ? AppColors.mainBgColor
+                              : isToday
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -753,8 +816,8 @@ class _CalendarPickerDialogState extends State<_CalendarPickerDialog> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(_selectedDate),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.c842D5F,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.mainBgColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r),
                       ),
@@ -805,7 +868,7 @@ class _CupertinoTimePickerDialogState
         bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1032),
+        color: AppColors.mainBgColor,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
@@ -920,8 +983,8 @@ class _CupertinoTimePickerDialogState
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.c842D5F,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.mainBgColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r),
                       ),

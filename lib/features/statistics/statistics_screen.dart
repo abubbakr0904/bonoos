@@ -21,7 +21,7 @@ class StatisticsScreen extends StatelessWidget {
     const weeklyMinutes = <double>[0, 6, 12, 8, 16, 10, 14];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const _StatsBackground(),
@@ -48,8 +48,8 @@ class StatisticsScreen extends StatelessWidget {
                                   title: "Медитаций вы\nуже послушали",
                                   emoji: "🧘🏻‍♀️",
                                   gradient: const [
-                                    Color(0xFF2A1A47),
-                                    Color(0xFF1C1537)
+                                    AppColors.mainBgColor,
+                                    AppColors.c55004D,
                                   ],
                                 ),
                               ),
@@ -61,8 +61,8 @@ class StatisticsScreen extends StatelessWidget {
                                   actionLabel: "История",
                                   onAction: () {},
                                   gradient: const [
-                                    Color(0xFF2A1A47),
-                                    Color(0xFF1C1537)
+                                    AppColors.mainBgColor,
+                                    AppColors.c55004D,
                                   ],
                                 ),
                               ),
@@ -124,9 +124,9 @@ class _StatsBackground extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF26114B),
-                Color(0xFF1B0F38),
-                Color(0xFF140B2A),
+                AppColors.mainBgColor,
+                AppColors.c55004D,
+                AppColors.mainBgColor,
               ],
             ),
           ),
@@ -184,21 +184,32 @@ class _StatsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row
+      (
       children: [
-        Text(
-          "Statistics",
-          style: AppTextStyles.body22w7.copyWith(
-            color: Colors.white.withValues(alpha: 0.95),
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          "Soft progress you can feel.",
-          style: AppTextStyles.body13w4.copyWith(
-            color: Colors.white.withValues(alpha: 0.70),
-          ),
+        GestureDetector(
+            onTap: (){
+              Navigator.pop(context);
+            },
+            child: Icon(Icons.arrow_back_ios_new ,color: Colors.white,size: 22.sp,)),
+        SizedBox(width: 20.w,),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Statistics",
+              style: AppTextStyles.body22w7.copyWith(
+                color: Colors.white.withValues(alpha: 0.95),
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              "Soft progress you can feel.",
+              style: AppTextStyles.body13w4.copyWith(
+                color: Colors.white.withValues(alpha: 0.70),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -246,7 +257,10 @@ class _StreakCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF3A2B57), Color(0xFF231641)],
+          colors: [
+            AppColors.mainBgColor,
+            AppColors.c55004D,
+          ],
         ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         boxShadow: const [

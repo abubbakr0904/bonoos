@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:bonoos/features/calendar/calendar_tasks_screen.dart';
 import 'package:bonoos/features/gratitude/gratitude_notes_screen.dart';
 import 'package:bonoos/core/values/app_colors.dart';
@@ -53,24 +54,21 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
     ];
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppColors.mainBgColor,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeInOutCubic,
+        switchOutCurve: Curves.easeInOutCubic,
         transitionBuilder: (child, animation) {
-          final slide = Tween<Offset>(
-            begin: const Offset(0.02, 0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-          return FadeTransition(opacity: animation, child: SlideTransition(position: slide, child: child));
+          return FadeTransition(opacity: animation, child: child);
         },
-        child: _buildBody(items, _index),
+        child: _buildBody(_index),
       ),
-      bottomNavigationBar: _BonoosBottomNav(
+      bottomNavigationBar: _LiquidGlassBottomNav(
         items: items,
-        index: _index,
-        onChanged: (i) {
+        currentIndex: _index,
+        onTap: (i) {
           if (i == 2) {
             _gratitudeViewVersion++;
           }
@@ -81,7 +79,7 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
     );
   }
 
-  Widget _buildBody(List<_TabItem> items, int index) {
+  Widget _buildBody(int index) {
     switch (index) {
       case 0:
         return const HomeScreen(key: ValueKey("home"));
@@ -96,10 +94,7 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
       case 4:
         return const SectionsScreen(key: ValueKey("sections"));
       default:
-        return _PlaceholderTab(
-          key: ValueKey(index),
-          title: items[index].label,
-        );
+        return const SizedBox.shrink();
     }
   }
 }
@@ -110,124 +105,92 @@ class _TabItem {
   const _TabItem({required this.label, required this.icon});
 }
 
-class _BonoosBottomNav extends StatelessWidget {
-  const _BonoosBottomNav({
+class _LiquidGlassBottomNav extends StatelessWidget {
+  const _LiquidGlassBottomNav({
     required this.items,
-    required this.index,
-    required this.onChanged,
-  });
-
-  final List<_TabItem> items;
-  final int index;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final height = 75.h;
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.mainBgColor,
-        border: Border(
-          top: BorderSide(
-            color: Colors.white.withOpacity(0.08),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: height,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
-            child: Row(
-              children: [
-                for (int i = 0; i < items.length; i++)
-                  Expanded(
-                    child: _NavItem(
-                      item: items[i],
-                      selected: i == index,
-                      onTap: () => onChanged(i),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.item,
-    required this.selected,
+    required this.currentIndex,
     required this.onTap,
   });
 
-  final _TabItem item;
-  final bool selected;
-  final VoidCallback onTap;
+  final List<_TabItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = Colors.white;
-    final inactiveColor = Colors.white.withOpacity(0.45);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.all(8.w),
+    return Container(
+      padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 36.h),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(36.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            height: 60.h,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selected ? Colors.white.withOpacity(0.12) : Colors.transparent,
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(36.r),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.4),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            child: Icon(
-              item.icon,
-              size: 24.sp,
-              color: selected ? activeColor : inactiveColor,
+            child: Padding(
+              padding:  EdgeInsets.symmetric(horizontal: 6.w),
+              child: Row(
+                children: List.generate(items.length, (index) {
+                  final isSelected = index == currentIndex;
+                  final item = items[index];
+                  
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => onTap(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: AnimatedContainer(
+                          width: 100.w,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          padding: EdgeInsets.symmetric(horizontal: 0.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.white.withOpacity(0.5) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                item.icon,
+                                color: isSelected ? AppColors.mainBgColor : Colors.white.withOpacity(0.6),
+                                size: 18.sp,
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                item.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isSelected ? AppColors.mainBgColor : Colors.white.withOpacity(0.6),
+                                  fontSize: 9.sp,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
             ),
           ),
-          SizedBox(height: 2.h),
-          Text(
-            item.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.body10w6.copyWith(
-              color: selected ? activeColor : inactiveColor,
-              fontSize: 10.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({super.key, required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Text(
-          title,
-          style: AppTextStyles.body22w7.copyWith(color: Colors.white),
         ),
       ),
     );

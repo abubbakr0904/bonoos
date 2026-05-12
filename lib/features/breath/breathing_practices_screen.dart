@@ -93,81 +93,70 @@ class _BreathingPracticesScreenState extends State<BreathingPracticesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.c30215A,
-              AppColors.c55004D,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(
-                        CupertinoIcons.back,
-                        color: Colors.white,
-                      ),
+      backgroundColor: AppColors.mainBgColor,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(
+                      CupertinoIcons.back,
+                      color: Colors.white,
                     ),
-                    const Spacer(),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  "Meditations and melodies",
-                  style: AppTextStyles.body24w7.copyWith(
-                    color: Colors.white,
                   ),
+                  const Spacer(),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                "Meditations and melodies",
+                style: AppTextStyles.body24w7.copyWith(
+                  color: Colors.white,
                 ),
-                SizedBox(height: 18.h),
-                _TopSegmented(
-                  selectedIndex: _filterIndex,
+              ),
+              SizedBox(height: 18.h),
+              _TopSegmented(
+                selectedIndex: _filterIndex,
+                showFavorites: _showFavorites,
+                onFavoritesTap: () => unawaited(_onFavoritesTap()),
+                onChanged: (i) => setState(() {
+                  _filterIndex = i;
+                  _selectedCardIndex = 0;
+                  _showFavorites = false;
+                }),
+              ),
+              SizedBox(height: 12.h),
+              _CategoryChips(
+                selectedIndex: _filterIndex,
+                onChanged: (i) => setState(() {
+                  _filterIndex = i;
+                  _selectedCardIndex = 0;
+                  _showFavorites = false;
+                }),
+              ),
+              SizedBox(height: 18.h),
+              Expanded(
+                child: _BreathingList(
+                  entryAnimation: _cardsEntryController,
+                  categoryIndex: _filterIndex,
                   showFavorites: _showFavorites,
-                  onFavoritesTap: () => unawaited(_onFavoritesTap()),
-                  onChanged: (i) => setState(() {
-                    _filterIndex = i;
-                    _selectedCardIndex = 0;
-                    _showFavorites = false;
-                  }),
+                  favoriteAuditions: _favoriteAuditions,
+                  favoritesLoading: _favoritesLoading,
+                  favoritesError: _favoritesError,
+                  selectedIndex: _selectedCardIndex,
+                  onSelect: (i) => setState(() => _selectedCardIndex = i),
+                  onRetryFavorites: _loadFavoriteAuditions,
+                  onRefreshFavorites: () =>
+                      unawaited(_loadFavoriteAuditions()),
                 ),
-                SizedBox(height: 12.h),
-                _CategoryChips(
-                  selectedIndex: _filterIndex,
-                  onChanged: (i) => setState(() {
-                    _filterIndex = i;
-                    _selectedCardIndex = 0;
-                    _showFavorites = false;
-                  }),
-                ),
-                SizedBox(height: 18.h),
-                Expanded(
-                  child: _BreathingList(
-                    entryAnimation: _cardsEntryController,
-                    categoryIndex: _filterIndex,
-                    showFavorites: _showFavorites,
-                    favoriteAuditions: _favoriteAuditions,
-                    favoritesLoading: _favoritesLoading,
-                    favoritesError: _favoritesError,
-                    selectedIndex: _selectedCardIndex,
-                    onSelect: (i) => setState(() => _selectedCardIndex = i),
-                    onRetryFavorites: _loadFavoriteAuditions,
-                    onRefreshFavorites: () =>
-                        unawaited(_loadFavoriteAuditions()),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -276,7 +265,7 @@ class _PillButton extends StatelessWidget {
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOutCubic,
           style: AppTextStyles.body14w6.copyWith(
-            color: selected ? AppColors.c30215A : Colors.white,
+            color: selected ? AppColors.mainBgColor : Colors.white,
           ),
           child: Text(label),
         ),
@@ -400,7 +389,7 @@ class _BreathingList extends StatelessWidget {
       icon: CupertinoIcons.sparkles,
     ),
     _CategoryStyle(
-      cardColor: Color(0xFF23173F),
+      cardColor: Colors.white10,
       iconGradient: [
         AppColors.c842D5F,
         AppColors.c55004D,
@@ -882,32 +871,14 @@ class _BreathingTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22.r),
-          gradient: selected
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.c842D5F,
-                    AppColors.c55004D,
-                  ],
-                )
-              : null,
-          color: selected ? null : const Color(0xFF23173F),
+          color: selected
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.06),
           border: Border.all(
             color: selected
-                ? AppColors.c842D5F.withValues(alpha: 0.9)
-                : Colors.transparent,
-            width: 1.5,
+                ? Colors.white.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.1),
           ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: AppColors.c842D5F.withValues(alpha: 0.30),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
         ),
         child: Row(
           children: [
@@ -981,73 +952,62 @@ class BreathDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.c30215A,
-              AppColors.c55004D,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(
-                        CupertinoIcons.back,
-                        color: Colors.white,
-                      ),
+      backgroundColor: AppColors.mainBgColor,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(
+                      CupertinoIcons.back,
+                      color: Colors.white,
                     ),
-                    const Spacer(),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  "Breath",
-                  style: AppTextStyles.body16w6.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
                   ),
+                  const Spacer(),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                "Breath",
+                style: AppTextStyles.body16w6.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
-                SizedBox(height: 10.h),
-                Text(
-                  item.title,
-                  style: AppTextStyles.body24w7.copyWith(
-                    color: Colors.white,
-                  ),
+              ),
+              SizedBox(height: 10.h),
+              Text(
+                item.title,
+                style: AppTextStyles.body24w7.copyWith(
+                  color: Colors.white,
                 ),
-                SizedBox(height: 18.h),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(bottom: 24.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final paragraph in item.details) ...[
-                          Text(
-                            paragraph,
-                            style: AppTextStyles.body14w4.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              height: 1.45,
-                            ),
+              ),
+              SizedBox(height: 18.h),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(bottom: 24.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final paragraph in item.details) ...[
+                        Text(
+                          paragraph,
+                          style: AppTextStyles.body14w4.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            height: 1.45,
                           ),
-                          SizedBox(height: 12.h),
-                        ],
+                        ),
+                        SizedBox(height: 12.h),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

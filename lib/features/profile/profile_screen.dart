@@ -8,8 +8,9 @@ import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
 import 'package:bonoos/features/tabbox/tabbox_controller.dart';
 import 'package:go_router/go_router.dart';
-import 'package:bonoos/features/profile/edit_profile_bottom_sheet.dart';
+import 'package:bonoos/features/profile/profile_edit_screen.dart';
 import 'package:bonoos/features/profile/profile_avatar_controller.dart';
+import 'package:bonoos/features/profile/passcode_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -157,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isEmailContact = emailStr.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const _ProfileBackground(),
@@ -170,11 +171,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _TopBar(
                     title: "Profil",
                     onEdit: () async {
-                      final result = await showModalBottomSheet<ClientProfile?>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => EditProfileBottomSheet(profile: _profile),
+                      final result = await Navigator.push<ClientProfile?>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfileEditScreen(profile: _profile),
+                        ),
                       );
                       if (result != null && mounted) {
                         _loadProfile();
@@ -236,10 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 14.h),
                   _SettingsListCard(
                     items: const [
-                      _SettingsItem(title: "Bizni qayerdan topish mumkin?"),
                       _SettingsItem(title: "Obunani boshqarish"),
-                      _SettingsItem(title: "Ilovani baholash"),
-                      _SettingsItem(title: "Ilova tilini tanlash"),
+                      _SettingsItem(title: "Ilova paroli"),
                       _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
                     ],
                     onTap: (item) {
@@ -252,6 +251,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           break;
                         case "Xaridlarni tiklash":
                           openRestoreSheet();
+                          break;
+                        case "Ilova paroli":
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const PasscodeScreen()),
+                          );
                           break;
                         case "Ilovani baholash":
                           openRateDialog();
@@ -285,17 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 10.h),
-                  _FooterLinks(
-                    items: const [
-                      "Shaxsiy ma'lumotlarni qayta ishlashga rozilik",
-                      "Reklama va axborot xabarlarini olishga rozilik",
-                      "Foydalanuvchi shartnomasi",
-                      "Shaxsiy ma'lumotlarni qayta ishlash siyosati",
-                    ],
-                    onTap: (text) {
-                      openInfoSheet(title: text, body: "Demo: bu yerda hujjat matni ochiladi.");
-                    },
-                  ),
+           
                 ],
               ),
             ),
@@ -303,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (_loading)
             Positioned.fill(
               child: Container(
-                color: const Color(0xFF140B2A).withValues(alpha: 0.78),
+                color: AppColors.mainBgColor.withValues(alpha: 0.78),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -345,7 +340,7 @@ class _ProfileBackground extends StatelessWidget {
               colors: [
                 Color(0xFF26114B),
                 Color(0xFF1B0F38),
-                Color(0xFF140B2A),
+                AppColors.mainBgColor,
               ],
             ),
           ),
@@ -408,6 +403,30 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        GestureDetector(
+          onTap: (){
+            Navigator.pop(context);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            height: 40.w,
+            width: 40.w,
+            // decoration: BoxDecoration(
+            //   shape: BoxShape.circle,
+            //   color: Colors.white.withValues(alpha: 0.08),
+            //   border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            // ),
+            child: const Center(
+              child: Icon(
+                CupertinoIcons.arrow_left,
+                size: 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 10.w,),
         Text(
           title,
           style: AppTextStyles.body22w7.copyWith(
@@ -961,7 +980,7 @@ class _ConfirmDialog extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 14.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20.r),
-          color: const Color(0xFF140B2A),
+          color: AppColors.mainBgColor,
           border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           boxShadow: const [
             BoxShadow(
@@ -1055,7 +1074,7 @@ class _InfoBottomSheet extends StatelessWidget {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -1133,7 +1152,7 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
@@ -1240,7 +1259,7 @@ class _LanguageBottomSheet extends StatelessWidget {
       builder: (context, controller) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF140B2A),
+            color: AppColors.mainBgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),

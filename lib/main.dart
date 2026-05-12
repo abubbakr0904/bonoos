@@ -4,6 +4,7 @@ import 'package:alarm/alarm.dart';
 import 'package:bonoos/core/routes/app_pages.dart';
 import 'package:bonoos/core/services/app_version/app_update_service.dart';
 import 'package:bonoos/features/alarm/alarm_service.dart';
+import 'package:bonoos/features/medicine/medicine_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -26,7 +27,9 @@ Future<void> main() async {
   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initDi();
   await Alarm.init();
+  await MedicineService.init();
   await AlarmService.syncAlarmsWithEngine();
+  await MedicineService.syncMedicinesWithEngine();
 
   await LastListenedManager.init(inject<SharedPreferences>());
 

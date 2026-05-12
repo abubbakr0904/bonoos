@@ -98,7 +98,7 @@ class _AlarmScreenState extends State<AlarmScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           const HomeGradientBackground(),

@@ -91,7 +91,7 @@ class _FaqScreenState extends State<FaqScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -311,13 +311,7 @@ class _FaqQuestionRow extends StatelessWidget {
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.12),
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x2014082A),
-                blurRadius: 12,
-                offset: Offset(0, 6),
-              ),
-            ],
+      
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -330,11 +324,11 @@ class _FaqQuestionRow extends StatelessWidget {
                     height: 40.w,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12.r),
-                      color: AppColors.c842D5F.withValues(alpha: 0.22),
+                      color: AppColors.white.withValues(alpha: 0.22),
                     ),
                     child: Icon(
                       CupertinoIcons.chat_bubble_text_fill,
-                      color: AppColors.c842D5F,
+                      color: AppColors.white,
                       size: 18.sp,
                     ),
                   ),
@@ -408,7 +402,7 @@ class _FaqQuestionRow extends StatelessWidget {
                               children: [
                                 Icon(
                                   CupertinoIcons.question_circle_fill,
-                                  color: AppColors.c842D5F,
+                                  color: AppColors.white,
                                   size: 18.sp,
                                 ),
                                 SizedBox(width: 8.w),

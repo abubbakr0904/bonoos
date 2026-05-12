@@ -180,7 +180,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     final progress = hasQuestions ? (_index + 1) / total : 0.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B2A),
+      backgroundColor: AppColors.mainBgColor,
       body: Stack(
         children: [
           HomeGradientBackground(),

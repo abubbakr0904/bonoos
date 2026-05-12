@@ -34,22 +34,23 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C071A),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.c842D5F,
-        foregroundColor: Colors.white,
-        onPressed: _isSaving ? null : () => _openEditor(),
-        child: _isSaving
-            ? SizedBox(
-                width: 18.w,
-                height: 18.w,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Icon(CupertinoIcons.add),
-      ),
+      backgroundColor: AppColors.mainBgColor,
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: Colors.white,
+      //   foregroundColor: AppColors.mainBgColor,
+      //   elevation: 4,
+      //   onPressed: _isSaving ? null : () => _openEditor(),
+      //   child: _isSaving
+      //       ? SizedBox(
+      //           width: 18.w,
+      //           height: 18.w,
+      //           child: CircularProgressIndicator(
+      //             color: AppColors.mainBgColor,
+      //             strokeWidth: 2,
+      //           ),
+      //         )
+      //       : const Icon(CupertinoIcons.add),
+      // ),
       body: Stack(
         children: [
           const _DecorativeBackground(),
@@ -61,6 +62,7 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                 children: [
                   _HeaderCard(
                     notesCount: _notes.length,
+                    onAdd: () => _openEditor(),
                   ),
                   SizedBox(height: 12.h),
                   Expanded(
@@ -150,31 +152,10 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                     padding: EdgeInsets.fromLTRB(14.w, 13.h, 14.w, 13.h),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20.r),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF302254).withValues(alpha: 0.94),
-                          const Color(0xFF19102F).withValues(alpha: 0.96),
-                        ],
-                      ),
+                      color: Colors.white.withValues(alpha: 0.1),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              const Color(0x60130C26).withValues(alpha: 0.45),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.04),
-                          blurRadius: 6,
-                          spreadRadius: -1,
-                          offset: const Offset(0, -1),
-                        ),
-                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,11 +168,11 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                    AppColors.c842D5F.withValues(alpha: 0.20),
+                                    AppColors.white.withValues(alpha: 0.20),
                               ),
                               child: Icon(
                                 CupertinoIcons.heart_fill,
-                                color: AppColors.c842D5F,
+                                color: AppColors.white,
                                 size: 14.sp,
                               ),
                             ),
@@ -572,26 +553,27 @@ class _EmptyNotes extends StatelessWidget {
                 height: 1.35,
               ),
             ),
-            // SizedBox(height: 14.h),
-            // SizedBox(
-            //   width: 160.w,
-            //   child: ElevatedButton(
-            //     onPressed: onCreate,
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: AppColors.c842D5F,
-            //       foregroundColor: Colors.white,
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(12.r),
-            //       ),
-            //       padding: EdgeInsets.symmetric(vertical: 10.h),
-            //       elevation: 0,
-            //     ),
-            //     child: Text(
-            //       "Yangi yozuv",
-            //       style: AppTextStyles.body14w6,
-            //     ),
-            //   ),
-            // ),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: 180.w,
+              child: ElevatedButton.icon(
+                onPressed: onCreate,
+                icon: const Icon(CupertinoIcons.add, size: 18),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.mainBgColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  elevation: 0,
+                ),
+                label: Text(
+                  "Yangi yozuv",
+                  style: AppTextStyles.body14w6,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -602,9 +584,11 @@ class _EmptyNotes extends StatelessWidget {
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.notesCount,
+    required this.onAdd,
   });
 
   final int notesCount;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -613,13 +597,34 @@ class _HeaderCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Shukrona daftari",
-            style: AppTextStyles.body24w7.copyWith(
-              color: Colors.white.withValues(alpha: 0.96),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Shukrona daftari",
+                style: AppTextStyles.body24w7.copyWith(
+                  color: Colors.white.withValues(alpha: 0.96),
+                ),
+              ),
+              IconButton(
+                onPressed: onAdd,
+                icon: Container(
+                  padding: EdgeInsets.all(6.r),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  ),
+                  child: Icon(
+                    CupertinoIcons.add,
+                    color: Colors.white,
+                    size: 20.sp,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 4.h),
           Text(
             "Har bir kichik yaxshilik - katta baxtning boshlanishi",
             style: AppTextStyles.body13w4.copyWith(
@@ -628,16 +633,6 @@ class _HeaderCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          Row(
-            children: [
-              // _InfoBadge(
-              //   icon: CupertinoIcons.doc_text_fill,
-              //   label: "$notesCount ta yozuv",
-              // ),
-              SizedBox(width: 8.w),
-              // Calendar olib tashlandi
-            ],
-          ),
         ],
       ),
     );
@@ -684,17 +679,7 @@ class _DecorativeBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1A1034),
-            Color(0xFF110923),
-            Color(0xFF090512),
-          ],
-        ),
-      ),
+      color: AppColors.mainBgColor,
     );
   }
 }
