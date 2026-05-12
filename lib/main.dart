@@ -139,12 +139,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     if (_checking) return Scaffold(backgroundColor: AppColors.mainBgColor);
 
-    // Get current path from the router
-    final String currentPath = RouteGenerate.router.routerDelegate.currentConfiguration.uri.path;
-
-    // 1. If we are on Splash screen, ALWAYS show it.
-    // Also if path is empty/root during init, assume splash is coming.
-    if (currentPath == SplashScreen.routeName || currentPath == '/splash' || currentPath == '/') {
+    // 1. If Splash is active, ALWAYS show it first.
+    if (SecurityService.isSplashActive) {
       return widget.child;
     }
 

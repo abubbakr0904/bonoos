@@ -4,6 +4,8 @@ import 'package:local_auth/local_auth.dart';
 class SecurityService {
   SecurityService._();
 
+  static bool isSplashActive = true;
+
   static const _storage = FlutterSecureStorage();
   static final _auth = LocalAuthentication();
 

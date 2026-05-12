@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bonoos/features/profile/security_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -58,8 +59,10 @@ class _SplashScreenState extends State<SplashScreen>
     }
     //
     if (hasPendingQuestions) {
+      SecurityService.isSplashActive = false;
       context.go(QuestionScreen.routeName);
     } else {
+      SecurityService.isSplashActive = false;
       context.go(TabBoxScreen.routeName);
     }
   }
