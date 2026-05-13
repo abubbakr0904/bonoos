@@ -79,6 +79,7 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
     return Scaffold(
       backgroundColor: AppColors.mainBgColor,
       appBar: AppBar(
+        surfaceTintColor: AppColors.mainBgColor,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -105,35 +106,34 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
               )
             : null,
         title: Text(
-          isEditing 
-              ? "Yozuvni tahrirlash" 
-              : (_steps.length <= 4 && isNewNote ? "Savol ${_steps.length}/4" : "Shukronalik daftari"),
+          "Shukronalik daftari",
           style: AppTextStyles.body18w6.copyWith(color: Colors.white),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GratitudeNotesScreen()),
-              );
-            },
-            icon: Container(
-              height: 34.w,
-              width: 34.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.22),
+          if (!isEditing)
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const GratitudeNotesScreen()),
+                );
+              },
+              icon: Container(
+                height: 34.w,
+                width: 34.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Icon(
+                  CupertinoIcons.clock,
+                  color: Colors.white,
+                  size: 18.sp,
                 ),
               ),
-              child: Icon(
-                CupertinoIcons.clock,
-                color: Colors.white,
-                size: 18.sp,
-              ),
             ),
-          ),
           if (isEditing)
             IconButton(
               onPressed: () async {
@@ -335,22 +335,39 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   Future<void> _handleSave(bool isEditing) async {
     if (_isSaving) return;
 
-    if (_steps.length < 4 && (widget.initialText ?? '').isEmpty) {
+    if (_steps.length < 4 && isNewNote) {
       setState(() {
-        _steps.add(_StepData(question: _questions[_steps.length]));
+        final newStep = _StepData(question: _questions[_steps.length]);
+        _steps.add(newStep);
+        _scrollToBottom();
+        // Request focus for the new step after it's built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          newStep.focusNode.requestFocus();
+        });
       });
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
+      return;
+    } else if (_steps.length == 4 && isNewNote && !_steps.any((s) => s.isCompletion)) {
+      setState(() {
+        final completionStep = _StepData(
+          question: "Davom ettirishingiz mumkin",
+          isCompletion: true,
         );
+        _steps.add(completionStep);
+        _scrollToBottom();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          completionStep.focusNode.requestFocus();
+        });
       });
       return;
     }
 
     // Final Save
-    final fullContent = _steps.map((s) => "${s.question}\n${s.controller.text.trim()}").join("\n\n");
+    final fullContent = _steps.map((s) {
+      if (s.isCompletion) {
+        return s.controller.text.trim();
+      }
+      return "${s.question}\n${s.controller.text.trim()}";
+    }).where((text) => text.isNotEmpty).join("\n\n");
     
     final draft = GratitudeDraft(
       content: fullContent,
@@ -385,7 +402,10 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Shukrona muvaffaqiyatli saqlandi")),
+        const SnackBar(
+          content: Text("Shukrona muvaffaqiyatli saqlandi"),
+          backgroundColor: AppColors.mainBgColor,
+        ),
       );
     } on DioException catch (e) {
       if (!mounted) return;
@@ -393,12 +413,18 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
           ? Map<String, dynamic>.from(e.response!.data)['message']?.toString()
           : null;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message ?? "Shukrona saqlanmadi")),
+        SnackBar(
+          content: Text(message ?? "Shukrona saqlanmadi"),
+          backgroundColor: AppColors.mainBgColor,
+        ),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Shukrona saqlanmadi")),
+        const SnackBar(
+          content: Text("Shukrona saqlanmadi"),
+          backgroundColor: AppColors.mainBgColor,
+        ),
       );
     } finally {
       if (mounted) {
@@ -407,14 +433,33 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
     }
   }
 
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
   bool get isNewNote => (widget.initialText ?? '').trim().isEmpty;
 }
 
 class _StepData {
-  _StepData({required this.question, TextEditingController? controller})
-      : controller = controller ?? TextEditingController();
+  _StepData({
+    required this.question,
+    TextEditingController? controller,
+    this.isCompletion = false,
+  })  : controller = controller ?? TextEditingController(),
+        focusNode = FocusNode();
+
   final String question;
   final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool isCompletion;
 }
 
 class _AnimatedStepWidget extends StatefulWidget {
@@ -479,15 +524,20 @@ class _AnimatedStepWidgetState extends State<_AnimatedStepWidget> with SingleTic
               ),
               TextField(
                 controller: widget.step.controller,
+                focusNode: widget.step.focusNode,
                 autofocus: widget.isLast,
                 maxLines: null,
                 minLines: 1,
                 style: AppTextStyles.body16w5.copyWith(
-                  color: Colors.black.withValues(alpha: 0.85),
+                  color: widget.step.isCompletion ? Colors.black.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.85),
                   height: 2.0,
+                  fontStyle: widget.step.isCompletion ? FontStyle.italic : FontStyle.normal,
                 ),
+                readOnly: false, // User should be able to continue writing
                 decoration: InputDecoration(
-                  hintText: "Javobingiz...",
+                  hintText: widget.step.isCompletion 
+                      ? "O'z fikrlaringizni bu yerda davom ettirishingiz mumkin..." 
+                      : "Javobingiz...",
                   hintStyle: AppTextStyles.body14w4.copyWith(
                     color: Colors.black.withValues(alpha: 0.2),
                   ),
@@ -531,55 +581,48 @@ class _NotepadContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDFDFD),
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 25,
-            spreadRadius: 2,
-            offset: const Offset(0, 12),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // The Notepad Paper
+        Container(
+          margin: EdgeInsets.only(top: 40.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFDFDFD),
+            borderRadius: BorderRadius.circular(16.r),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Spiral Binding Area
-          Container(
-            height: 48.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+          child: Column(
+            children: [
+              SizedBox(height: 16.h), // Tight space for holes area
+              // Lined Paper Area
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _LinedPaperPainter(),
+                      ),
+                    ),
+                    child,
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+        // The Spirals (positioned to stick out into the background)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SizedBox(
+            height: 60.h,
             child: CustomPaint(
               painter: _SpiralPainter(),
             ),
           ),
-          // Lined Paper Area
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _LinedPaperPainter(),
-                  ),
-                ),
-                child,
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -588,57 +631,46 @@ class _SpiralPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final ringPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.w;
-
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.2)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.w
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-
-    final holePaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.6)
+      ..color = const Color(0xFF9E9E9E)
       ..style = PaintingStyle.fill;
 
-    final ringCount = 14;
+    final ringCount = 10;
     final spacing = size.width / (ringCount + 1);
 
     for (int i = 1; i <= ringCount; i++) {
       final x = spacing * i;
-      final y = size.height * 0.5;
+      final y = 40.h; // Paper top edge (matched with margin)
 
-      // Draw shadow for ring
-      canvas.drawArc(
-        Rect.fromCenter(center: Offset(x + 2, y + 2), width: 14.w, height: 26.h),
-        -3.14 * 0.8,
-        3.14 * 1.6,
-        false,
-        shadowPaint,
+      // Draw the dark hole
+      canvas.drawCircle(
+        Offset(x, y + 10.h), 
+        5.w, 
+        Paint()..color = const Color(0xFF222222)
       );
 
-      // Draw metallic ring
-      ringPaint.shader = LinearGradient(
-        colors: [
-          Colors.grey[400]!,
-          Colors.grey[600]!,
-          Colors.grey[300]!,
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromCenter(center: Offset(x, y), width: 14.w, height: 26.h));
-
-      canvas.drawArc(
-        Rect.fromCenter(center: Offset(x, y), width: 14.w, height: 26.h),
-        -3.14 * 0.8,
-        3.14 * 1.6,
-        false,
-        ringPaint,
+      // Draw the vertical bar (oblong)
+      final RRect bar = RRect.fromLTRBR(
+        x - 4.w, 
+        y - 20.h, 
+        x + 4.w, 
+        y + 12.h, 
+        Radius.circular(4.r)
       );
-
-      // Draw holes
-      canvas.drawCircle(Offset(x, y - 8.h), 2.5.w, holePaint);
-      canvas.drawCircle(Offset(x, y + 8.h), 2.5.w, holePaint);
+      
+      // Draw shadow for the bar
+      canvas.drawRRect(
+        bar.shift(const Offset(1, 1)), 
+        Paint()..color = Colors.black.withValues(alpha: 0.2)
+      );
+      
+      // Draw the bar itself
+      canvas.drawRRect(bar, ringPaint);
+      
+      // Add a small highlight to the bar
+      canvas.drawRRect(
+        RRect.fromLTRBR(x - 1.w, y - 18.h, x + 1.w, y + 8.h, Radius.circular(2.r)),
+        Paint()..color = Colors.white.withValues(alpha: 0.3)
+      );
     }
   }
 
