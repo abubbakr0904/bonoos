@@ -25,18 +25,39 @@ class GratitudeNoteEditorScreen extends StatefulWidget {
 }
 
 class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
-  late final TextEditingController _controller;
+  late final ScrollController _scrollController;
   bool _isPrivate = true;
   bool _animateIn = false;
   bool _isSaving = false;
+  
+  final List<_StepData> _steps = [];
+
+  final List<String> _questions = [
+    "Bugungi kunimdan minnatdormanmi?",
+    "Bugun meni nima quvontirdi?",
+    "Bugun kimga yaxshilik qildim?",
+    "Ertangi kundan nimalarni kutyapman?",
+  ];
 
   final DioClient _dio = inject<DioClient>();
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialText ?? '');
+    _scrollController = ScrollController();
     _isPrivate = widget.initialIsPrivate;
+    
+    final isNew = (widget.initialText ?? '').trim().isEmpty;
+    if (isNew && widget.initialText == null) {
+      _steps.add(_StepData(question: _questions[0]));
+    } else {
+      // For existing notes or pushed text, just one big step
+      _steps.add(_StepData(
+        question: "Shukrona yozuvi",
+        controller: TextEditingController(text: widget.initialText ?? ''),
+      ));
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _animateIn = true);
@@ -45,7 +66,10 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scrollController.dispose();
+    for (final step in _steps) {
+      step.controller.dispose();
+    }
     super.dispose();
   }
 
@@ -59,9 +83,31 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        leading: SizedBox(),
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: Container(
+                  height: 34.w,
+                  width: 34.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.22),
+                    ),
+                  ),
+                  child: Icon(
+                    CupertinoIcons.back,
+                    color: Colors.white,
+                    size: 18.sp,
+                  ),
+                ),
+              )
+            : null,
         title: Text(
-          isEditing ? "Yozuvni tahrirlash" : "Shukronalik daftari",
+          isEditing 
+              ? "Yozuvni tahrirlash" 
+              : (_steps.length <= 4 && isNewNote ? "Savol ${_steps.length}/4" : "Shukronalik daftari"),
           style: AppTextStyles.body18w6.copyWith(color: Colors.white),
         ),
         actions: [
@@ -215,33 +261,6 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: EdgeInsets.all(16.r),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18.r),
-                  color: Colors.white.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.sparkles,
-                      color: Colors.white,
-                      size: 18.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        "Bugun sizni quvontirgan narsani yozing.",
-                        style: AppTextStyles.body13w4.copyWith(
-                          color: Colors.white.withValues(alpha: 0.78),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               SizedBox(height: 12.h),
               
               Expanded(
@@ -252,31 +271,21 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 420),
                     opacity: _animateIn ? 1 : 0,
-                    child: TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      expands: true,
-                      maxLines: null,
-                      minLines: null,
-                      textAlignVertical: TextAlignVertical.top,
-                      style: AppTextStyles.body16w5.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        height: 1.4,
+                    child: _NotepadContainer(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.fromLTRB(20.w, 10.h, 16.w, 100.h),
+                        itemCount: _steps.length,
+                        itemBuilder: (context, index) {
+                          final step = _steps[index];
+                          return _AnimatedStepWidget(
+                            key: ValueKey(step.question),
+                            step: step,
+                            isLast: index == _steps.length - 1,
+                            onChanged: () => setState(() {}),
+                          );
+                        },
                       ),
-                      decoration: InputDecoration(
-                        hintText: "Bugun nimaga shukr qildingiz?",
-                        hintStyle: AppTextStyles.body14w4.copyWith(
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.05),
-                        contentPadding: EdgeInsets.all(16.r),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ),
@@ -285,7 +294,7 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _controller.text.trim().isEmpty || _isSaving
+                  onPressed: _steps.last.controller.text.trim().isEmpty || _isSaving
                       ? null
                       : () => _handleSave(isEditing),
                   icon: _isSaving
@@ -299,7 +308,9 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                         )
                       : const Icon(CupertinoIcons.check_mark),
                   label: Text(
-                    _isSaving ? "Saqlanmoqda..." : "Saqlash",
+                    _isSaving 
+                        ? "Saqlanmoqda..." 
+                        : (_steps.length < 4 && isNewNote ? "Keyingisi" : "Saqlash"),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -322,8 +333,27 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   }
 
   Future<void> _handleSave(bool isEditing) async {
+    if (_isSaving) return;
+
+    if (_steps.length < 4 && (widget.initialText ?? '').isEmpty) {
+      setState(() {
+        _steps.add(_StepData(question: _questions[_steps.length]));
+      });
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      });
+      return;
+    }
+
+    // Final Save
+    final fullContent = _steps.map((s) => "${s.question}\n${s.controller.text.trim()}").join("\n\n");
+    
     final draft = GratitudeDraft(
-      content: _controller.text.trim(),
+      content: fullContent,
       tags: const [],
       isPrivate: _isPrivate,
     );
@@ -333,19 +363,27 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
       return;
     }
 
-    // Direct save if in tab
     setState(() => _isSaving = true);
     try {
       await _dio.post(
         ListAPI.clientGratitudeDiary,
         data: {
-          'content': draft.content,
-          'tags': draft.tags,
-          'is_private': draft.isPrivate,
+          'content': fullContent,
+          'tags': const [],
+          'is_private': _isPrivate,
         },
       );
       if (!mounted) return;
-      _controller.clear();
+      
+      // Reset for next note
+      setState(() {
+        for (final s in _steps) {
+          s.controller.dispose();
+        }
+        _steps.clear();
+        _steps.add(_StepData(question: _questions[0]));
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Shukrona muvaffaqiyatli saqlandi")),
       );
@@ -368,6 +406,103 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
       }
     }
   }
+
+  bool get isNewNote => (widget.initialText ?? '').trim().isEmpty;
+}
+
+class _StepData {
+  _StepData({required this.question, TextEditingController? controller})
+      : controller = controller ?? TextEditingController();
+  final String question;
+  final TextEditingController controller;
+}
+
+class _AnimatedStepWidget extends StatefulWidget {
+  const _AnimatedStepWidget({
+    super.key,
+    required this.step,
+    required this.isLast,
+    required this.onChanged,
+  });
+
+  final _StepData step;
+  final bool isLast;
+  final VoidCallback onChanged;
+
+  @override
+  State<_AnimatedStepWidget> createState() => _AnimatedStepWidgetState();
+}
+
+class _AnimatedStepWidgetState extends State<_AnimatedStepWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 20.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.step.question,
+                style: AppTextStyles.body14w7.copyWith(
+                  color: AppColors.mainBgColor.withValues(alpha: 0.6),
+                  height: 2.0,
+                ),
+              ),
+              TextField(
+                controller: widget.step.controller,
+                autofocus: widget.isLast,
+                maxLines: null,
+                minLines: 1,
+                style: AppTextStyles.body16w5.copyWith(
+                  color: Colors.black.withValues(alpha: 0.85),
+                  height: 2.0,
+                ),
+                decoration: InputDecoration(
+                  hintText: "Javobingiz...",
+                  hintStyle: AppTextStyles.body14w4.copyWith(
+                    color: Colors.black.withValues(alpha: 0.2),
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onChanged: (_) => widget.onChanged(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class GratitudeDraft {
@@ -387,4 +522,155 @@ class GratitudeDraft {
   final List<String> tags;
   final bool isPrivate;
   final bool deleteRequested;
+}
+
+class _NotepadContainer extends StatelessWidget {
+  const _NotepadContainer({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDFDFD),
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 25,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Spiral Binding Area
+          Container(
+            height: 48.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: CustomPaint(
+              painter: _SpiralPainter(),
+            ),
+          ),
+          // Lined Paper Area
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _LinedPaperPainter(),
+                  ),
+                ),
+                child,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpiralPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.w;
+
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.w
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+    final holePaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.6)
+      ..style = PaintingStyle.fill;
+
+    final ringCount = 14;
+    final spacing = size.width / (ringCount + 1);
+
+    for (int i = 1; i <= ringCount; i++) {
+      final x = spacing * i;
+      final y = size.height * 0.5;
+
+      // Draw shadow for ring
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset(x + 2, y + 2), width: 14.w, height: 26.h),
+        -3.14 * 0.8,
+        3.14 * 1.6,
+        false,
+        shadowPaint,
+      );
+
+      // Draw metallic ring
+      ringPaint.shader = LinearGradient(
+        colors: [
+          Colors.grey[400]!,
+          Colors.grey[600]!,
+          Colors.grey[300]!,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromCenter(center: Offset(x, y), width: 14.w, height: 26.h));
+
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset(x, y), width: 14.w, height: 26.h),
+        -3.14 * 0.8,
+        3.14 * 1.6,
+        false,
+        ringPaint,
+      );
+
+      // Draw holes
+      canvas.drawCircle(Offset(x, y - 8.h), 2.5.w, holePaint);
+      canvas.drawCircle(Offset(x, y + 8.h), 2.5.w, holePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _LinedPaperPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = Colors.blue.withValues(alpha: 0.1)
+      ..strokeWidth = 1.0;
+
+    final marginPaint = Paint()
+      ..color = Colors.red.withValues(alpha: 0.15)
+      ..strokeWidth = 1.5;
+
+    // Draw horizontal lines
+    // Match the lineHeight: 2.0 and fontSize: 16 (from AppTextStyles.body16w5)
+    // Approximate calculation for line spacing
+    final double firstLineY = 46.h;
+    final double lineSpacing = 32.h; // Should match text height roughly
+
+    for (double y = firstLineY; y < size.height; y += lineSpacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    }
+
+    // Draw vertical margin
+    canvas.drawLine(Offset(44.w, 0), Offset(44.w, size.height), marginPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
