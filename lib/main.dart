@@ -147,8 +147,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final pinEnabled = await SecurityService.isPinEnabled();
     final pinSet = await SecurityService.isPinSet();
     
-    // Lock ONLY if user is logged in AND PIN is enabled/set
-    final shouldLock = hasToken && (pinEnabled || pinSet);
+    // Lock ONLY if user is logged in AND PIN is enabled AND set
+    final shouldLock = hasToken && pinEnabled && pinSet;
     
     debugPrint('AuthWrapper: hasToken=$hasToken, pinEnabled=$pinEnabled, pinSet=$pinSet, shouldLock=$shouldLock');
     

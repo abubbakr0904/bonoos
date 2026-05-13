@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:bonoos/features/calendar/calendar_tasks_screen.dart';
+import 'package:bonoos/features/gratitude/gratitude_note_editor_screen.dart';
 import 'package:bonoos/features/gratitude/gratitude_notes_screen.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
@@ -86,8 +87,8 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
       case 1:
         return const CalendarTasksScreen(key: ValueKey("calendar_tasks"));
       case 2:
-        return GratitudeNotesScreen(
-          key: ValueKey("gratitude_$_gratitudeViewVersion"),
+        return const GratitudeNoteEditorScreen(
+          key: ValueKey("gratitude_editor"),
         );
       case 3:
         return const SubscriptionScreen(key: ValueKey("subscription"));

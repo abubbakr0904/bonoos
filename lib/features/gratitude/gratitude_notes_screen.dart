@@ -110,7 +110,9 @@ class _GratitudeNotesScreenState extends State<GratitudeNotesScreen> {
       );
     }
     if (_notes.isEmpty) {
-      return _EmptyNotes(onCreate: () => _openEditor());
+      return _EmptyNotes(onCreate: (){
+        Navigator.pop(context);
+      });
     }
     return RefreshIndicator(
       color: AppColors.c842D5F,
@@ -558,7 +560,7 @@ class _EmptyNotes extends StatelessWidget {
               width: 180.w,
               child: ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(CupertinoIcons.add, size: 18),
+                icon: const Icon(CupertinoIcons.clock, size: 18),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: AppColors.mainBgColor,
@@ -600,28 +602,36 @@ class _HeaderCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Shukrona daftari",
-                style: AppTextStyles.body24w7.copyWith(
-                  color: Colors.white.withValues(alpha: 0.96),
+              if (Navigator.of(context).canPop())
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Container(
+                    height: 34.w,
+                    width: 34.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: Icon(
+                      CupertinoIcons.back,
+                      color: Colors.white,
+                      size: 18.sp,
+                    ),
+                  ),
+                ),
+              if (Navigator.of(context).canPop()) SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  "Shukrona daftari",
+                  style: AppTextStyles.body24w7.copyWith(
+                    color: Colors.white.withValues(alpha: 0.96),
+                  ),
                 ),
               ),
-              IconButton(
-                onPressed: onAdd,
-                icon: Container(
-                  padding: EdgeInsets.all(6.r),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.add,
-                    color: Colors.white,
-                    size: 20.sp,
-                  ),
-                ),
-              ),
+
             ],
           ),
           SizedBox(height: 4.h),

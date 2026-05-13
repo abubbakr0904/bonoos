@@ -1,5 +1,10 @@
+import 'package:bonoos/core/api/dio_client.dart';
+import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
+import 'package:bonoos/di.dart';
+import 'package:bonoos/features/gratitude/gratitude_notes_screen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,6 +28,9 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   late final TextEditingController _controller;
   bool _isPrivate = true;
   bool _animateIn = false;
+  bool _isSaving = false;
+
+  final DioClient _dio = inject<DioClient>();
 
   @override
   void initState() {
@@ -51,30 +59,35 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: Container(
-            height: 34.w,
-            width: 34.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.12),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.22),
-              ),
-            ),
-            child: Icon(
-              CupertinoIcons.back,
-              color: Colors.white,
-              size: 18.sp,
-            ),
-          ),
-        ),
+        leading: SizedBox(),
         title: Text(
-          isEditing ? "Yozuvni tahrirlash" : "Yangi yozuv",
+          isEditing ? "Yozuvni tahrirlash" : "Shukronalik daftari",
           style: AppTextStyles.body18w6.copyWith(color: Colors.white),
         ),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GratitudeNotesScreen()),
+              );
+            },
+            icon: Container(
+              height: 34.w,
+              width: 34.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22),
+                ),
+              ),
+              child: Icon(
+                CupertinoIcons.clock,
+                color: Colors.white,
+                size: 18.sp,
+              ),
+            ),
+          ),
           if (isEditing)
             IconButton(
               onPressed: () async {
@@ -272,19 +285,22 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _controller.text.trim().isEmpty
+                  onPressed: _controller.text.trim().isEmpty || _isSaving
                       ? null
-                      : () => Navigator.of(context).pop(
-                            GratitudeDraft(
-                              content: _controller.text.trim(),
-                              tags: const [],
-                              isPrivate: _isPrivate,
-                            ),
+                      : () => _handleSave(isEditing),
+                  icon: _isSaving
+                      ? SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(
+                            color: AppColors.mainBgColor,
+                            strokeWidth: 2,
                           ),
-                  icon: const Icon(CupertinoIcons.check_mark),
-                  label: const Text(
-                    "Saqlash",
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                        )
+                      : const Icon(CupertinoIcons.check_mark),
+                  label: Text(
+                    _isSaving ? "Saqlanmoqda..." : "Saqlash",
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
@@ -303,6 +319,54 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleSave(bool isEditing) async {
+    final draft = GratitudeDraft(
+      content: _controller.text.trim(),
+      tags: const [],
+      isPrivate: _isPrivate,
+    );
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(draft);
+      return;
+    }
+
+    // Direct save if in tab
+    setState(() => _isSaving = true);
+    try {
+      await _dio.post(
+        ListAPI.clientGratitudeDiary,
+        data: {
+          'content': draft.content,
+          'tags': draft.tags,
+          'is_private': draft.isPrivate,
+        },
+      );
+      if (!mounted) return;
+      _controller.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Shukrona muvaffaqiyatli saqlandi")),
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final message = e.response?.data is Map
+          ? Map<String, dynamic>.from(e.response!.data)['message']?.toString()
+          : null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message ?? "Shukrona saqlanmadi")),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Shukrona saqlanmadi")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 }
 

@@ -374,7 +374,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     // 3. Now that data is cleared, navigate to login.
     // AuthWrapper will re-check auth on this route change and unlock the screen.
     if (mounted) {
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginPhoneScreen()), (route) => false);
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const SplashScreen()), (route) => false);
     }
   }
 
