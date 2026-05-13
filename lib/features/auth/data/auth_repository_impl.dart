@@ -90,22 +90,28 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, Unit>> logout() async {
     final pref = inject<PrefManager>();
     final prefs = inject<SharedPreferences>();
-    try {
-      final refreshToken = pref.refresh ?? '';
-      final deviceId = prefs.getString(SharedModel.deviceClientId) ?? '';
+    
+    final refreshToken = pref.refresh ?? '';
+    final deviceId = prefs.getString(SharedModel.deviceClientId) ?? '';
 
-      await _dio.post(
-        ListAPI.authClientLogout,
-        data: <String, dynamic>{
-          'refresh_token': refreshToken,
-          'device_id': deviceId,
-        },
-      );
-    } catch (e) {
-      debugPrint('Logout API xatosi: $e');
+    // 1. Clear local session IMMEDIATELY for instant UI feedback
+    await pref.logout();
+
+    // 2. Trigger API logout in background (with short timeout)
+    if (refreshToken.isNotEmpty) {
+      try {
+        await _dio.post(
+          ListAPI.authClientLogout,
+          data: <String, dynamic>{
+            'refresh_token': refreshToken,
+            'device_id': deviceId,
+          },
+        ).timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugPrint('Logout API background error (ignoring): $e');
+      }
     }
 
-    await pref.logout();
     return const Right(unit);
   }
 

@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 class SecurityService {
   SecurityService._();
 
-  static bool isSplashActive = true;
+  static final splashActive = ValueNotifier<bool>(true);
 
   static const _storage = FlutterSecureStorage();
   static final _auth = LocalAuthentication();

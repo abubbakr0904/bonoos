@@ -3,9 +3,15 @@ import 'dart:ui';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/profile/security_service.dart';
+import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
+import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/di.dart';
+import 'package:bonoos/core/routes/app_pages.dart';
+import 'package:bonoos/features/splash/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 enum PasscodeMode { setup, verify, change, setupConfirm }
 
@@ -29,6 +35,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
   String _tempCode = ""; // For setup confirmation
   final int _codeLength = 4;
   String _errorText = "";
+  int _attempts = 0;
 
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
@@ -105,6 +112,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
       case PasscodeMode.setupConfirm:
         if (_code == _tempCode) {
           await SecurityService.setPin(_code);
+          debugPrint('PasscodeScreen: PIN saved successfully. isPinSet=${await SecurityService.isPinSet()}');
           await _askBiometrics();
           _handleSuccess();
         } else {
@@ -121,11 +129,24 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
         if (ok) {
           _handleSuccess();
         } else {
+          _attempts++;
           _shakeController.forward(from: 0);
+          int remaining = 4 - _attempts;
+          
           setState(() {
             _code = "";
-            _errorText = "Noto'g'ri kod";
+            if (remaining > 1) {
+              _errorText = "Noto'g'ri kod. Yana $remaining ta urinish qoldi";
+            } else if (remaining == 1) {
+              _errorText = "Oxirgi urinish! Ehtiyot bo'ling";
+            }
           });
+
+          if (_attempts == 3) {
+            _showAttemptWarningDialog();
+          }  if (_attempts > 3) {
+            _logoutAndExit();
+          }
         }
         break;
 
@@ -189,7 +210,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Platform.isIOS ? CupertinoIcons.viewfinder : CupertinoIcons.device_phone_portrait,
+                    Platform.isIOS ? Icons.face_unlock_outlined : Icons.fingerprint,
                     color: Colors.white,
                     size: 42.sp,
                   ),
@@ -285,6 +306,78 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     }
   }
 
+  void _showAttemptWarningDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(28.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.mainBgColor.withValues(alpha: 0.95),
+                  AppColors.c842D5F.withValues(alpha: 0.9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(32.r),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.amber, size: 48.sp),
+                SizedBox(height: 16.h),
+                Text(
+                  "Diqqat!",
+                  style: AppTextStyles.body22w7.copyWith(color: Colors.white),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  "Sizni ilovadan chiqarib yuboramiz, agar yana bir marta kodni xato kiritsangiz. Ehtiyot bo'ling!",
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body14w4.copyWith(color: Colors.white.withValues(alpha: 0.8)),
+                ),
+                SizedBox(height: 24.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.mainBgColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                    ),
+                    child: const Text("Tushunarli"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logoutAndExit() async {
+    // 1. Clear local security data first
+    await SecurityService.deletePin();
+    
+    // 2. Trigger repository logout (clears prefs and calls API)
+    await inject<AuthRepository>().logout();
+    
+    // 3. Now that data is cleared, navigate to login.
+    // AuthWrapper will re-check auth on this route change and unlock the screen.
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginPhoneScreen()), (route) => false);
+    }
+  }
+
   void _handleSuccess() {
     if (widget.onSuccess != null) {
       widget.onSuccess!();
@@ -327,13 +420,6 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
             _title,
             style: AppTextStyles.body22w7.copyWith(color: Colors.white),
           ),
-          if (_errorText.isNotEmpty) ...[
-            SizedBox(height: 12.h),
-            Text(
-              _errorText,
-              style: AppTextStyles.body13w5.copyWith(color: Colors.redAccent),
-            ),
-          ],
           SizedBox(height: 60.h),
           // Indicators
           AnimatedBuilder(
@@ -341,24 +427,42 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
             builder: (context, child) {
               return Transform.translate(
                 offset: Offset(_shakeAnimation.value, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_codeLength, (index) {
-                    bool isFilled = index < _code.length;
-                    return Container(
-                      margin: EdgeInsets.symmetric(horizontal: 12.w),
-                      height: 16.w,
-                      width: 16.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isFilled ? AppColors.white : Colors.white.withValues(alpha: 0.1),
-                        border: Border.all(
-                          color: isFilled ? Colors.white : Colors.white.withValues(alpha: 0.2),
-                          width: 1,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_codeLength, (index) {
+                        bool isFilled = index < _code.length;
+                        return Container(
+                          margin: EdgeInsets.symmetric(horizontal: 12.w),
+                          height: 16.w,
+                          width: 16.w,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isFilled ? AppColors.white : Colors.white.withValues(alpha: 0.1),
+                            border: Border.all(
+                              color: isFilled ? Colors.white : Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    if (_errorText.isNotEmpty) ...[
+                      SizedBox(height: 32.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 40.w),
+                        child: Text(
+                          _errorText,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.body14w4.copyWith(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    );
-                  }),
+                    ],
+                  ],
                 ),
               );
             },
@@ -410,7 +514,7 @@ class _NumericKeypad extends StatelessWidget {
           children: [
             showBiometric 
               ? _KeyButton(
-                  icon: Platform.isIOS ? CupertinoIcons.lock_shield : CupertinoIcons.device_phone_portrait,
+                  icon: Icons.fingerprint,
                   onTap: onBiometricTap!,
                   isIcon: true,
                 )

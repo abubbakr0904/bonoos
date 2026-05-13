@@ -59,10 +59,10 @@ class _SplashScreenState extends State<SplashScreen>
     }
     //
     if (hasPendingQuestions) {
-      SecurityService.isSplashActive = false;
+      SecurityService.splashActive.value = false;
       context.go(QuestionScreen.routeName);
     } else {
-      SecurityService.isSplashActive = false;
+      SecurityService.splashActive.value = false;
       context.go(TabBoxScreen.routeName);
     }
   }

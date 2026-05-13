@@ -76,9 +76,9 @@ class _OtpScreenState extends State<OtpScreen> {
     result.fold(
       (failure) {
         setState(() => _resendLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message ?? 'Kod yuborilmadi.')),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(failure.message ?? 'Kod yuborilmadi.')),
+        // );
       },
       (_) {
         setState(() {
@@ -86,9 +86,9 @@ class _OtpScreenState extends State<OtpScreen> {
           _resendSecondsLeft = 30;
         });
         _tickResend();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kod qayta yuborildi.')),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text('Kod qayta yuborildi.')),
+        // );
       },
     );
   }
@@ -116,9 +116,9 @@ class _OtpScreenState extends State<OtpScreen> {
         _verifyLoading = false;
         _hasError = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(verifyFailure.message ?? 'Tasdiqlash muvaffaqiyatsiz.')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text(verifyFailure.message ?? 'Tasdiqlash muvaffaqiyatsiz.')),
+      // );
       return;
     }
 
@@ -128,9 +128,9 @@ class _OtpScreenState extends State<OtpScreen> {
     sessionResult.fold(
       (failure) {
         setState(() => _verifyLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message ?? 'Sessiya saqlanmadi. Qayta urinib ko‘ring.')),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(failure.message ?? 'Sessiya saqlanmadi. Qayta urinib ko‘ring.')),
+        // );
       },
       (_) {
         setState(() => _verifyLoading = false);
@@ -311,7 +311,6 @@ class _OtpScreenState extends State<OtpScreen> {
                             _resendSecondsLeft == 0 ? "Kod qayta yuborish" : "Kod kelmadimi? ${_resendSecondsLeft}s",
                             style: AppTextStyles.body14w6.copyWith(
                               color: _resendSecondsLeft == 0 ? Colors.white : Colors.white.withOpacity(0.5),
-                              decoration: _resendSecondsLeft == 0 ? TextDecoration.underline : TextDecoration.none,
                             ),
                           ),
                   ),

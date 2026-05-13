@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alarm/alarm.dart';
 import 'package:bonoos/core/routes/app_pages.dart';
 import 'package:bonoos/core/services/app_version/app_update_service.dart';
+import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/features/alarm/alarm_service.dart';
 import 'package:bonoos/features/medicine/medicine_service.dart';
 import 'package:flutter/material.dart';
@@ -111,13 +112,27 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     _checkAuth();
-    // Listen to route changes to rebuild AuthWrapper
-    RouteGenerate.router.routerDelegate.addListener(_rebuild);
+    SecurityService.splashActive.addListener(_onSplashChanged);
+    RouteGenerate.router.routerDelegate.addListener(_onRouteChanged);
+  }
+
+  void _onSplashChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onRouteChanged() {
+    if (mounted) {
+      // Use post-frame callback to avoid "setState during build" error
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAuth();
+      });
+    }
   }
 
   @override
   void dispose() {
-    RouteGenerate.router.routerDelegate.removeListener(_rebuild);
+    SecurityService.splashActive.removeListener(_onSplashChanged);
+    RouteGenerate.router.routerDelegate.removeListener(_onRouteChanged);
     super.dispose();
   }
 
@@ -126,12 +141,24 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Future<void> _checkAuth() async {
-    final enabled = await SecurityService.isPinEnabled();
+    final pref = inject<PrefManager>();
+    final hasToken = pref.token != null && pref.token!.isNotEmpty;
+    
+    final pinEnabled = await SecurityService.isPinEnabled();
+    final pinSet = await SecurityService.isPinSet();
+    
+    // Lock ONLY if user is logged in AND PIN is enabled/set
+    final shouldLock = hasToken && (pinEnabled || pinSet);
+    
+    debugPrint('AuthWrapper: hasToken=$hasToken, pinEnabled=$pinEnabled, pinSet=$pinSet, shouldLock=$shouldLock');
+    
     if (mounted) {
-      setState(() {
-        _authenticated = !enabled;
-        _checking = false;
-      });
+      if (_authenticated != !shouldLock || _checking) {
+        setState(() {
+          _authenticated = !shouldLock;
+          _checking = false;
+        });
+      }
     }
   }
 
@@ -140,17 +167,21 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (_checking) return Scaffold(backgroundColor: AppColors.mainBgColor);
 
     // 1. If Splash is active, ALWAYS show it first.
-    if (SecurityService.isSplashActive) {
+    if (SecurityService.splashActive.value) {
       return widget.child;
     }
 
     // 2. If PIN is enabled and not yet authenticated, show PasscodeScreen
     if (!_authenticated) {
-      return PasscodeScreen(
-        mode: PasscodeMode.verify,
-        onSuccess: () {
-          setState(() => _authenticated = true);
-        },
+      return Navigator(
+        onGenerateRoute: (settings) => MaterialPageRoute(
+          builder: (context) => PasscodeScreen(
+            mode: PasscodeMode.verify,
+            onSuccess: () {
+              setState(() => _authenticated = true);
+            },
+          ),
+        ),
       );
     }
 
