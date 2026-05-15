@@ -29,6 +29,8 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   bool _isPrivate = true;
   bool _animateIn = false;
   bool _isSaving = false;
+  bool _showIntro = true;
+  bool _slideAway = false;
   
   final List<_StepData> _steps = [];
 
@@ -58,9 +60,25 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
       ));
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      
+      // Wait for intro to show
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (!mounted) return;
+      
+      setState(() => _slideAway = true);
+      
+      // Delay slightly before showing notepad
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+      
       setState(() => _animateIn = true);
+      
+      // Hide intro completely after animation
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+      setState(() => _showIntro = false);
     });
   }
 
@@ -264,30 +282,81 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
               SizedBox(height: 12.h),
               
               Expanded(
-                child: AnimatedSlide(
-                  duration: const Duration(milliseconds: 420),
-                  curve: Curves.easeOutCubic,
-                  offset: _animateIn ? Offset.zero : const Offset(0, 0.16),
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 420),
-                    opacity: _animateIn ? 1 : 0,
-                    child: _NotepadContainer(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.fromLTRB(20.w, 10.h, 16.w, 100.h),
-                        itemCount: _steps.length,
-                        itemBuilder: (context, index) {
-                          final step = _steps[index];
-                          return _AnimatedStepWidget(
-                            key: ValueKey(step.question),
-                            step: step,
-                            isLast: index == _steps.length - 1,
-                            onChanged: () => setState(() {}),
-                          );
-                        },
+                child: Stack(
+                  children: [
+                    // Notepad
+                    AnimatedSlide(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      offset: _animateIn ? Offset.zero : const Offset(0, 0.2),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 500),
+                        opacity: _animateIn ? 1 : 0,
+                        child: _NotepadContainer(
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: EdgeInsets.fromLTRB(20.w, 10.h, 16.w, 100.h),
+                            itemCount: _steps.length,
+                            itemBuilder: (context, index) {
+                              final step = _steps[index];
+                              return _AnimatedStepWidget(
+                                key: ValueKey(step.question),
+                                step: step,
+                                isLast: index == _steps.length - 1,
+                                onChanged: () => setState(() {}),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    
+                    // Intro Illustration
+                    if (_showIntro)
+                      AnimatedSlide(
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeInOutCubic,
+                        offset: _slideAway ? const Offset(-1.2, 0) : Offset.zero,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 600),
+                          opacity: _slideAway ? 0 : 1,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 280.w,
+                                  height: 280.w,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(32.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 30,
+                                        offset: const Offset(0, 15),
+                                      ),
+                                    ],
+                                    image: const DecorationImage(
+                                      image: AssetImage('assets/images/gratitude_illustration.png'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 24.h),
+                                Text(
+                                  "Har bir kun uchun\nminnatdor bo'ling",
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.body18w6.copyWith(
+                                    color: Colors.white,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               SizedBox(height: 14.h),
