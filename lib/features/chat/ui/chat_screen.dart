@@ -1,4 +1,5 @@
 import 'package:bonoos/core/api/dio_client.dart';
+import 'package:bonoos/core/resources/assets/images/app_images.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/di.dart';
 import 'package:flutter/cupertino.dart';
@@ -92,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
         },
         builder: (context, state) {
           return Scaffold(
-            backgroundColor: AppColors.c30215A,
+            backgroundColor: AppColors.mainBgColor,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -111,14 +112,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     height: 38,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [AppColors.c842D5F, Color(0xFF6D45EA)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color : AppColors.mainBgColor
                     ),
-                    child: const Icon(CupertinoIcons.headphones,
-                        color: Colors.white),
+                    child: Center(child: Image.asset(AppImages.splashImage ,)),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -211,15 +207,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
               ],
             ),
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.c30215A, AppColors.c55004D],
-                ),
-              ),
-              child: SafeArea(
+            body: SafeArea(
                 top: false,
                 child: Column(
                   children: [
@@ -243,7 +231,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
-            ),
           );
         },
       ),
@@ -376,8 +363,8 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgGradient = isMine
-        ? const LinearGradient(
-            colors: [AppColors.c842D5F, Color(0xFF6E58FF)],
+        ?  LinearGradient(
+            colors: [AppColors.white.withValues(alpha: 0.4), AppColors.white.withValues(alpha: 0.4)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           )
@@ -403,13 +390,7 @@ class _MessageBubble extends StatelessWidget {
             gradient: bgGradient,
             borderRadius: radius,
             boxShadow: [
-              BoxShadow(
-                color: isMine
-                    ? const Color(0x40842D5F)
-                    : Colors.black.withValues(alpha: 0.16),
-                blurRadius: 16,
-                offset: const Offset(0, 10),
-              ),
+
             ],
             border: Border.all(
               color: Colors.white.withValues(alpha: isMine ? 0.06 : 0.1),

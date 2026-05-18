@@ -123,13 +123,7 @@ class _SectionsScreenState extends State<SectionsScreen>
                   ),
                 ],
               ),
-              SizedBox(height: 4.h),
-              Text(
-                "Sizga mos yo'nalishni tanlang",
-                style: AppTextStyles.body13w4.copyWith(
-                  color: Colors.white.withValues(alpha: 0.68),
-                ),
-              ),
+
               SizedBox(height: 14.h),
               Expanded(
                 child: GridView.builder(
@@ -186,12 +180,11 @@ class _SupportIconButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                "Qo'llab-quvvatlash",
-                style: AppTextStyles.body11w6.copyWith(
-                  color: AppColors.c842D5F,
-                ),
-              ),
+             Icon(
+               Icons.support_agent,
+               color : AppColors.white,
+               size: 30.sp,
+             ),
             ],
           ),
         ),

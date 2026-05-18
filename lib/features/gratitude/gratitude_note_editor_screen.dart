@@ -1,5 +1,6 @@
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
+import 'package:bonoos/core/resources/assets/images/app_images.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
@@ -27,7 +28,7 @@ class GratitudeNoteEditorScreen extends StatefulWidget {
 class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
   late final ScrollController _scrollController;
   bool _isPrivate = true;
-  bool _animateIn = false;
+  bool _animateIn = true;
   bool _isSaving = false;
   bool _showIntro = true;
   bool _slideAway = false;
@@ -286,11 +287,11 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                   children: [
                     // Notepad
                     AnimatedSlide(
-                      duration: const Duration(milliseconds: 600),
+                      duration: const Duration(milliseconds: 0),
                       curve: Curves.easeOutCubic,
                       offset: _animateIn ? Offset.zero : const Offset(0, 0.2),
                       child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 500),
+                        duration: const Duration(milliseconds: 0),
                         opacity: _animateIn ? 1 : 0,
                         child: _NotepadContainer(
                           child: ListView.builder(
@@ -310,52 +311,7 @@ class _GratitudeNoteEditorScreenState extends State<GratitudeNoteEditorScreen> {
                         ),
                       ),
                     ),
-                    
-                    // Intro Illustration
-                    if (_showIntro)
-                      AnimatedSlide(
-                        duration: const Duration(milliseconds: 800),
-                        curve: Curves.easeInOutCubic,
-                        offset: _slideAway ? const Offset(-1.2, 0) : Offset.zero,
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 600),
-                          opacity: _slideAway ? 0 : 1,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 280.w,
-                                  height: 280.w,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(32.r),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 15),
-                                      ),
-                                    ],
-                                    image: const DecorationImage(
-                                      image: AssetImage('assets/images/gratitude_illustration.png'),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 24.h),
-                                Text(
-                                  "Har bir kun uchun\nminnatdor bo'ling",
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.body18w6.copyWith(
-                                    color: Colors.white,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+
                   ],
                 ),
               ),

@@ -84,12 +84,7 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.mainBgColor,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openAddEventScreen,
-        backgroundColor: AppColors.mainBgColor,
-        foregroundColor: Colors.white,
-        child: const Icon(CupertinoIcons.add),
-      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -108,24 +103,24 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const StatisticsScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        CupertinoIcons.chart_bar_alt_fill,
-                        color: Colors.white,
-                      ),
-                      tooltip: "Statistika",
-                    ),
+                    // IconButton(
+                    //   onPressed: () {
+                    //     Navigator.of(context).push(
+                    //       MaterialPageRoute(
+                    //         builder: (_) => const StatisticsScreen(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   icon: const Icon(
+                    //     CupertinoIcons.chart_bar_alt_fill,
+                    //     color: Colors.white,
+                    //   ),
+                    //   tooltip: "Statistika",
+                    // ),
                   ],
                 ),
                 Text(
-                  "${_events.length} ta task",
+                  "${_events.length} ta elsatma",
                   style: AppTextStyles.body13w4.copyWith(
                     color: Colors.white.withValues(alpha: 0.68),
                   ),
@@ -273,7 +268,7 @@ class _CalendarTasksScreenState extends State<CalendarTasksScreen> {
                       ),
                       SizedBox(height: 10.h),
                       Text(
-                        'Rostdan ham bu taskni o\'chirmoqchimisiz?',
+                        'Rostdan ham bu elsatmani o\'chirmoqchimisiz?',
                         style: AppTextStyles.body14w4.copyWith(
                           color: Colors.white.withValues(alpha: 0.6),
                         ),
@@ -385,7 +380,7 @@ class _CalendarEmptyState extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           Text(
-            "Bu kunda task yo'q",
+            "Bu kunda elsatma yo'q",
             style: AppTextStyles.body16w6.copyWith(
               color: Colors.white.withValues(alpha: 0.84),
             ),
@@ -394,7 +389,7 @@ class _CalendarEmptyState extends StatelessWidget {
           TextButton(
             onPressed: onAdd,
             child: Text(
-              "Task qo'shish",
+              "Eslatma qo'shish",
               style: AppTextStyles.body14w6.copyWith(color: Colors.white),
             ),
           ),

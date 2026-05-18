@@ -1,6 +1,8 @@
+import 'package:bonoos/core/values/app_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MessageInput extends StatelessWidget {
   const MessageInput({
@@ -20,7 +22,7 @@ class MessageInput extends StatelessWidget {
       top: false,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
+        padding:  EdgeInsets.symmetric(vertical: 4.h , horizontal: 4.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -35,18 +37,7 @@ class MessageInput extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.12),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.05),
-              blurRadius: 1,
-              offset: const Offset(0, -1),
-            ),
-          ],
+
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -173,29 +164,9 @@ class _SendButtonState extends State<_SendButton>
           height: 48,
           width: 48,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isEnabled
-                  ? [
-                      const Color(0xFFB76CFF),
-                      const Color(0xFF6E58FF),
-                    ]
-                  : [
-                      Colors.white.withValues(alpha: 0.2),
-                      Colors.white.withValues(alpha: 0.1),
-                    ],
-            ),
+          color : AppColors.mainBgColor,
             borderRadius: BorderRadius.circular(22),
-            boxShadow: isEnabled
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF9D4DFF).withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+
           ),
           child: widget.isSending
               ? const Padding(
