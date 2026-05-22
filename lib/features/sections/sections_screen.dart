@@ -57,12 +57,7 @@ class _SectionsScreenState extends State<SectionsScreen>
           MaterialPageRoute(builder: (_) => const AlarmScreen()),
         ),
       ),
-      _SectionItem(
-        title: "Kun sovg'asi",
-        subtitle: "Har kunlik maxsus kontent",
-        icon: CupertinoIcons.gift_fill,
-        onTap: () => context.push(MessageOfDayScreen.routeName),
-      ),
+
       _SectionItem(
         title: "Playlist",
         subtitle: "Audiolar ro'yxati",

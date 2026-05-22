@@ -23,14 +23,22 @@ import 'package:bonoos/features/profile/security_service.dart';
 import 'package:bonoos/features/profile/passcode_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'generated/l10n.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:bonoos/core/services/notification/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppUpdateService.getCloudVersion();
   await dotenv.load(fileName: "assets/.env");
 
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await initDi();
+  await inject<NotificationService>().init();
   await Alarm.init();
   await MedicineService.init();
   await AlarmService.syncAlarmsWithEngine();
@@ -153,10 +161,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
     debugPrint('AuthWrapper: hasToken=$hasToken, pinEnabled=$pinEnabled, pinSet=$pinSet, shouldLock=$shouldLock');
     
     if (mounted) {
-      if (_authenticated != !shouldLock || _checking) {
+      if (_checking) {
         setState(() {
           _authenticated = !shouldLock;
           _checking = false;
+        });
+      } else if (!shouldLock && !_authenticated) {
+        // Unlock if shouldLock becomes false (e.g. user logged out or disabled pin)
+        setState(() {
+          _authenticated = true;
         });
       }
     }

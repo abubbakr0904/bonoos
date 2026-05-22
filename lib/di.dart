@@ -23,6 +23,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api/dio_client.dart';
 import 'core/utils/pref_manager.dart';
+import 'core/services/notification/notification_service.dart';
 
 final inject = GetIt.instance;
 
@@ -32,6 +33,7 @@ Future<void> initDi() async {
   initPrefManager(pref);
 
   inject.registerSingleton<DioClient>(DioClient(pref));
+  inject.registerSingleton<NotificationService>(NotificationService());
   _dataSources();
   _repositories();
   _useCases();

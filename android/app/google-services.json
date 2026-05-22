@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "231321427330",
+    "project_id": "bonoos-e774a",
+    "storage_bucket": "bonoos-e774a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:231321427330:android:c513c17ece3dd022ce839b",
+        "android_client_info": {
+          "package_name": "bonoos.mobile.app.bonoos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARL5_L0rP-bweN4KTHqbth9_CU8KgUizU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

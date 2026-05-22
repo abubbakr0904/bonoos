@@ -45,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   ClientProfile? _profile;
   final ScrollController _homeScroll = ScrollController();
   late final AnimationController _entryController;
-  bool _moodSheetShown = false;
   bool _giftOpenedToday = false;
 
   void _toggleChallenge() => setState(() => _expanded = !_expanded);
@@ -58,8 +57,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 950),
     )..forward();
     _loadProfile();
-    _showMoodSheetOnOpen();
     _checkPinSetup();
+    _checkGiftStatus();
+  }
+
+  Future<void> _checkGiftStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastOpened = prefs.getString('gift_last_opened_date');
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    if (lastOpened == today) {
+      if (mounted) setState(() => _giftOpenedToday = true);
+    }
   }
 
   Future<void> _checkPinSetup() async {
@@ -232,22 +240,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showMoodSheetOnOpen() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _moodSheetShown) return;
-      _moodSheetShown = true;
-      showModalBottomSheet<void>(
-        context: context,
-        isDismissible: true,
-        enableDrag: true,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        barrierColor: Colors.black.withOpacity(0.42),
-        builder: (_) => const _MoodCheckinSheet(),
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,33 +263,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             SizedBox(height: 16.h),
-            if (!_giftOpenedToday) ...[
-              FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: _entryController,
-                  curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
-                ),
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.10),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _entryController,
-                      curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
-                    ),
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _entryController,
+                curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
+              ),
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.10),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.10, 0.50, curve: Curves.easeOutCubic),
                   ),
-                  child: _DailyGiftCard(
-                    onTap: () {
+                ),
+                child: _DailyGiftCard(
+                  isDisabled: _giftOpenedToday,
+                  onTap: () async {
+                    if (_giftOpenedToday) return;
+                    final prefs = await SharedPreferences.getInstance();
+                    final today = DateTime.now().toIso8601String().substring(0, 10);
+                    
+                    if (context.mounted) {
                       context.push(MessageOfDayScreen.routeName).then((_) {
+                        prefs.setString('gift_last_opened_date', today);
                         if (mounted) setState(() => _giftOpenedToday = true);
                       });
-                    },
-                  ),
+                    }
+                  },
                 ),
               ),
-              SizedBox(height: 12.h),
-            ],
+            ),
+            SizedBox(height: 12.h),
             FadeTransition(
               opacity: CurvedAnimation(
                 parent: _entryController,
@@ -319,6 +317,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   values: [0, 6, 12, 8, 16, 10, 14],
                   labels: ["Du", "Se", "Ch", "Pa", "Ju", "Sha", "Ya"],
                 ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _entryController,
+                curve: const Interval(0.22, 0.65, curve: Curves.easeOutCubic),
+              ),
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.10),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entryController,
+                    curve: const Interval(0.22, 0.65, curve: Curves.easeOutCubic),
+                  ),
+                ),
+                child: const _MoodSliderCard(),
               ),
             ),
             SizedBox(height: 20.h),
@@ -348,54 +365,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-class _MoodOption {
-  const _MoodOption({
-    required this.label,
-    required this.assetPath,
-  });
-
-  final String label;
-  final String assetPath;
-}
-
-class _MoodCheckinSheet extends StatefulWidget {
-  const _MoodCheckinSheet();
+class _MoodSliderCard extends StatefulWidget {
+  const _MoodSliderCard({super.key});
 
   @override
-  State<_MoodCheckinSheet> createState() => _MoodCheckinSheetState();
+  State<_MoodSliderCard> createState() => _MoodSliderCardState();
 }
 
-class _MoodCheckinSheetState extends State<_MoodCheckinSheet> with SingleTickerProviderStateMixin {
-  static const List<_MoodOption> _moods = [
-    _MoodOption(label: 'Zo\'r', assetPath: 'assets/images/mood1.jpg'),
-    _MoodOption(label: 'Yaxshi', assetPath: 'assets/images/mood2.jpg'),
-    _MoodOption(label: 'Oddiy', assetPath: 'assets/images/mood3.jpg'),
-    _MoodOption(label: 'Yomonroq', assetPath: 'assets/images/mood4.jpg'),
-    _MoodOption(label: 'Yomon', assetPath: 'assets/images/mood5.jpg'),
-  ];
-
-  int? _selectedIndex;
+class _MoodSliderCardState extends State<_MoodSliderCard> {
+  double _sliderValue = 3;
   bool _isSaving = false;
-  late final AnimationController _floatController;
+  bool _showSuccess = false;
+  bool _moodSubmittedToday = false;
 
   @override
   void initState() {
     super.initState();
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat(reverse: true);
+    _checkMoodStatus();
   }
 
-  @override
-  void dispose() {
-    _floatController.dispose();
-    super.dispose();
+  Future<void> _checkMoodStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastSubmitted = prefs.getString('mood_last_submitted_date');
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    if (lastSubmitted == today) {
+      if (mounted) setState(() => _moodSubmittedToday = true);
+    }
   }
 
-  Future<void> _saveMood() async {
-    if (_selectedIndex == null) return;
-    final moodValue = 5 - _selectedIndex!;
+  Future<void> _submitMood(int moodValue) async {
+    if (_moodSubmittedToday || _isSaving) return;
     setState(() => _isSaving = true);
     try {
       final dio = inject<DioClient>();
@@ -403,236 +402,176 @@ class _MoodCheckinSheetState extends State<_MoodCheckinSheet> with SingleTickerP
         ListAPI.clientGratitudeDiaryMood,
         data: {'mood': moodValue},
       );
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      await prefs.setString('mood_last_submitted_date', today);
+
       if (!mounted) return;
-      Navigator.of(context).pop();
-    } on DioException catch (e) {
+      setState(() {
+        _isSaving = false;
+        _showSuccess = true;
+      });
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _showSuccess = false;
+            _moodSubmittedToday = true;
+          });
+        }
+      });
+    } catch (e) {
       if (!mounted) return;
-      final message = e.response?.data is Map ? Map<String, dynamic>.from(e.response!.data)['message']?.toString() : null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message ?? 'Kayfiyat saqlanmadi')),
-      );
       setState(() => _isSaving = false);
-    } catch (_) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kayfiyat saqlanmadi')),
+        const SnackBar(content: Text('Kayfiyat saqlanmadi, internet aloqasini tekshiring.')),
       );
-      setState(() => _isSaving = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      heightFactor: 0.65,
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-              color: AppColors.mainBgColor,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 14.h),
-            child: Column(
-              children: [
-                Container(
-                  width: 42.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withOpacity(0.2),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  children: [
-                    _TopIconButton(
-                      icon: CupertinoIcons.back,
-                      onTap: () => Navigator.of(context).maybePop(),
-                    ),
-                    const Spacer(),
-                    _TopIconButton(
-                      icon: CupertinoIcons.xmark,
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20.h),
-                Text(
-                  "Bugungi kayfiyatingiz?",
-                  style: AppTextStyles.body24w7.copyWith(
-                    color: Colors.white,
-                    fontFamily: 'DancingScript',
-                    fontSize: 34.sp,
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Center(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        spacing: 18.w,
-                        runSpacing: 18.h,
-                        children: List.generate(_moods.length, (index) {
-                          final mood = _moods[index];
-                          final selected = _selectedIndex == index;
-                          return TweenAnimationBuilder<double>(
-                            tween: Tween<double>(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 400 + (index * 100)),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, value, child) => Opacity(
-                              opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, (1 - value) * 18),
-                                child: child,
-                              ),
-                            ),
-                            child: SizedBox(
-                              width: 96.w,
-                              height: 96.w,
-                              child: _MoodItem(
-                                option: mood,
-                                selected: selected,
-                                floatController: _floatController,
-                                onTap: () => setState(() => _selectedIndex = index),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomButton(
-                    text: "Saqlash",
-                    onTap: _saveMood,
-                    isEnabled: _selectedIndex != null && !_isSaving,
-                    isLoading: _isSaving,
-                    height: 50.h,
-                    radius: BorderRadius.circular(16.r),
-                    bgColor: Colors.white,
-                    textColor: AppColors.mainBgColor,
-                    disabledBgColor: Colors.white.withOpacity(0.1),
-                    disabledTextColor: Colors.white.withOpacity(0.3),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  String _getEmoji(double value) {
+    if (value == 1) return '😔';
+    if (value == 2) return '😕';
+    if (value == 3) return '😐';
+    if (value == 4) return '🙂';
+    return '🤩';
   }
-}
 
-class _TopIconButton extends StatelessWidget {
-  const _TopIconButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
+  String _getLabel(double value) {
+    if (value == 1) return 'Yomon';
+    if (value == 2) return 'Yomonroq';
+    if (value == 3) return 'Oddiy';
+    if (value == 4) return 'Yaxshi';
+    return "Zo'r";
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 38.w,
-      width: 38.w,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.r),
-          onTap: onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.r),
-              color: Colors.black.withOpacity(0.12),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+    if (_moodSubmittedToday) {
+      return const SizedBox.shrink();
+    }
+
+    if (_showSuccess) {
+      return ZoomIn(
+        duration: const Duration(milliseconds: 400),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElasticIn(
+              child: Container(
+                height: 48.w,
+                width: 48.w,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.green,
+                ),
+                child: Icon(CupertinoIcons.checkmark_alt, color: Colors.white, size: 24.sp),
+              ),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 20.sp,
+            SizedBox(height: 8.h),
+            Text(
+              "Saqlandi! ✨",
+              style: AppTextStyles.body14w6.copyWith(color: Colors.white),
             ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Bugungi kayfiyatingiz qanday?  ${_getEmoji(_sliderValue)} ${_getLabel(_sliderValue)}",
+              style: AppTextStyles.body14w5.copyWith(color: Colors.white.withOpacity(0.9)),
+            ),
+            if (_isSaving) ...[
+              SizedBox(width: 8.w),
+              SizedBox(
+                width: 14.w,
+                height: 14.w,
+                child: const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 1.5,
+                ),
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: 8.h),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: Colors.white.withOpacity(0.8),
+            inactiveTrackColor: Colors.white.withOpacity(0.15),
+            thumbColor: Colors.white,
+            overlayColor: Colors.white.withOpacity(0.1),
+            trackHeight: 4.h,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            activeTickMarkColor: Colors.transparent,
+            inactiveTickMarkColor: Colors.transparent,
+          ),
+          child: Slider(
+            value: _sliderValue,
+            min: 1,
+            max: 5,
+            divisions: 4,
+            onChanged: _isSaving
+                ? null
+                : (val) {
+                    setState(() {
+                      _sliderValue = val;
+                    });
+                  },
+            onChangeEnd: _isSaving
+                ? null
+                : (val) {
+                    _submitMood(val.toInt());
+                  },
           ),
         ),
-      ),
+        SizedBox(height: 4.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSmallTick('😔', 1),
+              _buildSmallTick('😕', 2),
+              _buildSmallTick('😐', 3),
+              _buildSmallTick('🙂', 4),
+              _buildSmallTick('🤩', 5),
+            ],
+          ),
+        ),
+      ],
     );
   }
-}
 
-class _MoodItem extends StatelessWidget {
-  const _MoodItem({
-    required this.option,
-    required this.selected,
-    required this.floatController,
-    required this.onTap,
-  });
-
-  final _MoodOption option;
-  final bool selected;
-  final AnimationController floatController;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999.r),
-        onTap: onTap,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: floatController,
-            builder: (context, child) {
-              final offsetY = selected ? (-5.0 * floatController.value) : 0.0;
-              return Transform.translate(
-                offset: Offset(0, offsetY),
-                child: AnimatedScale(
-                  scale: selected ? 1.25 : 1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: child,
-                ),
-              );
+  Widget _buildSmallTick(String emoji, double stepValue) {
+    final isSelected = _sliderValue == stepValue;
+    return GestureDetector(
+      onTap: _isSaving
+          ? null
+          : () {
+              setState(() {
+                _sliderValue = stepValue;
+              });
+              _submitMood(stepValue.toInt());
             },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              height: 96.w,
-              width: 96.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: selected ? Border.all(color: Colors.white, width: 2) : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: selected ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.2),
-                    blurRadius: selected ? 20 : 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                option.assetPath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.black.withOpacity(0.1),
-                  child: const Icon(CupertinoIcons.smiley, color: Colors.white),
-                ),
-              ),
-            ),
+      child: AnimatedScale(
+        scale: isSelected ? 1.25 : 0.9,
+        duration: const Duration(milliseconds: 200),
+        child: AnimatedOpacity(
+          opacity: isSelected ? 1.0 : 0.4,
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            emoji,
+            style: TextStyle(fontSize: 16.sp),
           ),
         ),
       ),
@@ -796,68 +735,72 @@ class _HeaderActionTile extends StatelessWidget {
 }
 
 class _DailyGiftCard extends StatelessWidget {
-  const _DailyGiftCard({required this.onTap});
+  const _DailyGiftCard({required this.onTap, this.isDisabled = false});
 
   final VoidCallback onTap;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withOpacity(0.15),
-              Colors.white.withOpacity(0.05),
+      onTap: isDisabled ? null : onTap,
+      child: Opacity(
+        opacity: isDisabled ? 0.5 : 1.0,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.15),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20.r),
+        
+          ),
+          child: Row(
+            children: [
+              // Gift Icon with Glow
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.15),
+             
+                ),
+                child: Icon(isDisabled ? CupertinoIcons.checkmark_alt : CupertinoIcons.gift_fill, color: Colors.white, size: 28.sp),
+              ),
+              SizedBox(width: 18.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Kun sovg'asi",
+                      style: AppTextStyles.body20w7.copyWith(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        height: 1.1,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      isDisabled ? "Har bir kun uchun alohida sovg'a oling" : "Siz uchun maxsus motivatsiya",
+                      style: AppTextStyles.body14w4.copyWith(
+                        color: Colors.white.withOpacity(0.65),
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Interactive button-like indicator
+       
             ],
           ),
-          borderRadius: BorderRadius.circular(20.r),
-      
-        ),
-        child: Row(
-          children: [
-            // Gift Icon with Glow
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.15),
-           
-              ),
-              child: Icon(CupertinoIcons.gift_fill, color: Colors.white, size: 28.sp),
-            ),
-            SizedBox(width: 18.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Kun sovg'asi",
-                    style: AppTextStyles.body20w7.copyWith(
-                      color: Colors.white,
-                      fontSize: 16.sp,
-                      height: 1.1,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    "Siz uchun maxsus motivatsiya",
-                    style: AppTextStyles.body14w4.copyWith(
-                      color: Colors.white.withOpacity(0.65),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Interactive button-like indicator
-     
-          ],
         ),
       ),
     );

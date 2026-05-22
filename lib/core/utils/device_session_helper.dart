@@ -15,7 +15,7 @@ class DeviceSessionHelper {
 
   /// `.env` da `FCM_TOKEN` bo‘lsa ishlatiladi, aks holda placeholder.
   static Future<Map<String, dynamic>> buildSessionPayload(SharedPreferences prefs) async {
-    final fcm = _resolveFcmToken();
+    final fcm = _resolveFcmToken(prefs);
     final deviceId = await _deviceId(prefs);
     final deviceName = await _deviceName();
 
@@ -27,7 +27,9 @@ class DeviceSessionHelper {
     };
   }
 
-  static String _resolveFcmToken() {
+  static String _resolveFcmToken(SharedPreferences prefs) {
+    final cached = prefs.getString('fcm_token');
+    if (cached != null && cached.isNotEmpty) return cached;
     final fromEnv = dotenv.env['FCM_TOKEN']?.trim();
     if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
     return _placeholderFcm;
