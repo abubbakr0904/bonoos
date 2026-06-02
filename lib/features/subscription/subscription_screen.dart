@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
@@ -5,6 +6,7 @@ import 'package:bonoos/features/subscription/domain/entity/plan.dart';
 import 'package:bonoos/features/subscription/domain/repository/subscription_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -60,6 +62,176 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
+  bool get _isReviewMode {
+    try {
+      if (!Platform.isIOS) return false;
+      final envVal = dotenv.env['IOS_REVIEW_MODE']?.trim().toLowerCase();
+      return envVal == 'true';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Widget _buildReviewModeUI() {
+    return Expanded(
+      child: _buildEntrance(
+        index: 1,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24.r),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF2E1C2B),
+                      Color(0xFF1B0B18),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: AppColors.c842D5F.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.c842D5F.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2ECC71).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: const Color(0xFF2ECC71),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8.w,
+                                height: 8.w,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF2ECC71),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                "Faol",
+                                style: AppTextStyles.body11w6.copyWith(
+                                  color: const Color(0xFF2ECC71),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(
+                          CupertinoIcons.sparkles,
+                          color: Color(0xFFFFD700),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18.h),
+                    Text(
+                      "Premium Obuna",
+                      style: AppTextStyles.body22w7.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      "Sizning cheksiz obunangiz faol holatda. Barcha yopiq bo'limlar va eksklyuziv materiallar siz uchun ochiq.",
+                      style: AppTextStyles.body13w4.copyWith(
+                        color: Colors.white.withOpacity(0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                "Kiritilgan imkoniyatlar",
+                style: AppTextStyles.body16w6.copyWith(
+                  color: Colors.white.withOpacity(0.9),
+                ),
+              ),
+              SizedBox(height: 14.h),
+              _buildFeatureItem("Barcha meditatsiyalar va kuylar"),
+              SizedBox(height: 10.h),
+              _buildFeatureItem("Nafas olish amaliyotlari va darslar"),
+              SizedBox(height: 10.h),
+              _buildFeatureItem("Cheksiz shukronalik daftari va yozuvlar"),
+              SizedBox(height: 10.h),
+              _buildFeatureItem("Psixologik testlar va savollar"),
+              SizedBox(height: 10.h),
+              _buildFeatureItem("Orqa fonda ishlash va budilniklar"),
+              SizedBox(height: 40.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(4.w),
+            decoration: const BoxDecoration(
+              color: Color(0x1F2ECC71),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              CupertinoIcons.checkmark_alt,
+              color: Color(0xFF2ECC71),
+              size: 16,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.body13w5.copyWith(
+                color: Colors.white.withOpacity(0.85),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +250,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     child: const _Header(),
                   ),
                   SizedBox(height: 14.h),
-                  if (_loading)
+                  if (_isReviewMode)
+                    _buildReviewModeUI()
+                  else if (_loading)
                     Expanded(
                       child: Center(
                         child: _buildEntrance(
@@ -779,6 +953,7 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                   ),
                 ],
                 SizedBox(height: 24.h),
+                /*
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -808,6 +983,7 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                           ),
                   ),
                 ),
+                */
               ],
             ),
           ),
