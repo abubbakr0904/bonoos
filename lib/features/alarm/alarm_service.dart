@@ -131,7 +131,7 @@ class AlarmService {
       loopAudio: true,
       vibrate: true,
       warningNotificationOnKill: Platform.isIOS,
-      androidFullScreenIntent: true,
+      androidFullScreenIntent: false,
       volumeSettings: VolumeSettings.fade(
         fadeDuration: Duration(seconds: 5),
         volume: 0.9,

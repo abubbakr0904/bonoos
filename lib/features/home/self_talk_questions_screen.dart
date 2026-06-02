@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shimmer/shimmer.dart';
 
-class TopicSwipeArgs {
+class TopicSwipeArgs  {
   const TopicSwipeArgs({
     required this.topicId,
     required this.title,
