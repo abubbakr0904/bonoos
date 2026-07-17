@@ -10,11 +10,10 @@ import 'package:bonoos/di.dart';
 import 'package:dio/dio.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
 import 'package:bonoos/features/common/widget/custom_button.dart';
+import 'package:bonoos/features/common/widget/playlist_category_chips.dart';
 import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
-import 'package:bonoos/features/home/domain/entity/client_banner_dto.dart';
-import 'package:bonoos/features/home/domain/repository/banners_repository.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/notification/notifications_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
@@ -815,16 +814,14 @@ class _HomePlaylistFromPlaylistSection extends StatefulWidget {
 }
 
 class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlaylistSection> {
-  final List<Audition> _items = [];
+  List<Audition> _items = [];
   List<Category> _categories = [];
-  int _selectedCategoryIndex = -1; // -1 means "Barchasi" (All)
+  int _selectedIndex = -1;
   bool _categoriesLoading = true;
-  bool _loadingInitial = true;
-  bool _loadingMore = false;
-  String? _error;
-  int _nextOffset = 0;
-  bool _hasMore = true;
-  static const int _pageSize = 10;
+  String? _categoriesError;
+  bool _auditionsLoading = false;
+  String? _auditionsError;
+  static const int _allPageSize = 50;
 
   static const List<List<Color>> _gradientPalette = [
     [Color(0xFF8E44AD), Color(0xFF9B59B6)],
@@ -836,103 +833,127 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
   @override
   void initState() {
     super.initState();
-    _loadCategoriesAndInitial();
+    _loadCategories();
   }
 
-  Future<void> _loadCategoriesAndInitial() async {
-    if (!mounted) return;
+  Future<void> _loadCategories() async {
     setState(() {
       _categoriesLoading = true;
-      _loadingInitial = true;
-      _error = null;
-      _items.clear();
-      _nextOffset = 0;
-      _hasMore = true;
+      _categoriesError = null;
     });
 
-    final catsResult = await inject<PlaylistRepository>().fetchCategories();
-    List<Category> loadedCats = [];
-    catsResult.fold(
-      (_) {},
-      (cats) => loadedCats = cats,
-    );
-
-    final auditionsResult = await inject<PlaylistRepository>().fetchAuditionsPage(limit: _pageSize, offset: 0);
-    
+    final result = await inject<PlaylistRepository>().fetchCategories();
     if (!mounted) return;
 
-    setState(() {
-      _categoriesLoading = false;
-      _categories = loadedCats;
-      
-      auditionsResult.fold(
-        (f) {
-          _loadingInitial = false;
-          _error = f.message ?? 'Xatolik';
-        },
-        (page) {
-          _loadingInitial = false;
-          _error = null;
-          _items.addAll(page.items);
-          _nextOffset = page.offset + page.items.length;
-          _hasMore = page.hasMore;
-        },
-      );
-    });
+    result.fold(
+      (f) => setState(() {
+        _categoriesLoading = false;
+        _categoriesError = f.message ?? 'Xatolik';
+      }),
+      (cats) {
+        setState(() {
+          _categoriesLoading = false;
+          _categories = cats;
+          _selectedIndex = -1;
+        });
+        _loadAllAuditions();
+      },
+    );
   }
 
-  Future<void> _selectCategory(int index) async {
-    if (index == _selectedCategoryIndex) return;
+  Future<void> _loadAllAuditions() async {
     setState(() {
-      _selectedCategoryIndex = index;
-      _loadingInitial = true;
-      _error = null;
-      _items.clear();
+      _auditionsLoading = true;
+      _auditionsError = null;
+      _items = [];
     });
 
+    final result = await inject<PlaylistRepository>().fetchAuditionsPage(
+      limit: _allPageSize,
+      offset: 0,
+    );
+    if (!mounted) return;
+
+    result.fold(
+      (f) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = f.message ?? 'Xatolik';
+      }),
+      (page) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = null;
+        _items = page.items;
+      }),
+    );
+  }
+
+  Future<void> _loadAuditions(int categoryId) async {
+    setState(() {
+      _auditionsLoading = true;
+      _auditionsError = null;
+      _items = [];
+    });
+
+    final result = await inject<PlaylistRepository>().fetchAuditions(categoryId);
+    if (!mounted) return;
+
+    result.fold(
+      (f) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = f.message ?? 'Xatolik';
+      }),
+      (list) => setState(() {
+        _auditionsLoading = false;
+        _auditionsError = null;
+        _items = list;
+      }),
+    );
+  }
+
+  void _onCategorySelected(int index) {
+    if (index == _selectedIndex) return;
+    if (index != -1 && index >= _categories.length) return;
+    setState(() => _selectedIndex = index);
     if (index == -1) {
-      final r = await inject<PlaylistRepository>().fetchAuditionsPage(limit: _pageSize, offset: 0);
-      if (!mounted) return;
-      r.fold(
-        (f) => setState(() {
-          _loadingInitial = false;
-          _error = f.message ?? 'Xatolik';
-        }),
-        (page) => setState(() {
-          _loadingInitial = false;
-          _error = null;
-          _items.addAll(page.items);
-          _nextOffset = page.offset + page.items.length;
-          _hasMore = page.hasMore;
-        }),
-      );
+      _loadAllAuditions();
     } else {
-      final catId = _categories[index].id;
-      final r = await inject<PlaylistRepository>().fetchAuditions(catId);
-      if (!mounted) return;
-      r.fold(
-        (f) => setState(() {
-          _loadingInitial = false;
-          _error = f.message ?? 'Xatolik';
-        }),
-        (list) => setState(() {
-          _loadingInitial = false;
-          _error = null;
-          _items.addAll(list);
-          _hasMore = false;
-        }),
-      );
+      _loadAuditions(_categories[index].id);
     }
+  }
+
+  void _retryLoadAuditions() {
+    if (_selectedIndex == -1) {
+      _loadAllAuditions();
+    } else if (_selectedIndex < _categories.length) {
+      _loadAuditions(_categories[_selectedIndex].id);
+    }
+  }
+
+  String _subtitleForItem(Audition item) {
+    if (_selectedIndex != -1) return _selectedCategoryName;
+    for (final c in _categories) {
+      if (c.id == item.categoryId) return c.name;
+    }
+    return item.durationLabel;
   }
 
   void _onFavoriteTap(int index) {
     if (index < 0 || index >= _items.length) return;
     final item = _items[index];
     final next = !item.favorited;
-    setState(() => _items[index] = item.copyWith(favorited: next));
+    setState(() {
+      _items = List<Audition>.from(_items);
+      _items[index] = item.copyWith(favorited: next);
+    });
     unawaited(inject<PlaylistRepository>().toggleAuditionFavorite(item.id).then((either) {
       if (!mounted) return;
-      either.fold((_) => setState(() => _items[index] = item), (_) {});
+      either.fold(
+        (_) => setState(() {
+          _items = List<Audition>.from(_items);
+          _items[index] = item;
+        }),
+        (_) {},
+      );
     }));
   }
 
@@ -946,93 +967,16 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
     });
   }
 
-  Widget _buildCategoriesRow() {
-    if (_categoriesLoading) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: 12.h),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          child: Row(
-            children: List.generate(4, (i) {
-              return Container(
-                margin: EdgeInsets.only(right: 8.w),
-                width: 80.w,
-                height: 32.h,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              );
-            }),
-          ),
-        ),
-      );
-    }
-
-    if (_categories.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: () => _selectCategory(-1),
-              child: _buildCategoryChip(
-                label: "Barchasi",
-                selected: _selectedCategoryIndex == -1,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            ...List.generate(_categories.length, (index) {
-              final cat = _categories[index];
-              final selected = index == _selectedCategoryIndex;
-              return Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: GestureDetector(
-                  onTap: () => _selectCategory(index),
-                  child: _buildCategoryChip(
-                    label: cat.name,
-                    selected: selected,
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
+  int? get _selectedCategoryId {
+    if (_selectedIndex == -1) return null;
+    if (_selectedIndex < 0 || _selectedIndex >= _categories.length) return null;
+    return _categories[_selectedIndex].id;
   }
 
-  Widget _buildCategoryChip({required String label, required bool selected}) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: selected
-            ? Colors.white.withValues(alpha: 0.16)
-            : Colors.white.withValues(alpha: 0.06),
-        border: Border.all(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.18)
-              : Colors.white.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.body12w5.copyWith(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.95)
-              : Colors.white.withValues(alpha: 0.65),
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-        ),
-      ),
-    );
+  String get _selectedCategoryName {
+    if (_selectedIndex == -1) return 'Hammasi';
+    if (_selectedIndex < 0 || _selectedIndex >= _categories.length) return '';
+    return _categories[_selectedIndex].name;
   }
 
   @override
@@ -1050,77 +994,123 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
           style: AppTextStyles.body13w4.copyWith(color: Colors.white.withOpacity(0.6)),
         ),
         SizedBox(height: 14.h),
-        _buildCategoriesRow(),
-        if (_loadingInitial)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 32.h),
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-          )
-        else if (_error != null)
-          Text(_error!, style: AppTextStyles.body14w5.copyWith(color: Colors.white.withOpacity(0.6)))
-        else if (_items.isEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 40.h),
-            child: Center(
-              child: Text(
-                'Bu ruknda hozircha audio yo\'q',
-                style: AppTextStyles.body13w5.copyWith(color: Colors.white.withOpacity(0.5)),
-              ),
-            ),
+        if (_categoriesLoading)
+          const PlaylistCategoriesShimmer()
+        else if (_categoriesError != null)
+          PlaylistCategoriesError(
+            error: _categoriesError!,
+            onRetry: _loadCategories,
           )
         else ...[
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => SizedBox(height: 10.h),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              final colors = _gradientPalette[index % _gradientPalette.length];
-              void openAudio() {
-                LastListenedManager.save(
-                  prefs: inject<SharedPreferences>(),
-                  title: item.text,
-                  durationLabel: item.durationLabel,
-                  audioUrl: item.fullAudioUrl,
-                  formattedDuration: item.formattedDuration,
-                );
-                context.push(AudioScreen.routeName, extra: AudioScreenArgs(
-                  title: item.text,
-                  durationLabel: item.durationLabel,
-                  audioUrl: item.fullAudioUrl,
-                  auditionId: item.id,
-                  auditionType: item.type,
-                  durationSeconds: item.duration,
-                  initialFavorited: item.favorited,
-                  syncHomeAuditionsAfterFavorite: true,
-                  onAuditionsSynced: _mergeSynced,
-                ));
-              }
-              return TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: Duration(milliseconds: 320 + (index * 50)),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) => Opacity(
-                  opacity: value,
-                  child: Transform.translate(offset: Offset(0, (1 - value) * 14), child: child),
+          PlaylistCategoryChipRow(
+            categories: _categories,
+            selectedIndex: _selectedIndex,
+            onSelected: _onCategorySelected,
+            showAllChip: true,
+            allLabel: 'Hammasi',
+          ),
+          SizedBox(height: 16.h),
+        ],
+        if (_categoriesLoading)
+          Padding(
+            padding: EdgeInsets.only(top: 16.h),
+            child: const PlaylistAuditionsShimmer(),
+          )
+        else if (_categoriesError == null) ...[
+          if (_auditionsLoading)
+            const PlaylistAuditionsShimmer()
+          else if (_auditionsError != null)
+            Column(
+              children: [
+                Text(
+                  _auditionsError!,
+                  style: AppTextStyles.body14w5.copyWith(color: Colors.white.withOpacity(0.6)),
                 ),
-                child: GestureDetector(
-                  onTap: openAudio,
-                  child: AudioListTile(
-                    title: item.text,
-                    subtitle: item.durationLabel,
-                    tag: item.formattedDuration,
-                    duration: item.durationLabel,
-                    colors: colors,
-                    onTap: openAudio,
-                    isFavorite: item.favorited,
-                    onFavoriteTap: () => _onFavoriteTap(index),
+                TextButton(
+                  onPressed: _retryLoadAuditions,
+                  child: Text(
+                    'Qayta urinish',
+                    style: AppTextStyles.body14w6.copyWith(color: AppColors.c842D5F),
                   ),
                 ),
-              );
-            },
-          ),
+              ],
+            )
+          else if (_items.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 40.h),
+              child: Center(
+                child: Text(
+                  _selectedIndex == -1
+                      ? 'Hozircha audio yo\'q'
+                      : 'Bu kategoriyada hozircha audio yo\'q',
+                  style: AppTextStyles.body13w5.copyWith(color: Colors.white.withOpacity(0.5)),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _items.length,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                final colors = _gradientPalette[index % _gradientPalette.length];
+                final categoryId = _selectedCategoryId;
+                void openAudio() {
+                  LastListenedManager.save(
+                    prefs: inject<SharedPreferences>(),
+                    title: item.text,
+                    durationLabel: item.durationLabel,
+                    audioUrl: item.fullAudioUrl,
+                    formattedDuration: item.formattedDuration,
+                  );
+                  context.push(
+                    AudioScreen.routeName,
+                    extra: AudioScreenArgs(
+                      title: item.text,
+                      durationLabel: item.durationLabel,
+                      audioUrl: item.fullAudioUrl,
+                      auditionId: item.id,
+                      auditionType: item.type,
+                      durationSeconds: item.duration,
+                      initialFavorited: item.favorited,
+                      categoryIdForSync: categoryId,
+                      syncHomeAuditionsAfterFavorite: true,
+                      onAuditionsSynced: categoryId == null
+                          ? _mergeSynced
+                          : (List<Audition> list) {
+                              if (!mounted) return;
+                              if (_selectedCategoryId != categoryId) return;
+                              setState(() => _items = list);
+                            },
+                    ),
+                  );
+                }
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: Duration(milliseconds: 320 + (index * 50)),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(offset: Offset(0, (1 - value) * 14), child: child),
+                  ),
+                  child: GestureDetector(
+                    onTap: openAudio,
+                    child: AudioListTile(
+                      title: item.text,
+                      subtitle: _subtitleForItem(item),
+                      tag: item.formattedDuration,
+                      duration: item.durationLabel,
+                      colors: colors,
+                      onTap: openAudio,
+                      isFavorite: item.favorited,
+                      onFavoriteTap: () => _onFavoriteTap(index),
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ],
     );

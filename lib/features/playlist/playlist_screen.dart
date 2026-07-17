@@ -5,7 +5,7 @@ import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
-import 'package:bonoos/features/common/widget/home_gradient_background.dart';
+import 'package:bonoos/features/common/widget/playlist_category_chips.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
 import 'package:bonoos/features/playlist/domain/entity/category.dart';
@@ -15,8 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shimmer/shimmer.dart';
-
 class PlaylistScreen extends StatefulWidget {
   const PlaylistScreen({super.key});
   static const String routeName = "/playlist";
@@ -178,11 +176,20 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                   SizedBox(height: 18.h),
 
                   if (_categoriesLoading)
-                    const _CategoriesShimmer()
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const PlaylistCategoriesShimmer(),
+                        SizedBox(height: 20.h),
+                        const PlaylistAuditionsShimmer(),
+                      ],
+                    )
                   else if (_categoriesError != null)
-                    _CategoriesError(
-                      error: _categoriesError!,
-                      onRetry: _loadCategories,
+                    Expanded(
+                      child: PlaylistCategoriesError(
+                        error: _categoriesError!,
+                        onRetry: _loadCategories,
+                      ),
                     )
                   else ...[
                     FadeTransition(
@@ -191,7 +198,7 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                         curve:
                             const Interval(0.20, 0.62, curve: Curves.easeOutCubic),
                       ),
-                      child: _CategoriesChipRow(
+                      child: PlaylistCategoryChipRow(
                         categories: _categories,
                         selectedIndex: _selectedIndex,
                         onSelected: _onCategorySelected,
@@ -200,7 +207,7 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                     SizedBox(height: 16.h),
                     Expanded(
                       child: _auditionsLoading
-                          ? const _AuditionsShimmer()
+                          ? const PlaylistAuditionsShimmer()
                           : _auditionsError != null
                               ? _AuditionsError(
                                   error: _auditionsError!,
@@ -343,118 +350,6 @@ class _PlaylistScreenState extends State<PlaylistScreen>
   }
 }
 
-// ---------------------------------------------------------------------------
-// Shimmer loading
-// ---------------------------------------------------------------------------
-
-class _CategoriesShimmer extends StatelessWidget {
-  const _CategoriesShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 4.h),
-        Shimmer.fromColors(
-          baseColor: Colors.white.withValues(alpha: 0.06),
-          highlightColor: Colors.white.withValues(alpha: 0.12),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Row(
-              children: List.generate(5, (i) {
-                final widths = [80.0, 110.0, 95.0, 100.0, 70.0];
-                return Padding(
-                  padding: EdgeInsets.only(right: 8.w),
-                  child: Container(
-                    width: widths[i].w,
-                    height: 34.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ),
-        SizedBox(height: 20.h),
-        const _AuditionsShimmer(),
-      ],
-    );
-  }
-}
-
-class _AuditionsShimmer extends StatelessWidget {
-  const _AuditionsShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.06),
-      highlightColor: Colors.white.withValues(alpha: 0.12),
-      child: Column(
-        children: List.generate(4, (i) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 10.h),
-            child: Container(
-              height: 72.h,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18.r),
-                color: Colors.white,
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _CategoriesError extends StatelessWidget {
-  const _CategoriesError({required this.error, required this.onRetry});
-
-  final String error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              CupertinoIcons.exclamationmark_triangle,
-              size: 36.sp,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-            SizedBox(height: 10.h),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body14w5.copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-            SizedBox(height: 14.h),
-            TextButton(
-              onPressed: onRetry,
-              child: Text(
-                'Qayta urinish',
-                style: AppTextStyles.body14w6.copyWith(color: AppColors.c842D5F),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _AuditionsError extends StatelessWidget {
   const _AuditionsError({required this.error, required this.onRetry});
 
@@ -489,63 +384,6 @@ class _AuditionsError extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Category chips row
-// ---------------------------------------------------------------------------
-
-class _CategoriesChipRow extends StatelessWidget {
-  const _CategoriesChipRow({
-    required this.categories,
-    required this.selectedIndex,
-    required this.onSelected,
-  });
-
-  final List<Category> categories;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: List.generate(categories.length, (index) {
-          final cat = categories[index];
-          final selected = index == selectedIndex;
-          return Padding(
-            padding: EdgeInsets.only(right: 8.w),
-            child: GestureDetector(
-              onTap: () => onSelected(index),
-              child: _CategoryChip(
-                label: cat.name,
-                selected: selected,
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Background, header, last listened
-// ---------------------------------------------------------------------------
-
-class _PlaylistBackground extends StatelessWidget {
-  const _PlaylistBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.mainBgColor,
       ),
     );
   }
@@ -710,46 +548,6 @@ class _LastListenedCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Category chip
-// ---------------------------------------------------------------------------
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    this.selected = false,
-  });
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: selected
-            ? Colors.white.withValues(alpha: 0.14)
-            : Colors.white.withValues(alpha: 0.06),
-        border: Border.all(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.10),
-        ),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.body12w5.copyWith(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.92)
-              : Colors.white.withValues(alpha: 0.70),
-        ),
-      ),
     );
   }
 }
