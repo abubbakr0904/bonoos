@@ -279,9 +279,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 14.h),
                   _SettingsListCard(
-                    items: const [
-                      _SettingsItem(title: "Obunani boshqarish"),
-                      _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
+                    items: [
+                      if (TabBoxController.isSubscriptionVisible)
+                        const _SettingsItem(title: "Obunani boshqarish"),
+                      const _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
                     ],
                     onTap: (item) {
                       switch (item.title) {
@@ -289,7 +290,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           openLanguageSheet();
                           break;
                         case "Obunani boshqarish":
-                          TabBoxController.instance.setIndex(3);
+                          Navigator.of(context).pop();
+                          TabBoxController.instance.setTab(AppTab.subscription);
                           break;
                         case "Xaridlarni tiklash":
                           openRestoreSheet();

@@ -5,6 +5,7 @@ import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/chat/ui/chat_screen.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/playlist/playlist_screen.dart';
+import 'package:bonoos/features/sections/about_us_screen.dart';
 import 'package:bonoos/features/sections/faq_screen.dart';
 import 'package:bonoos/features/medicine/medicine_list_screen.dart';
 import 'package:flutter/cupertino.dart';
@@ -89,6 +90,14 @@ class _SectionsScreenState extends State<SectionsScreen>
         icon: CupertinoIcons.question_circle_fill,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FaqScreen()),
+        ),
+      ),
+      _SectionItem(
+        title: "Biz haqimizda",
+        subtitle: "Hayot bu bonus — veb-sayt",
+        icon: CupertinoIcons.globe,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AboutUsScreen()),
         ),
       ),
     ];

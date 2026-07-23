@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:bonoos/features/calendar/calendar_tasks_screen.dart';
 import 'package:bonoos/features/gratitude/gratitude_note_editor_screen.dart';
-import 'package:bonoos/features/gratitude/gratitude_notes_screen.dart';
 import 'package:bonoos/core/values/app_colors.dart';
-import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/home/home_screen.dart';
 import 'package:bonoos/features/sections/sections_screen.dart';
 import 'package:bonoos/features/subscription/subscription_screen.dart';
@@ -26,10 +24,24 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
   int _gratitudeViewVersion = 0;
   final _controller = TabBoxController.instance;
 
+  static const _tabMeta = {
+    AppTab.home: _TabItem(label: "Home", icon: CupertinoIcons.house_fill),
+    AppTab.calendar: _TabItem(label: "Calendar", icon: CupertinoIcons.calendar),
+    AppTab.gratitude: _TabItem(label: "Shukrona", icon: CupertinoIcons.heart_fill),
+    AppTab.subscription: _TabItem(label: "Abonement", icon: CupertinoIcons.tickets_fill),
+    AppTab.sections: _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2_fill),
+  };
+
+  List<_TabItem> get _visibleTabItems =>
+      TabBoxController.visibleTabs.map((tab) => _tabMeta[tab]!).toList();
+
   @override
   void initState() {
     super.initState();
-    _index = _controller.index.value;
+    _index = _controller.index.value.clamp(0, _visibleTabItems.length - 1);
+    if (_index != _controller.index.value) {
+      _controller.index.value = _index;
+    }
     _controller.index.addListener(_onIndexChanged);
   }
 
@@ -41,19 +53,15 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
 
   void _onIndexChanged() {
     if (!mounted) return;
-    setState(() => _index = _controller.index.value);
+    final next = _controller.index.value.clamp(0, _visibleTabItems.length - 1);
+    if (next != _controller.index.value) {
+      _controller.index.value = next;
+    }
+    setState(() => _index = next);
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = <_TabItem>[
-      const _TabItem(label: "Home", icon: CupertinoIcons.house_fill),
-      const _TabItem(label: "Calendar", icon: CupertinoIcons.calendar),
-      const _TabItem(label: "Shukrona", icon: CupertinoIcons.heart_fill),
-      const _TabItem(label: "Abonement", icon: CupertinoIcons.tickets_fill),
-      const _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2_fill),
-    ];
-
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.mainBgColor,
@@ -64,13 +72,14 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
         transitionBuilder: (child, animation) {
           return FadeTransition(opacity: animation, child: child);
         },
-        child: _buildBody(_index),
+        child: _buildBody(TabBoxController.tabAt(_index)),
       ),
       bottomNavigationBar: _LiquidGlassBottomNav(
-        items: items,
+        items: _visibleTabItems,
         currentIndex: _index,
         onTap: (i) {
-          if (i == 2) {
+          final tab = TabBoxController.tabAt(i);
+          if (tab == AppTab.gratitude) {
             _gratitudeViewVersion++;
           }
           _controller.setIndex(i);
@@ -80,22 +89,20 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
     );
   }
 
-  Widget _buildBody(int index) {
-    switch (index) {
-      case 0:
+  Widget _buildBody(AppTab tab) {
+    switch (tab) {
+      case AppTab.home:
         return const HomeScreen(key: ValueKey("home"));
-      case 1:
+      case AppTab.calendar:
         return const CalendarTasksScreen(key: ValueKey("calendar_tasks"));
-      case 2:
+      case AppTab.gratitude:
         return const GratitudeNoteEditorScreen(
           key: ValueKey("gratitude_editor"),
         );
-      case 3:
+      case AppTab.subscription:
         return const SubscriptionScreen(key: ValueKey("subscription"));
-      case 4:
+      case AppTab.sections:
         return const SectionsScreen(key: ValueKey("sections"));
-      default:
-        return const SizedBox.shrink();
     }
   }
 }
@@ -143,12 +150,12 @@ class _LiquidGlassBottomNav extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding:  EdgeInsets.symmetric(horizontal: 6.w),
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
               child: Row(
                 children: List.generate(items.length, (index) {
                   final isSelected = index == currentIndex;
                   final item = items[index];
-                  
+
                   return Expanded(
                     child: GestureDetector(
                       onTap: () => onTap(index),

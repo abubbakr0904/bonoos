@@ -782,18 +782,25 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
       },
       (paymentLink) async {
         setState(() => _subscribing = false);
-        final uri = Uri.tryParse(paymentLink);
+        final uri = Uri.tryParse(paymentLink.trim());
         if (uri == null) {
           setState(() => _error = 'To\'lov havolasi noto\'g\'ri.');
           return;
         }
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          if (mounted) Navigator.of(context).pop();
-        } else {
-          if (mounted) {
+        try {
+          final opened = await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+          if (!mounted) return;
+          if (!opened) {
             setState(() => _error = 'To\'lov sahifasini ochib bo\'lmadi.');
+            return;
           }
+          Navigator.of(context).pop();
+        } catch (_) {
+          if (!mounted) return;
+          setState(() => _error = 'To\'lov sahifasini ochib bo\'lmadi.');
         }
       },
     );
@@ -953,7 +960,6 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                   ),
                 ],
                 SizedBox(height: 24.h),
-                /*
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -972,7 +978,7 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                         ? SizedBox(
                             width: 22.w,
                             height: 22.w,
-                            child: CircularProgressIndicator(
+                            child: const CircularProgressIndicator(
                               strokeWidth: 2.5,
                               color: AppColors.mainBgColor,
                             ),
@@ -983,7 +989,6 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                           ),
                   ),
                 ),
-                */
               ],
             ),
           ),
