@@ -17,6 +17,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,12 +33,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ClientProfile? _profile;
 
   bool _pinEnabled = false;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
     _checkSecurity();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() => _appVersion = info.version);
+    } catch (_) {}
   }
 
   Future<void> _checkSecurity() async {
@@ -104,8 +115,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const appVersion = "3.3.8";
-
     void openLanguageSheet() {
       showModalBottomSheet<void>(
         context: context,
@@ -157,6 +166,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: "Hisobdan chiqish",
             description: "Haqiqatan ham chiqmoqchimisiz? Istalgan vaqtda qayta kirishingiz mumkin.",
             primaryLabel: "Chiqish",
+            secondaryLabel: "Bekor qilish",
+            onPrimary: () => Navigator.of(ctx).pop(true),
+            onSecondary: () => Navigator.of(ctx).pop(false),
+            primaryIsDestructive: true,
+          );
+        },
+      );
+      if (confirmed != true || !mounted) return;
+
+      setState(() => _loading = true);
+      await inject<AuthRepository>().logout();
+      if (!mounted) return;
+      context.go(LoginPhoneScreen.routeName);
+    }
+
+    Future<void> openDeleteAccountDialog() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return _ConfirmDialog(
+            title: "Hisobni o'chirish",
+            description: "Haqiqatan ham akkountni o'chirmoqchimisiz? Istalgan vaqtda qayta kirishingiz mumkin.",
+            primaryLabel: "O'chirish",
             secondaryLabel: "Bekor qilish",
             onPrimary: () => Navigator.of(ctx).pop(true),
             onSecondary: () => Navigator.of(ctx).pop(false),
@@ -283,6 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (TabBoxController.isSubscriptionVisible)
                         const _SettingsItem(title: "Obunani boshqarish"),
                       const _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
+                      const _SettingsItem(title: "Hisobni o'chirish", isDestructive: true),
                     ],
                     onTap: (item) {
                       switch (item.title) {
@@ -323,16 +356,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         case "Hisobdan chiqish":
                           openLogoutDialog();
                           break;
+                        case "Hisobni o'chirish":
+                          openDeleteAccountDialog();
+                          break;
                       }
                     },
                   ),
                   SizedBox(height: 14.h),
-                  Text(
-                    "Ilova versiyasi: $appVersion",
-                    style: AppTextStyles.body12w4.copyWith(
-                      color: Colors.white.withValues(alpha: 0.55),
+                  if (_appVersion.isNotEmpty)
+                    Text(
+                      "Ilova versiyasi: $_appVersion",
+                      style: AppTextStyles.body12w4.copyWith(
+                        color: Colors.white.withValues(alpha: 0.55),
+                      ),
                     ),
-                  ),
                   SizedBox(height: 10.h),
            
                 ],
