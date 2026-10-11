@@ -47,7 +47,7 @@ class ChatCubit extends Cubit<ChatState> {
   /// Automatically create conversation and setup
   Future<void> _createConversationAndSetup() async {
     try {
-      final conversation = await _repository.createConversation(adminId: 2);
+      final conversation = await _repository.createConversation();
       await _setupConversation(conversation, [conversation]);
     } catch (e) {
       emit(

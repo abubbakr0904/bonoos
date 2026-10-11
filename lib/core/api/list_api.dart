@@ -196,7 +196,7 @@ class ListAPI {
   static String clientChatConversations({int limit = 50}) =>
       'api/v1/client/chat/conversations?limit=$limit';
 
-  /// Chat conversation yaratish (POST, Bearer). Body: `{ "admin_id": 2 }`.
+  /// Chat conversation olish/yaratish (POST, Bearer). Body kerak emas — har bir mijozda bitta suhbat.
   static const String clientChatConversationsCreate =
       'api/v1/client/chat/conversations';
 

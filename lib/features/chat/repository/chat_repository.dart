@@ -35,12 +35,9 @@ class ChatRepository {
     return conversationResponse.data;
   }
 
-  /// Create new conversation
-  Future<Conversation> createConversation({int adminId = 2}) async {
-    final response = await _dioClient.post(
-      ListAPI.clientChatConversationsCreate,
-      data: CreateConversationRequest(adminId: adminId).toJson(),
-    );
+  /// Foydalanuvchining yagona suhbatini oladi yoki yaratadi (shared inbox — admin tanlanmaydi).
+  Future<Conversation> createConversation() async {
+    final response = await _dioClient.post(ListAPI.clientChatConversationsCreate);
     return Conversation.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
