@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 import 'package:bonoos/features/common/widget/audio_list_tile.dart';
 import 'package:bonoos/features/common/widget/custom_button.dart';
 import 'package:bonoos/features/common/widget/playlist_category_chips.dart';
-import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
 import 'package:bonoos/features/breath/breathing_practices_screen.dart';
 import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
@@ -19,6 +18,8 @@ import 'package:bonoos/features/notification/notifications_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
 import 'package:bonoos/features/playlist/domain/entity/category.dart';
 import 'package:bonoos/features/playlist/domain/repository/playlist_repository.dart';
+import 'package:bonoos/features/playlist/widget/category_purchase_sheet.dart';
+import 'package:bonoos/features/statistics/widget/home_weekly_chart.dart';
 import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
 import 'package:bonoos/features/profile/profile_screen.dart';
@@ -310,12 +311,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     curve: const Interval(0.18, 0.60, curve: Curves.easeOutCubic),
                   ),
                 ),
-                child: const WeeklyListeningChartCard(
-                  title: "Haftalik tinglash (daqiqa)",
-                  subtitle: "Statistik ma'lumotlar",
-                  values: [0, 6, 12, 8, 16, 10, 14],
-                  labels: ["Du", "Se", "Ch", "Pa", "Ju", "Sha", "Ya"],
-                ),
+                child: const HomeWeeklyChart(),
               ),
             ),
             SizedBox(height: 20.h),
@@ -921,6 +917,24 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
     }
   }
 
+  /// Yopiq audio bosilganda — to‘plamni ochish oynasi, so‘ng ro‘yxatni yangilash.
+  Future<void> _openPurchaseFor(Audition item) async {
+    Category? category;
+    for (final c in _categories) {
+      if (c.id == item.categoryId) category = c;
+    }
+    if (category == null) return;
+    final unlocked = await showCategoryPurchaseSheet(context, category);
+    if (!unlocked || !mounted) return;
+    final result = await inject<PlaylistRepository>().fetchCategories();
+    if (!mounted) return;
+    result.fold((_) {}, (cats) => setState(() => _categories = cats));
+    _retryLoadAuditions();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("«${category.name}» to'plami ochildi")),
+    );
+  }
+
   void _retryLoadAuditions() {
     if (_selectedIndex == -1) {
       _loadAllAuditions();
@@ -1058,6 +1072,10 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
                 final colors = _gradientPalette[index % _gradientPalette.length];
                 final categoryId = _selectedCategoryId;
                 void openAudio() {
+                  if (item.isLocked) {
+                    _openPurchaseFor(item);
+                    return;
+                  }
                   LastListenedManager.save(
                     prefs: inject<SharedPreferences>(),
                     title: item.text,
@@ -1104,6 +1122,7 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
                       duration: item.durationLabel,
                       colors: colors,
                       onTap: openAudio,
+                      locked: item.isLocked,
                       isFavorite: item.favorited,
                       onFavoriteTap: () => _onFavoriteTap(index),
                     ),

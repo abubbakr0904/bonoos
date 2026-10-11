@@ -15,7 +15,7 @@ class AboutUsScreen extends StatefulWidget {
   const AboutUsScreen({super.key});
 
   static const String routeName = '/sections/about-us';
-  static const String landingUrl = 'https://bonoos-landing.onrender.com/';
+  static const String landingUrl = 'https://bonoos.uz/';
 
   @override
   State<AboutUsScreen> createState() => _AboutUsScreenState();

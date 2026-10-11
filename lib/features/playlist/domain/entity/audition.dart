@@ -19,6 +19,9 @@ class Audition {
   final String text;
   final bool favorited;
 
+  /// Pullik kategoriya sotib olinmagan: server `audio` ni yubormaydi.
+  bool get isLocked => audio.trim().isEmpty;
+
   factory Audition.fromJson(Map<String, dynamic> json) {
     final fav = json['favorited'];
     return Audition(

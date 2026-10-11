@@ -8,6 +8,12 @@ class ListAPI {
 
   static String get baseUrl => dotenv.env['TASK_BASE_URL'] ?? '';
 
+  /// Chat WebSocket host — `BASE_URL` dan olinadi (`https://` → `wss://`, yo'lsiz).
+  static String get wsBaseUrl {
+    final api = Uri.parse(dotenv.env['BASE_URL'] ?? '');
+    return Uri(scheme: api.scheme == 'http' ? 'ws' : 'wss', host: api.host, port: api.hasPort ? api.port : null).toString();
+  }
+
   static String get TaskBaseUrl => dotenv.env['TASK_BASE_URL'] ?? '';
 
   static String get sentryDsn => dotenv.env['SENTRY_DSN'] ?? '';
@@ -62,6 +68,9 @@ class ListAPI {
   /// POST — sessiya (Bearer kerak). Body: `device_id`, `device_name`, `session_type`, `fcm_token`.
   static const String authClientSession = 'api/v1/auth/client/session';
 
+  /// POST — access tokenni yangilash. Body: `refresh_token`, `device_id`. Javob: `data.tokens`.
+  static const String authClientRefreshToken = 'api/v1/auth/client/refresh-token';
+
   /// POST — chiqish (Bearer kerak). Body: `refresh_token`, `device_id`.
   static const String authClientLogout = 'api/v1/auth/client/logout';
 
@@ -109,6 +118,13 @@ class ListAPI {
   /// Kategoriyalar ro'yxati (GET).
   static const String categories = 'api/v1/categories';
 
+  /// Pullik kategoriyani sotib olish (POST, Bearer). Javob: `payment_id`, `payment_link` (Payme).
+  static String clientCategoryPurchase(int categoryId) =>
+      'api/v1/client/categories/$categoryId/purchase';
+
+  /// To'lov holati (GET, Bearer). `status`: pending | completed | failed | cancelled.
+  static String clientPayment(int paymentId) => 'api/v1/client/payments/$paymentId';
+
   /// FAQ ro'yxati (GET).
   static const String faqs = 'api/v1/faqs';
 
@@ -141,6 +157,16 @@ class ListAPI {
 
   /// Auditionlar ro'yxati (GET). Query: `?category_id=N`.
   static const String auditions = 'api/v1/auditions';
+
+  /// Bitta audition (GET). Sotib olinmagan pullik audioda `audio` bo'lmaydi.
+  static String auditionById(int auditionId) => 'api/v1/auditions/$auditionId';
+
+  /// Tinglash jami (GET, Bearer). Query: `?from=YYYY-MM-DD&to=YYYY-MM-DD` (ixtiyoriy, UTC).
+  /// Javob: `total_listen_events`, `total_duration` (sekund), `active_days`.
+  static const String clientActionsSummary = 'api/v1/client/actions-summary';
+
+  /// Kunlik tinglash — audio bo'yicha (GET, Bearer). Query: `?day=YYYY-MM-DD`.
+  static const String clientDailySummary = 'api/v1/client/daily-summary';
 
   /// Audioni tinglash (POST, Bearer). Body: `duration`, `audition_type`, `day`.
   static String clientAuditionListen(int auditionId) =>

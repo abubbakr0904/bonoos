@@ -10,6 +10,7 @@ import 'package:bonoos/features/home/audio_screen.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
 import 'package:bonoos/features/playlist/domain/entity/category.dart';
 import 'package:bonoos/features/playlist/domain/repository/playlist_repository.dart';
+import 'package:bonoos/features/playlist/widget/category_purchase_sheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -125,6 +126,22 @@ class _PlaylistScreenState extends State<PlaylistScreen>
     );
   }
 
+  Category? get _selectedCategory =>
+      _selectedIndex < _categories.length ? _categories[_selectedIndex] : null;
+
+  /// Pullik to‘plamni ochish oynasi; muvaffaqiyatli bo‘lsa ro‘yxatni yangilaydi.
+  Future<void> _openPurchase(Category category) async {
+    final unlocked = await showCategoryPurchaseSheet(context, category);
+    if (!unlocked || !mounted) return;
+    final result = await inject<PlaylistRepository>().fetchCategories();
+    if (!mounted) return;
+    result.fold((_) {}, (cats) => setState(() => _categories = cats));
+    _loadAuditions(category.id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("«${category.name}» to'plami ochildi")),
+    );
+  }
+
   void _onCategorySelected(int index) {
     if (index == _selectedIndex) return;
     setState(() => _selectedIndex = index);
@@ -205,6 +222,13 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                       ),
                     ),
                     SizedBox(height: 16.h),
+                    if (_selectedCategory?.isLocked ?? false) ...[
+                      LockedCategoryBanner(
+                        category: _selectedCategory!,
+                        onTap: () => _openPurchase(_selectedCategory!),
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
                     Expanded(
                       child: _auditionsLoading
                           ? const PlaylistAuditionsShimmer()
@@ -272,7 +296,13 @@ class _PlaylistScreenState extends State<PlaylistScreen>
                                                     tag: item.formattedDuration,
                                                     duration: item.durationLabel,
                                                     colors: colors,
+                                                    locked: item.isLocked,
                                                     onTap: () {
+                                                      if (item.isLocked) {
+                                                        final cat = _selectedCategory;
+                                                        if (cat != null) _openPurchase(cat);
+                                                        return;
+                                                      }
                                                       LastListenedManager.save(
                                                         prefs:
                                                             inject<SharedPreferences>(),

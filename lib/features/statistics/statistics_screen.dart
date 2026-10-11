@@ -1,25 +1,25 @@
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/features/common/widget/weekly_listening_chart_card.dart';
+import 'package:bonoos/features/statistics/data/listening_stats_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class StatisticsScreen extends StatelessWidget {
+class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Demo data (wire to real analytics later)
-    const streakDays = 1;
-    const meditationsCount = 13;
-    const listenedMinutes = 0;
-    const breathingDone = 0;
-    const favouriteDone = 1;
-    const favouriteTitle = "для тебя";
-    const favouriteDuration = "2 минуты";
-    const weeklyMinutes = <double>[0, 6, 12, 8, 16, 10, 14];
+  State<StatisticsScreen> createState() => _StatisticsScreenState();
+}
 
+class _StatisticsScreenState extends State<StatisticsScreen> {
+  late Future<ListeningStats> _stats = ListeningStatsRepository().fetch();
+
+  void _reload() => setState(() => _stats = ListeningStatsRepository().fetch());
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.mainBgColor,
       body: Stack(
@@ -28,81 +28,140 @@ class StatisticsScreen extends StatelessWidget {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 18.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _StatsHeader(),
-                  SizedBox(height: 14.h),
-                  _StreakCard(days: streakDays),
-                  SizedBox(height: 12.h),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _MetricCard(
-                                  value: "$meditationsCount",
-                                  title: "Медитаций вы\nуже послушали",
-                                  emoji: "🧘🏻‍♀️",
-                                  gradient: const [
-                                    AppColors.mainBgColor,
-                                    AppColors.c55004D,
-                                  ],
-                                ),
+              child: FutureBuilder<ListeningStats>(
+                future: _stats,
+                builder: (context, snap) {
+                  final stats = snap.data;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _StatsHeader(),
+                      SizedBox(height: 14.h),
+                      if (snap.connectionState != ConnectionState.done)
+                        const Expanded(
+                          child: Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        )
+                      else if (stats == null)
+                        Expanded(child: _StatsError(onRetry: _reload))
+                      else ...[
+                        _StreakCard(days: stats.streak),
+                        SizedBox(height: 12.h),
+                        Expanded(
+                          child: RefreshIndicator(
+                            color: AppColors.mainBgColor,
+                            onRefresh: () async {
+                              _reload();
+                              await _stats;
+                            },
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: BouncingScrollPhysics(),
                               ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: _MetricCard(
-                                  value: "$listenedMinutes",
-                                  title: "Минут\nпрослушанных\nмедитаций",
-                                  actionLabel: "История",
-                                  onAction: () {},
-                                  gradient: const [
-                                    AppColors.mainBgColor,
-                                    AppColors.c55004D,
-                                  ],
-                                ),
-                              ),
-                            ],
+                              child: _StatsBody(stats: stats),
+                            ),
                           ),
-                          SizedBox(height: 12.h),
-                          _WideMetricCard(
-                            value: "$breathingDone",
-                            title: "Раз выполнена\nпрактика дыхания",
-                            actionLabel: "История",
-                            onAction: () {},
-                          ),
-                          SizedBox(height: 12.h),
-                          _FavouriteCard(
-                            doneCount: favouriteDone,
-                            title: favouriteTitle,
-                            duration: favouriteDuration,
-                          ),
-                          SizedBox(height: 12.h),
-                          WeeklyListeningChartCard(
-                            title: "Weekly listening (minutes)",
-                            subtitle: "Static demo data",
-                            values: weeklyMinutes,
-                            labels: const [
-                              "Mon",
-                              "Tue",
-                              "Wed",
-                              "Thu",
-                              "Fri",
-                              "Sat",
-                              "Sun"
-                            ],
-                          ),
-                          SizedBox(height: 16.h),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsBody extends StatelessWidget {
+  const _StatsBody({required this.stats});
+
+  final ListeningStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = stats.topToday;
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _MetricCard(
+                value: "${stats.totalListens}",
+                title: "Marta audio\ntinglagansiz",
+                emoji: "🧘🏻‍♀️",
+                gradient: const [AppColors.mainBgColor, AppColors.c55004D],
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: _MetricCard(
+                value: "${stats.totalMinutes}",
+                title: "Daqiqa\ntinglangan\nmashg'ulotlar",
+                emoji: "🎧",
+                gradient: const [AppColors.mainBgColor, AppColors.c55004D],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        _WideMetricCard(
+          value: "${stats.activeDays}",
+          title: "Kun davomida\nmashg'ulot qilgansiz",
+        ),
+        if (top != null) ...[
+          SizedBox(height: 12.h),
+          _FavouriteCard(
+            doneCount: top.listenedCount,
+            title: top.audition.text,
+            duration: top.audition.durationLabel,
+          ),
+        ],
+        SizedBox(height: 12.h),
+        WeeklyListeningChartCard(
+          title: "Haftalik tinglash (daqiqa)",
+          subtitle: "Oxirgi 7 kun: ${stats.weekMinutes} daqiqa",
+          values: stats.dayMinutes,
+          labels: stats.dayLabels,
+        ),
+        SizedBox(height: 16.h),
+      ],
+    );
+  }
+}
+
+class _StatsError extends StatelessWidget {
+  const _StatsError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            CupertinoIcons.exclamationmark_triangle,
+            size: 32.sp,
+            color: Colors.white.withValues(alpha: 0.5),
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            "Statistikani yuklab bo'lmadi",
+            style: AppTextStyles.body13w5.copyWith(
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(
+              'Qayta urinish',
+              style: AppTextStyles.body14w6.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -197,14 +256,14 @@ class _StatsHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Statistics",
+              "Statistika",
               style: AppTextStyles.body22w7.copyWith(
                 color: Colors.white.withValues(alpha: 0.95),
               ),
             ),
             SizedBox(height: 4.h),
             Text(
-              "Soft progress you can feel.",
+              "Kichik qadamlar — katta o'zgarish.",
               style: AppTextStyles.body13w4.copyWith(
                 color: Colors.white.withValues(alpha: 0.70),
               ),
@@ -279,7 +338,7 @@ class _StreakCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Ударный режим",
+                  "Ketma-ket kunlar",
                   style: AppTextStyles.body14w6.copyWith(
                     color: Colors.white.withValues(alpha: 0.86),
                   ),
@@ -300,7 +359,7 @@ class _StreakCard extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(bottom: 6.h),
                       child: Text(
-                        "день",
+                        "kun",
                         style: AppTextStyles.body16w6.copyWith(
                           color: const Color(0xFFFFC07D),
                         ),
@@ -333,16 +392,12 @@ class _MetricCard extends StatelessWidget {
     required this.value,
     required this.title,
     this.emoji,
-    this.actionLabel,
-    this.onAction,
     required this.gradient,
   });
 
   final String value;
   final String title;
   final String? emoji;
-  final String? actionLabel;
-  final VoidCallback? onAction;
   final List<Color> gradient;
 
   @override
@@ -380,15 +435,7 @@ class _MetricCard extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            if (actionLabel != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: _PillButton(
-                  label: actionLabel!,
-                  onTap: onAction ?? () {},
-                ),
-              )
-            else if (emoji != null)
+            if (emoji != null)
               Text(
                 emoji!,
                 style: TextStyle(fontSize: 20.sp),
@@ -406,14 +453,10 @@ class _WideMetricCard extends StatelessWidget {
   const _WideMetricCard({
     required this.value,
     required this.title,
-    required this.actionLabel,
-    required this.onAction,
   });
 
   final String value;
   final String title;
-  final String actionLabel;
-  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +487,7 @@ class _WideMetricCard extends StatelessWidget {
               ],
             ),
           ),
-          _PillButton(label: actionLabel, onTap: onAction),
+          Text("📅", style: TextStyle(fontSize: 22.sp)),
         ],
       ),
     );
@@ -470,7 +513,7 @@ class _FavouriteCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "$doneCount раз вы сделали\nсвою любимую практику",
+            "Bugun eng ko'p tinglaganingiz\n$doneCount marta",
             style: AppTextStyles.body14w6.copyWith(
               color: Colors.white.withValues(alpha: 0.90),
               height: 1.2,
@@ -526,51 +569,6 @@ class _FavouriteCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PillButton extends StatelessWidget {
-  const _PillButton({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.c842D5F, AppColors.c55004D],
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x2A842D5F),
-              blurRadius: 14,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(CupertinoIcons.play_fill, color: Colors.white, size: 14),
-            SizedBox(width: 8.w),
-            Text(
-              label,
-              style: AppTextStyles.body12w6.copyWith(
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

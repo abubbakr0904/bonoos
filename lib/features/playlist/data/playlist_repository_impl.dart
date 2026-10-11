@@ -162,6 +162,44 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
 
   /// `data` — to‘g‘ridan-to‘g‘ri ro‘yxat yoki `{ items, limit, offset, total }`.
   /// Bo‘sh / `items: null` → bo‘sh ro‘yxat.
+  @override
+  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId) async {
+    try {
+      final response = await _dio.post(ListAPI.clientCategoryPurchase(categoryId));
+      final data = (response.data as Map?)?['data'];
+      final link = data is Map ? data['payment_link'] as String? : null;
+      final paymentId = data is Map ? (data['payment_id'] as num?)?.toInt() : null;
+      if (link == null || link.isEmpty || paymentId == null) {
+        return const Left(BadResponseFailure(message: 'To\'lov havolasi olinmadi.'));
+      }
+      return Right(CategoryPurchase(paymentId: paymentId, paymentLink: link));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        return const Left(AlreadyOwnedFailure(message: 'Bu to\'plam allaqachon ochilgan.'));
+      }
+      return Left(_mapDio(e));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> fetchPaymentStatus(int paymentId) async {
+    try {
+      final raw = await _dio.get(ListAPI.clientPayment(paymentId));
+      final data = ((raw as Response<dynamic>).data as Map?)?['data'];
+      final status = data is Map ? data['status'] as String? : null;
+      if (status == null) {
+        return const Left(BadResponseFailure(message: 'To\'lov holati olinmadi.'));
+      }
+      return Right(status);
+    } on DioException catch (e) {
+      return Left(_mapDio(e));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
   List<Audition>? _parseAuditionsList(dynamic dataRaw) {
     if (dataRaw is List) {
       return dataRaw
@@ -234,7 +272,7 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     String? msg;
     if (data is Map) {
       final m = Map<String, dynamic>.from(data);
-      msg = m['message']?.toString() ?? m['detail']?.toString();
+      msg = m['message']?.toString() ?? m['error']?.toString() ?? m['detail']?.toString();
     }
     if (status == 401) {
       return UnAuthorizedFailure(message: msg ?? 'Kirish talab qilinadi.');

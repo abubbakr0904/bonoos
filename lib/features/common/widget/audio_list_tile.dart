@@ -16,6 +16,7 @@ class AudioListTile extends StatelessWidget {
     this.onMoreTap,
     this.isFavorite = false,
     this.onFavoriteTap,
+    this.locked = false,
   });
 
 
@@ -28,6 +29,9 @@ class AudioListTile extends StatelessWidget {
   final VoidCallback? onMoreTap;
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
+
+  /// Pullik to‘plamdan, hali ochilmagan audio — play o‘rniga qulf.
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +53,10 @@ class AudioListTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(100.r),
              color : Colors.white.withValues(alpha: 0.2)
               ),
-              child: const Icon(
-                CupertinoIcons.play_fill,
-                color: Colors.white,
-                size: 20,
+              child: Icon(
+                locked ? CupertinoIcons.lock_fill : CupertinoIcons.play_fill,
+                color: Colors.white.withValues(alpha: locked ? 0.85 : 1),
+                size: locked ? 18 : 20,
               ),
             ),
             SizedBox(width: 12.w),
@@ -65,7 +69,7 @@ class AudioListTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.body16w6.copyWith(
-                      color: Colors.white.withValues(alpha: 0.92),
+                      color: Colors.white.withValues(alpha: locked ? 0.70 : 0.92),
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -81,7 +85,7 @@ class AudioListTile extends StatelessWidget {
               ),
             ),
             SizedBox(width: 8.w),
-            if (onFavoriteTap != null)
+            if (onFavoriteTap != null && !locked)
               GestureDetector(
                 onTap: onFavoriteTap,
                 behavior: HitTestBehavior.opaque,

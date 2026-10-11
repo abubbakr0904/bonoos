@@ -4,6 +4,18 @@ import 'package:bonoos/features/playlist/domain/entity/auditions_page.dart';
 import 'package:bonoos/features/playlist/domain/entity/category.dart';
 import 'package:dartz/dartz.dart';
 
+class CategoryPurchase {
+  const CategoryPurchase({required this.paymentId, required this.paymentLink});
+
+  final int paymentId;
+  final String paymentLink;
+}
+
+/// Kategoriya allaqachon sotib olingan (409) — kirish ochiq, qayta yuklash kifoya.
+class AlreadyOwnedFailure extends Failure {
+  const AlreadyOwnedFailure({super.message});
+}
+
 abstract class PlaylistRepository {
   Future<Either<Failure, List<Category>>> fetchCategories();
   Future<Either<Failure, List<Audition>>> fetchAuditions(int categoryId);
@@ -19,6 +31,12 @@ abstract class PlaylistRepository {
 
   /// GET `/client/favorites/auditions` — foydalanuvchi sevimli audiolari.
   Future<Either<Failure, List<Audition>>> fetchFavoriteAuditions();
+
+  /// POST `/client/categories/{id}/purchase` — Payme to‘lov havolasi.
+  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId);
+
+  /// GET `/client/payments/{id}` — `pending | completed | failed | cancelled`.
+  Future<Either<Failure, String>> fetchPaymentStatus(int paymentId);
 
   /// Audioni ~70% tinglanganda chaqiriladi; muvaffaqiyat/xatolik UI ga chiqarilmaydi.
   Future<void> reportAuditionListen({

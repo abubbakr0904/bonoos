@@ -1,3 +1,4 @@
+import 'package:bonoos/core/api/auth_refresh_interceptor.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/api/pretty_dio_logger.dart';
 import 'package:bonoos/core/utils/pref_manager.dart';
@@ -38,6 +39,8 @@ class DioClient {
         },
       ),
     );
+
+    _dio.interceptors.add(AuthRefreshInterceptor(_dio));
 
     try {
       _dio.interceptors.add(

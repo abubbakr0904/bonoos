@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bonoos/core/api/list_api.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -96,8 +97,7 @@ class ChatCubit extends Cubit<ChatState> {
         updatedAt: conversation.updatedAt,
       );
 
-      // Production WebSocket server
-      const wsBaseUrl = 'wss://api.vibrant.uz';
+      final wsBaseUrl = ListAPI.wsBaseUrl;
       const asAdmin = false;
 
       print('[ChatCubit] Connecting to WebSocket: $wsBaseUrl');
@@ -220,8 +220,7 @@ class ChatCubit extends Cubit<ChatState> {
     if (state.activeThread == null || isClosed) return;
     print('[ChatCubit] Attempting reconnect...');
     try {
-      // Production WebSocket server (hardcoded)
-      const wsBaseUrl = 'wss://api.vibrant.uz';
+      final wsBaseUrl = ListAPI.wsBaseUrl;
       print('[ChatCubit] Reconnecting to: $wsBaseUrl');
 
       await _repository.connectToConversation(

@@ -1,17 +1,11 @@
-import 'dart:developer';
 import 'dart:math' as math;
-import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/routes/app_pages.dart';
 import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/di.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dio_client.dart';
 
 class PrettyDioLogger extends Interceptor {
   /// Print request [Options]
@@ -49,7 +43,6 @@ class PrettyDioLogger extends Interceptor {
   /// you can also write log in a file.
   DebugPrintCallback logPrint;
   String? _token;
-  bool _isRefreshing = false;
 
   PrettyDioLogger({
     this.request = true,
@@ -143,75 +136,7 @@ class PrettyDioLogger extends Interceptor {
         return;
       } else {}
     }
-    if (!_isRefreshing &&
-        _token != null &&
-        _token!.isNotEmpty &&
-        (err.response?.statusCode == 403 || err.response?.statusCode == 401)) {
-      _isRefreshing = true;
-
-      log('║ refreshing the token ║');
-      _refreshTheToken();
-    }
-
     super.onError(err, handler);
-  }
-
-  void _refreshTheToken() async {
-    final refresh = inject<PrefManager>().refresh;
-    final deviceId = inject<SharedPreferences>().getString(SharedModel.deviceClientId) ?? '';
-    
-    if (refresh == null || refresh.trim().isEmpty) {
-      inject<PrefManager>().logout();
-      rootNavigatorKey.currentContext!.go(LoginPhoneScreen.routeName);
-    } else {
-      final dio = inject<DioClient>().dio;
-      dio
-          .post(
-            'api/v1/auth/client/refresh-token',
-            data: {
-              'refresh_token': refresh,
-              'device_id': deviceId,
-            },
-          )
-          .then((value) {
-            String? newAccess;
-            String? newRefresh;
-
-            final dynamic body = value.data;
-            if (body is Map) {
-              final map = Map<String, dynamic>.from(body);
-              final dynamic d = map['data'];
-              if (d is Map) {
-                final dMap = Map<String, dynamic>.from(d);
-                final dynamic tokens = dMap['tokens'];
-                if (tokens is Map) {
-                  final tMap = Map<String, dynamic>.from(tokens);
-                  newAccess = tMap['access_token'] as String?;
-                  newRefresh = tMap['refresh_token'] as String?;
-                }
-                newAccess ??= dMap['access_token'] as String?;
-                newRefresh ??= dMap['refresh_token'] as String?;
-              }
-              newAccess ??= map['access_token'] as String?;
-              newRefresh ??= map['refresh_token'] as String?;
-            }
-
-            if (newAccess != null && newAccess.isNotEmpty) {
-              inject<PrefManager>().token = newAccess;
-            }
-            if (newRefresh != null && newRefresh.isNotEmpty) {
-              inject<PrefManager>().refresh = newRefresh;
-            }
-
-            log("Refreshed access token: $newAccess");
-            _isRefreshing = false;
-          })
-          .onError((e, st) {
-            log("Refresh token failed: ${e.toString()}", stackTrace: st);
-            inject<PrefManager>().logout();
-            rootNavigatorKey.currentContext!.go(LoginPhoneScreen.routeName);
-          });
-    }
   }
 
   @override

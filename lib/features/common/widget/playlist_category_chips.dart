@@ -54,6 +54,7 @@ class PlaylistCategoryChipRow extends StatelessWidget {
                 child: PlaylistCategoryChip(
                   label: cat.name,
                   selected: selected,
+                  locked: cat.isLocked,
                 ),
               ),
             );
@@ -69,13 +70,20 @@ class PlaylistCategoryChip extends StatelessWidget {
     super.key,
     required this.label,
     this.selected = false,
+    this.locked = false,
   });
 
   final String label;
   final bool selected;
 
+  /// Pullik va hali sotib olinmagan to‘plam — kichik qulf belgisi.
+  final bool locked;
+
   @override
   Widget build(BuildContext context) {
+    final textColor = selected
+        ? Colors.white.withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.70);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
@@ -91,14 +99,21 @@ class PlaylistCategoryChip extends StatelessWidget {
               : Colors.white.withValues(alpha: 0.10),
         ),
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.body12w5.copyWith(
-          color: selected
-              ? Colors.white.withValues(alpha: 0.92)
-              : Colors.white.withValues(alpha: 0.70),
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (locked) ...[
+            Icon(CupertinoIcons.lock_fill, size: 11.sp, color: textColor),
+            SizedBox(width: 5.w),
+          ],
+          Text(
+            label,
+            style: AppTextStyles.body12w5.copyWith(
+              color: textColor,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -26,7 +26,7 @@ class QuoteDto {
     );
   }
 
-  /// `BASE_URL` (masalan `https://api.vibrant.uz/`) bilan to‘liq rasm manzili.
+  /// `BASE_URL` (masalan `https://api.bonoos.uz/`) bilan to‘liq rasm manzili.
   String resolveImageUrl(String apiBaseUrl) {
     if (image.isEmpty) return '';
     if (image.startsWith('http://') || image.startsWith('https://')) return image;
