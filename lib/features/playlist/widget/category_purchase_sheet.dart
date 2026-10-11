@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/di.dart';
@@ -12,6 +13,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Pullik to‘plamni ochish oynasi. `true` — to‘plam ochildi (ro‘yxatni qayta yuklash kerak).
 Future<bool> showCategoryPurchaseSheet(BuildContext context, Category category) async {
+  if (hideExternalPayments()) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Bu to'plam tez orada ochiladi")),
+    );
+    return false;
+  }
   final unlocked = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -353,7 +360,9 @@ class LockedCategoryBanner extends StatelessWidget {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    "Barcha audiolarni ${category.formattedPrice} evaziga oching",
+                    hideExternalPayments()
+                        ? "Tez orada ochiladi"
+                        : "Barcha audiolarni ${category.formattedPrice} evaziga oching",
                     style: AppTextStyles.body12w4.copyWith(
                       color: Colors.white.withValues(alpha: 0.72),
                     ),

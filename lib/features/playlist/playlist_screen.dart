@@ -17,7 +17,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class PlaylistScreen extends StatefulWidget {
-  const PlaylistScreen({super.key});
+  const PlaylistScreen({super.key, this.initialCategoryId});
+
+  /// Shu kategoriya tanlangan holda ochiladi (masalan, «To‘plamlar» tabidan).
+  final int? initialCategoryId;
+
   static const String routeName = "/playlist";
 
   @override
@@ -65,13 +69,14 @@ class _PlaylistScreenState extends State<PlaylistScreen>
         _categoriesError = f.message ?? 'Xatolik';
       }),
       (cats) {
+        final initial = cats.indexWhere((c) => c.id == widget.initialCategoryId);
         setState(() {
           _categoriesLoading = false;
           _categories = cats;
-          _selectedIndex = 0;
+          _selectedIndex = initial < 0 ? 0 : initial;
         });
         if (cats.isNotEmpty) {
-          _loadAuditions(cats.first.id);
+          _loadAuditions(cats[_selectedIndex].id);
         }
       },
     );

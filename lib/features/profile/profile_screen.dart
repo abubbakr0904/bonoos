@@ -313,7 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _SettingsListCard(
                     items: [
                       if (TabBoxController.isSubscriptionVisible)
-                        const _SettingsItem(title: "Obunani boshqarish"),
+                        const _SettingsItem(title: "Mening to'plamlarim"),
                       const _SettingsItem(title: "Hisobdan chiqish", isDestructive: true),
                       const _SettingsItem(title: "Hisobni o'chirish", isDestructive: true),
                     ],
@@ -322,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         case "Ilova tilini tanlash":
                           openLanguageSheet();
                           break;
-                        case "Obunani boshqarish":
+                        case "Mening to'plamlarim":
                           Navigator.of(context).pop();
                           TabBoxController.instance.setTab(AppTab.subscription);
                           break;

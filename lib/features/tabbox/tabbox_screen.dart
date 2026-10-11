@@ -4,7 +4,7 @@ import 'package:bonoos/features/gratitude/gratitude_note_editor_screen.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/features/home/home_screen.dart';
 import 'package:bonoos/features/sections/sections_screen.dart';
-import 'package:bonoos/features/subscription/subscription_screen.dart';
+import 'package:bonoos/features/playlist/collections_screen.dart';
 import 'package:bonoos/features/tabbox/tabbox_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +28,7 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
     AppTab.home: _TabItem(label: "Home", icon: CupertinoIcons.house_fill),
     AppTab.calendar: _TabItem(label: "Calendar", icon: CupertinoIcons.calendar),
     AppTab.gratitude: _TabItem(label: "Shukrona", icon: CupertinoIcons.heart_fill),
-    AppTab.subscription: _TabItem(label: "Abonement", icon: CupertinoIcons.tickets_fill),
+    AppTab.subscription: _TabItem(label: "To'plamlar", icon: CupertinoIcons.square_stack_3d_up_fill),
     AppTab.sections: _TabItem(label: "Bo'limlar", icon: CupertinoIcons.square_grid_2x2_fill),
   };
 
@@ -100,7 +100,8 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
           key: ValueKey("gratitude_editor"),
         );
       case AppTab.subscription:
-        return const SubscriptionScreen(key: ValueKey("subscription"));
+        // Obuna to'xtatilgan — kontent faqat to'plam (kategoriya) sotib olish orqali ochiladi.
+        return const CollectionsScreen(key: ValueKey("collections"));
       case AppTab.sections:
         return const SectionsScreen(key: ValueKey("sections"));
     }

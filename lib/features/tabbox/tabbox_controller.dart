@@ -17,7 +17,7 @@ class TabBoxController {
 
   final ValueNotifier<int> index = ValueNotifier<int>(0);
 
-  /// iOS App Store talablari: obuna tabi ko‘rinmaydi.
+  /// iOS App Store talablari: «To‘plamlar» (tashqi to‘lov) tabi ko‘rinmaydi.
   static bool get isSubscriptionVisible => !Platform.isIOS;
 
   static List<AppTab> get visibleTabs {

@@ -85,7 +85,7 @@ class RouteGenerate {
       GoRoute(
         path: PlaylistScreen.routeName,
         name: PlaylistScreen.routeName,
-        builder: (_, __) => const PlaylistScreen(),
+        builder: (_, state) => PlaylistScreen(initialCategoryId: state.extra as int?),
       ),
 
       GoRoute(
