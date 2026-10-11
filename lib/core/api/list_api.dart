@@ -20,7 +20,7 @@ class ListAPI {
 
   /// Barcha API so‘rovlarida yuboriladigan header (`x-uuid`). Qiymat: `.env` → `X_UUID`.
   static const String headerXUuid = 'x-uuid';
-  static const String _defaultXUuid = '810da8fa-72d8-4a0c-81d8-3a740fe5d18e';
+  static const String _defaultXUuid = 'ae4ae05a-fd51-4814-8e00-c3d52b8c0625';
   static String get xUuid => (dotenv.env['X_UUID']?.trim().isNotEmpty ?? false)
       ? dotenv.env['X_UUID']!.trim()
       : _defaultXUuid;
