@@ -2,6 +2,7 @@ import 'package:bonoos/features/on_boarding/first_enter_screen.dart';
 import 'package:bonoos/features/auth/login_phone_screen.dart';
 import 'package:bonoos/features/auth/otp_screen.dart';
 import 'package:bonoos/features/auth/telegram_login_screen.dart';
+import 'package:bonoos/features/auth/telegram_otp_screen.dart';
 import 'package:bonoos/features/questions/question_screen.dart';
 import 'package:bonoos/features/home/message_of_day_screen.dart';
 import 'package:bonoos/features/home/self_talk_topics_screen.dart';
@@ -49,6 +50,12 @@ class RouteGenerate {
         path: TelegramLoginScreen.routeName,
         name: TelegramLoginScreen.routeName,
         builder: (_, __) => const TelegramLoginScreen(),
+      ),
+
+      GoRoute(
+        path: TelegramOtpScreen.routeName,
+        name: TelegramOtpScreen.routeName,
+        builder: (_, __) => const TelegramOtpScreen(),
       ),
 
       GoRoute(
