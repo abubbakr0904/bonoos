@@ -3,7 +3,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/core/values/app_colors.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/features/auth/telegram_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -56,7 +56,7 @@ class _FirstEnterScreenState extends State<FirstEnterScreen> {
     final prefs = inject<SharedPreferences>();
     await prefs.setBool(SharedModel.onBoard, true);
     if (mounted) {
-      context.go(LoginPhoneScreen.routeName);
+      context.go(TelegramLoginScreen.routeName);
     }
   }
 

@@ -65,6 +65,13 @@ class ListAPI {
   /// POST body: `{ "phone": "930374441", "code": "5976" }`.
   static const String authVerifyOtp = 'api/v1/auth/client/verify-otp';
 
+  /// POST body: `{ "code": "123456" }` — @bonoos_auth_bot bergan 6 xonali kod.
+  /// Javob verify-otp bilan bir xil (`tokens`, `user_id`, `is_new_user`).
+  static const String authTelegramVerify = 'api/v1/auth/client/telegram/verify';
+
+  /// Login boti: user raqamini ulashadi va kod oladi.
+  static const String telegramAuthBotUrl = 'https://t.me/bonoos_auth_bot?start=login';
+
   /// POST — sessiya (Bearer kerak). Body: `device_id`, `device_name`, `session_type`, `fcm_token`.
   static const String authClientSession = 'api/v1/auth/client/session';
 

@@ -38,6 +38,10 @@ class UrlNotFoundFailure extends Failure {
   const UrlNotFoundFailure({super.message});
 }
 
+class TooManyRequestsFailure extends Failure {
+  const TooManyRequestsFailure({super.message});
+}
+
 class UnknownFailure extends Failure {
   const UnknownFailure({super.message});
 }

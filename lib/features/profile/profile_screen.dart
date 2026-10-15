@@ -3,7 +3,7 @@ import 'package:bonoos/core/values/app_text_styles.dart';
 import 'package:bonoos/core/resources/assets/images/app_images.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/features/auth/telegram_login_screen.dart';
 import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
 import 'package:bonoos/features/tabbox/tabbox_controller.dart';
@@ -178,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _loading = true);
       await inject<AuthRepository>().logout();
       if (!mounted) return;
-      context.go(LoginPhoneScreen.routeName);
+      context.go(TelegramLoginScreen.routeName);
     }
 
     Future<void> openDeleteAccountDialog() async {
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _loading = true);
       await inject<AuthRepository>().logout();
       if (!mounted) return;
-      context.go(LoginPhoneScreen.routeName);
+      context.go(TelegramLoginScreen.routeName);
     }
 
     void openRestoreSheet() {

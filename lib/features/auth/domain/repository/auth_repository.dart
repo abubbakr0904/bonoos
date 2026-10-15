@@ -12,6 +12,9 @@ abstract class AuthRepository {
     required String code,
   });
 
+  /// [code] — Telegram botdan olingan 6 raqamli bir martalik kod.
+  Future<Either<Failure, VerifyOtpResult>> telegramVerify({required String code});
+
   /// OTP dan keyin sessiya ro'yxatdan o'tkazish (Bearer kerak — verify dan keyin).
   Future<Either<Failure, Unit>> registerClientSession();
 

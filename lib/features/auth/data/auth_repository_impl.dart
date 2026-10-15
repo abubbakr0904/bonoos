@@ -35,17 +35,30 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, VerifyOtpResult>> verifyOtp({
     required String phoneDigits,
     required String code,
+  }) =>
+      _exchangeForTokens(
+        ListAPI.authVerifyOtp,
+        <String, dynamic>{'phone': phoneDigits, 'code': code},
+        phoneDigits: phoneDigits,
+      );
+
+  @override
+  Future<Either<Failure, VerifyOtpResult>> telegramVerify({required String code}) =>
+      _exchangeForTokens(ListAPI.authTelegramVerify, <String, dynamic>{'code': code});
+
+  /// Kodni tokenlarga almashtiradi va sessiyani saqlaydi (verify-otp va telegram/verify javobi bir xil).
+  Future<Either<Failure, VerifyOtpResult>> _exchangeForTokens(
+    String path,
+    Map<String, dynamic> body, {
+    String? phoneDigits,
   }) async {
     try {
-      final response = await _dio.post(
-        ListAPI.authVerifyOtp,
-        data: <String, dynamic>{'phone': phoneDigits, 'code': code},
-      );
-      final body = response.data;
-      if (body is! Map) {
+      final response = await _dio.post(path, data: body);
+      final resBody = response.data;
+      if (resBody is! Map) {
         return const Left(BadResponseFailure(message: 'Javob formati noto‘g‘ri.'));
       }
-      final map = Map<String, dynamic>.from(body);
+      final map = Map<String, dynamic>.from(resBody);
       final raw = map['data'];
       if (raw is! Map) {
         return const Left(BadResponseFailure(message: 'Javobda data yo‘q.'));
@@ -135,6 +148,11 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     if (status == 403) {
       return ForbiddenFailure(message: msg ?? 'Kirish taqiqlangan.');
+    }
+    if (status == 429) {
+      return const TooManyRequestsFailure(
+        message: 'Juda ko‘p urinish. Birozdan keyin qayta urinib ko‘ring.',
+      );
     }
     if (status == 404) {
       return UrlNotFoundFailure(message: msg ?? 'Manzil topilmadi.');

@@ -58,7 +58,7 @@ class PrefManager {
     required int expiresIn,
     required int userId,
     required bool isNewUser,
-    required String phoneDigits,
+    String? phoneDigits,
     required String rawDataJson,
   }) async {
     final pendingQuestions = preferences.getBool(SharedModel.newUser) ?? false;
@@ -69,7 +69,10 @@ class PrefManager {
     await preferences.setBool(
         SharedModel.newUser, pendingQuestions || isNewUser);
     await preferences.setString(SharedModel.authSessionJson, rawDataJson);
-    await preferences.setString(SharedModel.useName, phoneDigits);
+    // Telegram login da raqam ilovaga kelmaydi.
+    if (phoneDigits != null) {
+      await preferences.setString(SharedModel.useName, phoneDigits);
+    }
   }
 
   Future<bool> logout() async => await preferences.clear();

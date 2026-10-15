@@ -6,7 +6,7 @@ import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/core/values/app_text_styles.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/features/auth/telegram_login_screen.dart';
 import 'package:bonoos/features/on_boarding/first_enter_screen.dart';
 import 'package:bonoos/features/profile/passcode_screen.dart';
 import 'package:bonoos/features/questions/question_screen.dart';
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
     }
     //
     if (!hasToken) {
-      context.go(LoginPhoneScreen.routeName);
+      context.go(TelegramLoginScreen.routeName);
       return;
     }
     //

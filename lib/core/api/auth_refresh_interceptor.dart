@@ -5,7 +5,7 @@ import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/routes/app_pages.dart';
 import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/di.dart';
-import 'package:bonoos/features/auth/login_phone_screen.dart';
+import 'package:bonoos/features/auth/telegram_login_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,6 +98,6 @@ class AuthRefreshInterceptor extends Interceptor {
   Future<void> _logout() async {
     await inject<PrefManager>().logout();
     final ctx = rootNavigatorKey.currentContext;
-    if (ctx != null && ctx.mounted) ctx.go(LoginPhoneScreen.routeName);
+    if (ctx != null && ctx.mounted) ctx.go(TelegramLoginScreen.routeName);
   }
 }
