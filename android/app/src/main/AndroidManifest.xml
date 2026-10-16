@@ -39,6 +39,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Payme to'lovdan keyin api.bonoos.uz/api/v1/payme/return sahifasi ilovani shu havola bilan
+                 ochadi (bonoos://payment/return?payment_id=…). Ilova faqat oldinga chiqadi: ochiq turgan
+                 to'lov oynasi resume da to'lov holatini o'zi tekshiradi. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="bonoos" android:host="payment"/>
+            </intent-filter>
+            <!-- Deep link go_router ga uzatilmasin (bunday yo'l yo'q — xato sahifasi chiqardi). -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
