@@ -11,9 +11,15 @@ class CategoryPurchase {
   final String paymentLink;
 }
 
-/// Kategoriya allaqachon sotib olingan (409) — kirish ochiq, qayta yuklash kifoya.
-class AlreadyOwnedFailure extends Failure {
-  const AlreadyOwnedFailure({super.message});
+/// GET `/client/payments/{id}` natijasi.
+class PaymentStatus {
+  const PaymentStatus({required this.status, this.accessExpiresAt});
+
+  /// `pending | completed | failed | cancelled`
+  final String status;
+
+  /// To‘lov bajarilgach shu to‘lov bergan davr tugash sanasi (`null` — umrbod yoki hali yo‘q).
+  final DateTime? accessExpiresAt;
 }
 
 abstract class PlaylistRepository {
@@ -32,11 +38,12 @@ abstract class PlaylistRepository {
   /// GET `/client/favorites/auditions` — foydalanuvchi sevimli audiolari.
   Future<Either<Failure, List<Audition>>> fetchFavoriteAuditions();
 
-  /// POST `/client/categories/{id}/purchase` — Payme to‘lov havolasi.
-  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId);
+  /// POST `/client/categories/{id}/purchase` `{price_id}` — tanlangan tarif uchun Payme havolasi.
+  /// Ochiq to‘plamni ham sotib olish mumkin: muddat joriy muddat oxiridan uzayadi.
+  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId, int priceId);
 
-  /// GET `/client/payments/{id}` — `pending | completed | failed | cancelled`.
-  Future<Either<Failure, String>> fetchPaymentStatus(int paymentId);
+  /// GET `/client/payments/{id}`.
+  Future<Either<Failure, PaymentStatus>> fetchPaymentStatus(int paymentId);
 
   /// Audioni ~70% tinglanganda chaqiriladi; muvaffaqiyat/xatolik UI ga chiqarilmaydi.
   Future<void> reportAuditionListen({

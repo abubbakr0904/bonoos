@@ -62,12 +62,18 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
       context.push(PlaylistScreen.routeName, extra: c.id);
       return;
     }
-    final unlocked = await showCategoryPurchaseSheet(context, c);
-    if (!unlocked || !mounted) return;
+    await _buy(c);
+  }
+
+  /// Yopiq to‘plamni ochish yoki ochig‘ining muddatini uzaytirish.
+  Future<void> _buy(Category c) async {
+    final renewal = c.unlocked;
+    final paid = await showCategoryPurchaseSheet(context, c);
+    if (!paid || !mounted) return;
     await _load(silent: true);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("«${c.name}» to'plami ochildi")),
+      SnackBar(content: Text(renewal ? "«${c.name}» muddati uzaytirildi" : "«${c.name}» to'plami ochildi")),
     );
   }
 
@@ -94,7 +100,7 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
               Text(
                 hideExternalPayments()
                     ? "Maxsus audio to'plamlar."
-                    : "Bir marta to'lang — to'plam doim siz bilan.",
+                    : "Tarifni tanlang — 30 kundan 1 yilgacha.",
                 style: AppTextStyles.body13w4.copyWith(
                   color: Colors.white.withValues(alpha: 0.70),
                 ),
@@ -130,12 +136,14 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                                   ),
                                 if (owned.isNotEmpty) ...[
                                   const _SectionTitle("Mening to'plamlarim"),
-                                  for (final c in owned) _CollectionTile(category: c, onTap: () => _onTap(c)),
+                                  for (final c in owned)
+                                    _CollectionTile(category: c, onTap: () => _onTap(c), onRenew: () => _buy(c)),
                                   SizedBox(height: 14.h),
                                 ],
                                 if (locked.isNotEmpty) ...[
                                   if (owned.isNotEmpty) const _SectionTitle("Yangi to'plamlar"),
-                                  for (final c in locked) _CollectionTile(category: c, onTap: () => _onTap(c)),
+                                  for (final c in locked)
+                                    _CollectionTile(category: c, onTap: () => _onTap(c), onRenew: () => _buy(c)),
                                 ],
                                 if (_freeCount > 0) ...[
                                   SizedBox(height: 10.h),
@@ -174,10 +182,13 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _CollectionTile extends StatelessWidget {
-  const _CollectionTile({required this.category, required this.onTap});
+  const _CollectionTile({required this.category, required this.onTap, required this.onRenew});
 
   final Category category;
   final VoidCallback onTap;
+
+  /// Ochiq to‘plam muddatini uzaytirish (tarif tanlash oynasi).
+  final VoidCallback onRenew;
 
   @override
   Widget build(BuildContext context) {
@@ -243,10 +254,38 @@ class _CollectionTile extends StatelessWidget {
                     ],
                     SizedBox(height: 8.h),
                     if (!locked)
-                      const _Pill(icon: CupertinoIcons.checkmark_alt, text: "Ochilgan")
+                      Row(
+                        children: [
+                          _Pill(
+                            icon: category.expiresSoon ? CupertinoIcons.clock : CupertinoIcons.checkmark_alt,
+                            text: _accessText(category),
+                            warning: category.expiresSoon,
+                          ),
+                          // Umrbod bo‘lmasa uzaytirish mumkin (iOS review rejimida tashqi to‘lov yashirin).
+                          if (!category.isLifetime && !reviewMode && category.prices.isNotEmpty) ...[
+                            SizedBox(width: 6.w),
+                            // Alohida tugma: bosish kartaga (pleylistni ochish) o‘tib ketmasin.
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: onRenew,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+                                ),
+                                child: Text(
+                                  'Uzaytirish',
+                                  style: AppTextStyles.body10w6.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
                     else if (!reviewMode)
                       Text(
-                        category.formattedPrice,
+                        category.fromPriceLabel,
                         style: AppTextStyles.body17wb.copyWith(
                           color: Colors.white.withValues(alpha: 0.95),
                         ),
@@ -270,11 +309,22 @@ class _CollectionTile extends StatelessWidget {
   }
 }
 
+/// "23 kun qoldi", "Bugun tugaydi", "Umrbod".
+String _accessText(Category c) {
+  final left = c.daysLeft;
+  if (left == null) return 'Umrbod';
+  if (left <= 0) return 'Bugun tugaydi';
+  return '$left kun qoldi';
+}
+
 class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.text});
+  const _Pill({required this.icon, required this.text, this.warning = false});
 
   final IconData icon;
   final String text;
+
+  /// Muddat tugashiga oz qolgan — ko‘zga tashlanadigan rang.
+  final bool warning;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +332,7 @@ class _Pill extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: Colors.white.withValues(alpha: 0.14),
+        color: warning ? AppColors.cff8989.withValues(alpha: 0.22) : Colors.white.withValues(alpha: 0.14),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

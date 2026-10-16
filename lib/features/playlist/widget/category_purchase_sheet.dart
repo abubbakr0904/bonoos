@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Pullik to‘plamni ochish oynasi. `true` — to‘plam ochildi (ro‘yxatni qayta yuklash kerak).
+/// Pullik to‘plamni ochish yoki muddatini uzaytirish oynasi (tarif tanlanadi).
+/// `true` — to‘lov bajarildi (ro‘yxatni qayta yuklash kerak).
 Future<bool> showCategoryPurchaseSheet(BuildContext context, Category category) async {
   if (hideExternalPayments()) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -44,6 +45,18 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
   _Stage _stage = _Stage.idle;
   String? _error;
   int? _paymentId;
+  late CategoryPrice? _selected = widget.category.prices.isEmpty ? null : widget.category.prices.first;
+
+  /// To‘plam ochiq — sotib olish muddatni uzaytiradi.
+  bool get _isRenewal => widget.category.unlocked;
+
+  /// Oylik narxi eng arzon (va 30 kunlikdan arzonroq) tarif — "Tejamkor" belgisi.
+  CategoryPrice? get _bestValue {
+    final prices = widget.category.prices;
+    if (prices.length < 2) return null;
+    final best = prices.reduce((a, b) => a.monthlyPrice <= b.monthlyPrice ? a : b);
+    return best.monthlyPrice < prices.first.monthlyPrice ? best : null;
+  }
 
   @override
   void initState() {
@@ -66,19 +79,17 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
   }
 
   Future<void> _purchase() async {
+    final price = _selected;
+    if (price == null) return;
     setState(() {
       _stage = _Stage.creating;
       _error = null;
     });
-    final result = await inject<PlaylistRepository>().purchaseCategory(widget.category.id);
+    final result = await inject<PlaylistRepository>().purchaseCategory(widget.category.id, price.id);
     if (!mounted) return;
 
     await result.fold(
       (failure) async {
-        if (failure is AlreadyOwnedFailure) {
-          Navigator.of(context).pop(true);
-          return;
-        }
         setState(() {
           _stage = _Stage.idle;
           _error = failure.message ?? 'Xatolik yuz berdi';
@@ -112,8 +123,8 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
         _stage = _Stage.waitingPayment;
         _error = failure.message ?? 'To\'lov holatini olib bo\'lmadi.';
       }),
-      (status) {
-        switch (status) {
+      (payment) {
+        switch (payment.status) {
           case 'completed':
             Navigator.of(context).pop(true);
           case 'failed':
@@ -181,8 +192,12 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                   ),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
                 ),
-                child: const Center(
-                  child: Icon(CupertinoIcons.lock_fill, color: Colors.white, size: 22),
+                child: Center(
+                  child: Icon(
+                    _isRenewal ? CupertinoIcons.clock_fill : CupertinoIcons.lock_fill,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -198,31 +213,15 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      "Pullik to'plam. Bir marta to'lang — barcha audiolar doim ochiq bo'ladi.",
+                      _isRenewal
+                          ? "Hozir ${category.expiresDateLabel ?? ''} gacha ochiq. Yangi muddat shu sanadan keyin qo'shiladi."
+                          : "Tarifni tanlang — muddat davomida barcha audiolar ochiq bo'ladi.",
                       style: AppTextStyles.body13w4.copyWith(
                         color: Colors.white.withValues(alpha: 0.70),
                         height: 1.35,
                       ),
                     ),
                   ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 14.h),
-          Row(
-            children: [
-              Text(
-                category.formattedPrice,
-                style: AppTextStyles.body22w7.copyWith(
-                  color: Colors.white.withValues(alpha: 0.95),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                "/ bir martalik",
-                style: AppTextStyles.body13w4.copyWith(
-                  color: Colors.white.withValues(alpha: 0.65),
                 ),
               ),
             ],
@@ -237,8 +236,22 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
               ),
             ),
           ],
+          SizedBox(height: 14.h),
+          if (category.prices.isEmpty)
+            Text(
+              "Hozircha tariflar yo'q",
+              style: AppTextStyles.body13w4.copyWith(color: Colors.white.withValues(alpha: 0.7)),
+            )
+          else
+            for (final p in category.prices)
+              _TariffOption(
+                price: p,
+                selected: _selected?.id == p.id,
+                bestValue: _bestValue?.id == p.id,
+                onTap: waiting || busy ? null : () => setState(() => _selected = p),
+              ),
           if (waiting) ...[
-            SizedBox(height: 14.h),
+            SizedBox(height: 6.h),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               decoration: BoxDecoration(
@@ -279,7 +292,7 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: busy ? null : (waiting ? _checkPayment : _purchase),
+              onPressed: busy || _selected == null ? null : (waiting ? _checkPayment : _purchase),
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: Colors.white,
@@ -300,12 +313,100 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                       ),
                     )
                   : Text(
-                      waiting ? "To'lovni tekshirish" : "Ochish — ${category.formattedPrice}",
+                      waiting
+                          ? "To'lovni tekshirish"
+                          : "${_isRenewal ? 'Uzaytirish' : "To'lash"} — ${_selected?.formattedPrice ?? ''}",
                       style: AppTextStyles.body16w7,
                     ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TariffOption extends StatelessWidget {
+  const _TariffOption({
+    required this.price,
+    required this.selected,
+    required this.bestValue,
+    required this.onTap,
+  });
+
+  final CategoryPrice price;
+  final bool selected;
+  final bool bestValue;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            color: Colors.white.withValues(alpha: selected ? 0.12 : 0.05),
+            border: Border.all(
+              color: selected ? Colors.white.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.12),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                selected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle,
+                size: 20,
+                color: Colors.white.withValues(alpha: selected ? 0.95 : 0.45),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          price.durationLabel,
+                          style: AppTextStyles.body16w7.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                        ),
+                        if (bestValue) ...[
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(99),
+                              color: Colors.white.withValues(alpha: 0.18),
+                            ),
+                            child: Text(
+                              'Tejamkor',
+                              style: AppTextStyles.body10w6.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (price.durationDays > 31) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        'oyiga ~${formatSom((price.monthlyPrice / 100).round() * 100)}',
+                        style: AppTextStyles.body12w4.copyWith(color: Colors.white.withValues(alpha: 0.62)),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                price.formattedPrice,
+                style: AppTextStyles.body16w7.copyWith(color: Colors.white.withValues(alpha: 0.95)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -362,7 +463,7 @@ class LockedCategoryBanner extends StatelessWidget {
                   Text(
                     hideExternalPayments()
                         ? "Tez orada ochiladi"
-                        : "Barcha audiolarni ${category.formattedPrice} evaziga oching",
+                        : "Barcha audiolarni oching — ${category.fromPriceLabel}",
                     style: AppTextStyles.body12w4.copyWith(
                       color: Colors.white.withValues(alpha: 0.72),
                     ),

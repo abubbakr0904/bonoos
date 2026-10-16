@@ -163,9 +163,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
   /// `data` — to‘g‘ridan-to‘g‘ri ro‘yxat yoki `{ items, limit, offset, total }`.
   /// Bo‘sh / `items: null` → bo‘sh ro‘yxat.
   @override
-  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId) async {
+  Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId, int priceId) async {
     try {
-      final response = await _dio.post(ListAPI.clientCategoryPurchase(categoryId));
+      final response = await _dio.post(
+        ListAPI.clientCategoryPurchase(categoryId),
+        data: <String, dynamic>{'price_id': priceId},
+      );
       final data = (response.data as Map?)?['data'];
       final link = data is Map ? data['payment_link'] as String? : null;
       final paymentId = data is Map ? (data['payment_id'] as num?)?.toInt() : null;
@@ -174,8 +177,11 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
       }
       return Right(CategoryPurchase(paymentId: paymentId, paymentLink: link));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        return const Left(AlreadyOwnedFailure(message: 'Bu to\'plam allaqachon ochilgan.'));
+      // 409 — tarif sotuvdan olingan, 404 — tarif topilmadi: ro‘yxatni yangilash kerak.
+      final code = e.response?.statusCode;
+      if (code == 409 || code == 404) {
+        return const Left(ServerFailure(
+            message: 'Bu tarif hozir mavjud emas. Ro\'yxatni yangilab, boshqa tarifni tanlang.'));
       }
       return Left(_mapDio(e));
     } catch (e) {
@@ -184,7 +190,7 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
   }
 
   @override
-  Future<Either<Failure, String>> fetchPaymentStatus(int paymentId) async {
+  Future<Either<Failure, PaymentStatus>> fetchPaymentStatus(int paymentId) async {
     try {
       final raw = await _dio.get(ListAPI.clientPayment(paymentId));
       final data = ((raw as Response<dynamic>).data as Map?)?['data'];
@@ -192,7 +198,11 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
       if (status == null) {
         return const Left(BadResponseFailure(message: 'To\'lov holati olinmadi.'));
       }
-      return Right(status);
+      final expires = data is Map ? data['access_expires_at'] as String? : null;
+      return Right(PaymentStatus(
+        status: status,
+        accessExpiresAt: expires == null ? null : DateTime.tryParse(expires),
+      ));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
