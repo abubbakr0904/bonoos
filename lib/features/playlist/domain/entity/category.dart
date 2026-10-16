@@ -90,14 +90,6 @@ class Category {
     return p == null ? '' : '${p.formattedPrice} dan';
   }
 
-  /// "12.11.2026" — tugash sanasi (mahalliy vaqt).
-  String? get expiresDateLabel {
-    final e = expiresAt?.toLocal();
-    if (e == null) return null;
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(e.day)}.${two(e.month)}.${e.year}';
-  }
-
   factory Category.fromJson(Map<String, dynamic> json) {
     final prices = (json['prices'] as List?)
             ?.whereType<Map>()

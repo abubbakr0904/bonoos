@@ -57,23 +57,19 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
     );
   }
 
+  /// Ochiq to‘plam — tinglash; yopiq (sotib olinmagan yoki muddati tugagan) — tarif tanlab sotib olish.
+  /// Ochiq to‘plam muddatini foydalanuvchi o‘zi uzaytirmaydi: operator admin paneldan uzaytiradi.
   Future<void> _onTap(Category c) async {
     if (!c.isLocked) {
       context.push(PlaylistScreen.routeName, extra: c.id);
       return;
     }
-    await _buy(c);
-  }
-
-  /// Yopiq to‘plamni ochish yoki ochig‘ining muddatini uzaytirish.
-  Future<void> _buy(Category c) async {
-    final renewal = c.unlocked;
     final paid = await showCategoryPurchaseSheet(context, c);
     if (!paid || !mounted) return;
     await _load(silent: true);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(renewal ? "«${c.name}» muddati uzaytirildi" : "«${c.name}» to'plami ochildi")),
+      SnackBar(content: Text("«${c.name}» to'plami ochildi")),
     );
   }
 
@@ -136,14 +132,12 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                                   ),
                                 if (owned.isNotEmpty) ...[
                                   const _SectionTitle("Mening to'plamlarim"),
-                                  for (final c in owned)
-                                    _CollectionTile(category: c, onTap: () => _onTap(c), onRenew: () => _buy(c)),
+                                  for (final c in owned) _CollectionTile(category: c, onTap: () => _onTap(c)),
                                   SizedBox(height: 14.h),
                                 ],
                                 if (locked.isNotEmpty) ...[
                                   if (owned.isNotEmpty) const _SectionTitle("Yangi to'plamlar"),
-                                  for (final c in locked)
-                                    _CollectionTile(category: c, onTap: () => _onTap(c), onRenew: () => _buy(c)),
+                                  for (final c in locked) _CollectionTile(category: c, onTap: () => _onTap(c)),
                                 ],
                                 if (_freeCount > 0) ...[
                                   SizedBox(height: 10.h),
@@ -182,13 +176,10 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _CollectionTile extends StatelessWidget {
-  const _CollectionTile({required this.category, required this.onTap, required this.onRenew});
+  const _CollectionTile({required this.category, required this.onTap});
 
   final Category category;
   final VoidCallback onTap;
-
-  /// Ochiq to‘plam muddatini uzaytirish (tarif tanlash oynasi).
-  final VoidCallback onRenew;
 
   @override
   Widget build(BuildContext context) {
@@ -254,34 +245,10 @@ class _CollectionTile extends StatelessWidget {
                     ],
                     SizedBox(height: 8.h),
                     if (!locked)
-                      Row(
-                        children: [
-                          _Pill(
-                            icon: category.expiresSoon ? CupertinoIcons.clock : CupertinoIcons.checkmark_alt,
-                            text: _accessText(category),
-                            warning: category.expiresSoon,
-                          ),
-                          // Umrbod bo‘lmasa uzaytirish mumkin (iOS review rejimida tashqi to‘lov yashirin).
-                          if (!category.isLifetime && !reviewMode && category.prices.isNotEmpty) ...[
-                            SizedBox(width: 6.w),
-                            // Alohida tugma: bosish kartaga (pleylistni ochish) o‘tib ketmasin.
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: onRenew,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
-                                ),
-                                child: Text(
-                                  'Uzaytirish',
-                                  style: AppTextStyles.body10w6.copyWith(color: Colors.white.withValues(alpha: 0.95)),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                      _Pill(
+                        icon: category.expiresSoon ? CupertinoIcons.clock : CupertinoIcons.checkmark_alt,
+                        text: _accessText(category),
+                        warning: category.expiresSoon,
                       )
                     else if (!reviewMode)
                       Text(

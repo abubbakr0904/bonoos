@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Pullik to‘plamni ochish yoki muddatini uzaytirish oynasi (tarif tanlanadi).
-/// `true` — to‘lov bajarildi (ro‘yxatni qayta yuklash kerak).
+/// Yopiq pullik to‘plamni ochish oynasi (tarif tanlanadi). Ochiq to‘plam muddatini foydalanuvchi
+/// uzaytirmaydi — buni operator admin paneldan qiladi. `true` — to‘lov bajarildi (ro‘yxatni qayta yuklash kerak).
 Future<bool> showCategoryPurchaseSheet(BuildContext context, Category category) async {
   if (hideExternalPayments()) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -46,9 +46,6 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
   String? _error;
   int? _paymentId;
   late CategoryPrice? _selected = widget.category.prices.isEmpty ? null : widget.category.prices.first;
-
-  /// To‘plam ochiq — sotib olish muddatni uzaytiradi.
-  bool get _isRenewal => widget.category.unlocked;
 
   /// Oylik narxi eng arzon (va 30 kunlikdan arzonroq) tarif — "Tejamkor" belgisi.
   CategoryPrice? get _bestValue {
@@ -193,11 +190,7 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                   border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
                 ),
                 child: Center(
-                  child: Icon(
-                    _isRenewal ? CupertinoIcons.clock_fill : CupertinoIcons.lock_fill,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                  child: Icon(CupertinoIcons.lock_fill, color: Colors.white, size: 22),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -213,9 +206,7 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      _isRenewal
-                          ? "Hozir ${category.expiresDateLabel ?? ''} gacha ochiq. Yangi muddat shu sanadan keyin qo'shiladi."
-                          : "Tarifni tanlang — muddat davomida barcha audiolar ochiq bo'ladi.",
+                      "Tarifni tanlang — muddat davomida barcha audiolar ochiq bo'ladi.",
                       style: AppTextStyles.body13w4.copyWith(
                         color: Colors.white.withValues(alpha: 0.70),
                         height: 1.35,
@@ -315,7 +306,7 @@ class _CategoryPurchaseSheetState extends State<_CategoryPurchaseSheet>
                   : Text(
                       waiting
                           ? "To'lovni tekshirish"
-                          : "${_isRenewal ? 'Uzaytirish' : "To'lash"} — ${_selected?.formattedPrice ?? ''}",
+                          : "To'lash — ${_selected?.formattedPrice ?? ''}",
                       style: AppTextStyles.body16w7,
                     ),
             ),
