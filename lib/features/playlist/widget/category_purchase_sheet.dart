@@ -14,12 +14,8 @@ import 'package:url_launcher/url_launcher.dart';
 /// Yopiq pullik to‘plamni ochish oynasi (tarif tanlanadi). Ochiq to‘plam muddatini foydalanuvchi
 /// uzaytirmaydi — buni operator admin paneldan qiladi. `true` — to‘lov bajarildi (ro‘yxatni qayta yuklash kerak).
 Future<bool> showCategoryPurchaseSheet(BuildContext context, Category category) async {
-  if (hideExternalPayments()) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Bu to'plam tez orada ochiladi")),
-    );
-    return false;
-  }
+  // Review test foydalanuvchisi: to‘lov oynasi umuman ochilmaydi.
+  if (hideExternalPayments()) return false;
   final unlocked = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,

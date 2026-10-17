@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:bonoos/features/calendar/calendar_tasks_screen.dart';
 import 'package:bonoos/features/gratitude/gratitude_note_editor_screen.dart';
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:bonoos/core/values/app_colors.dart';
 import 'package:bonoos/features/home/home_screen.dart';
 import 'package:bonoos/features/sections/sections_screen.dart';
@@ -43,12 +44,21 @@ class _TabBoxScreenState extends State<TabBoxScreen> {
       _controller.index.value = _index;
     }
     _controller.index.addListener(_onIndexChanged);
+    PaymentVisibility.isTestUser.addListener(_onPaymentVisibilityChanged);
   }
 
   @override
   void dispose() {
     _controller.index.removeListener(_onIndexChanged);
+    PaymentVisibility.isTestUser.removeListener(_onPaymentVisibilityChanged);
     super.dispose();
+  }
+
+  /// Test foydalanuvchi aniqlansa «To‘plamlar» tabi yo‘qoladi — Home ga qaytamiz.
+  void _onPaymentVisibilityChanged() {
+    if (!mounted) return;
+    _controller.index.value = 0;
+    setState(() => _index = 0);
   }
 
   void _onIndexChanged() {

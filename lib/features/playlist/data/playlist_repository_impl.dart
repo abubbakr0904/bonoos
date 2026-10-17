@@ -1,6 +1,7 @@
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/error/failure.dart';
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/playlist/domain/entity/audition.dart';
 import 'package:bonoos/features/playlist/domain/entity/auditions_page.dart';
@@ -31,6 +32,8 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
       final categories = list
           .whereType<Map>()
           .map((e) => Category.fromJson(Map<String, dynamic>.from(e)))
+          // Review test foydalanuvchisiga yopiq (sotib olinmagan) to‘plamlar ko‘rsatilmaydi.
+          .where((c) => !(hideExternalPayments() && c.isLocked))
           .toList();
       return Right(categories);
     } on DioException catch (e) {
@@ -59,7 +62,7 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
         return const Left(
             BadResponseFailure(message: 'Auditionlar ma\'lumoti yo\'q.'));
       }
-      return Right(auditions);
+      return Right(_visible(auditions));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
@@ -89,7 +92,12 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
         return const Left(
             BadResponseFailure(message: 'Auditionlar ma\'lumoti yo\'q.'));
       }
-      return Right(page);
+      return Right(AuditionsPage(
+        items: _visible(page.items),
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      ));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
@@ -128,7 +136,7 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
         return const Left(
             BadResponseFailure(message: 'Sevimlilar ma\'lumoti yo\'q.'));
       }
-      return Right(auditions);
+      return Right(_visible(auditions));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
@@ -164,6 +172,9 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
   /// Bo‘sh / `items: null` → bo‘sh ro‘yxat.
   @override
   Future<Either<Failure, CategoryPurchase>> purchaseCategory(int categoryId, int priceId) async {
+    if (hideExternalPayments()) {
+      return const Left(BadResponseFailure(message: 'Mavjud emas.'));
+    }
     try {
       final response = await _dio.post(
         ListAPI.clientCategoryPurchase(categoryId),
@@ -209,6 +220,10 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
       return Left(UnknownFailure(message: e.toString()));
     }
   }
+
+  /// Review test foydalanuvchisiga yopiq (pullik) audiolar ko‘rsatilmaydi.
+  List<Audition> _visible(List<Audition> list) =>
+      hideExternalPayments() ? list.where((a) => !a.isLocked).toList() : list;
 
   List<Audition>? _parseAuditionsList(dynamic dataRaw) {
     if (dataRaw is List) {

@@ -4,11 +4,14 @@ import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/error/failure.dart';
 import 'package:bonoos/core/utils/device_session_helper.dart';
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:bonoos/core/utils/pref_manager.dart';
 import 'package:bonoos/di.dart';
 import 'package:flutter/foundation.dart';
 import 'package:bonoos/features/auth/domain/entity/verify_otp_result.dart';
 import 'package:bonoos/features/auth/domain/repository/auth_repository.dart';
+import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
+import 'package:bonoos/features/profile/domain/repository/profile_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -77,6 +80,11 @@ class AuthRepositoryImpl implements AuthRepository {
         phoneDigits: phoneDigits,
         rawDataJson: jsonEncode(dataMap),
       );
+      // Review test foydalanuvchisi birinchi ekrandayoq to‘lovlarni ko‘rmasin.
+      await inject<ProfileRepository>()
+          .fetchMe()
+          .timeout(const Duration(seconds: 8))
+          .catchError((_) => const Left<Failure, ClientProfile>(UnknownFailure()));
       return Right(result);
     } on DioException catch (e) {
       return Left(_mapDio(e));
@@ -109,6 +117,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // 1. Clear local session IMMEDIATELY for instant UI feedback
     await pref.logout();
+    PaymentVisibility.reset();
 
     // 2. Trigger API logout in background (with short timeout)
     if (refreshToken.isNotEmpty) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
@@ -830,6 +831,14 @@ class _HomePlaylistFromPlaylistSectionState extends State<_HomePlaylistFromPlayl
   void initState() {
     super.initState();
     _loadCategories();
+    PaymentVisibility.isTestUser.addListener(_loadCategories);
+  }
+
+  @override
+  void dispose() {
+    // Test foydalanuvchi aniqlansa ro‘yxat yopiq audiolarsiz qayta yuklanadi.
+    PaymentVisibility.isTestUser.removeListener(_loadCategories);
+    super.dispose();
   }
 
   Future<void> _loadCategories() async {

@@ -1,6 +1,7 @@
 import 'package:bonoos/core/api/dio_client.dart';
 import 'package:bonoos/core/api/list_api.dart';
 import 'package:bonoos/core/error/failure.dart';
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:bonoos/di.dart';
 import 'package:bonoos/features/profile/domain/entity/client_profile.dart';
 import 'package:bonoos/features/profile/domain/entity/activity.dart';
@@ -28,7 +29,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       if (data is! Map) {
         return const Left(BadResponseFailure(message: 'Profil ma\'lumoti yo\'q.'));
       }
-      return Right(ClientProfile.fromJson(Map<String, dynamic>.from(data)));
+      return Right(await _withPaymentVisibility(
+          ClientProfile.fromJson(Map<String, dynamic>.from(data))));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
@@ -195,12 +197,19 @@ class ProfileRepositoryImpl implements ProfileRepository {
       if (data is! Map) {
         return const Left(BadResponseFailure(message: 'Profil ma\'lumoti yo\'q.'));
       }
-      return Right(ClientProfile.fromJson(Map<String, dynamic>.from(data)));
+      return Right(await _withPaymentVisibility(
+          ClientProfile.fromJson(Map<String, dynamic>.from(data))));
     } on DioException catch (e) {
       return Left(_mapDio(e));
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
+  }
+
+  /// `is_test_user` ni global holatga yozadi (to‘lovlarni yashirish uchun).
+  Future<ClientProfile> _withPaymentVisibility(ClientProfile profile) async {
+    await PaymentVisibility.setTestUser(profile.isTestUser);
+    return profile;
   }
 
   Failure _mapDio(DioException e) {

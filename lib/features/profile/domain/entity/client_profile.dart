@@ -12,6 +12,7 @@ class ClientProfile {
     this.regionId,
     this.activityId,
     this.income,
+    this.isTestUser = false,
   });
 
   final int id;
@@ -27,6 +28,9 @@ class ClientProfile {
   final int? activityId;
   final int? income;
 
+  /// Store review uchun test foydalanuvchi — ilovada to‘lovlar ko‘rsatilmaydi.
+  final bool isTestUser;
+
   factory ClientProfile.fromJson(Map<String, dynamic> json) {
     return ClientProfile(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -41,6 +45,7 @@ class ClientProfile {
       regionId: (json['region_id'] as num?)?.toInt(),
       activityId: (json['activity_id'] as num?)?.toInt(),
       income: (json['income'] as num?)?.toInt(),
+      isTestUser: json['is_test_user'] as bool? ?? false,
     );
   }
 }

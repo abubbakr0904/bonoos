@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:bonoos/core/utils/external_payments.dart';
 import 'package:flutter/foundation.dart';
 
 enum AppTab {
@@ -17,8 +16,8 @@ class TabBoxController {
 
   final ValueNotifier<int> index = ValueNotifier<int>(0);
 
-  /// iOS App Store talablari: «To‘plamlar» (tashqi to‘lov) tabi ko‘rinmaydi.
-  static bool get isSubscriptionVisible => !Platform.isIOS;
+  /// «To‘plamlar» (tashqi to‘lov) tabi — tashqi to‘lovlar yashirilmagan bo‘lsa ko‘rinadi.
+  static bool get isSubscriptionVisible => !hideExternalPayments();
 
   static List<AppTab> get visibleTabs {
     if (isSubscriptionVisible) {
